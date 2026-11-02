@@ -6819,6 +6819,34 @@ addEventListener('resize', () => {
   </div>
   <div id="gToast" role="alert"></div>
 </div>
+<style>
+  #gLogin{position:fixed;inset:0;z-index:200006;display:none;place-items:center;background:rgba(0,0,0,.72);backdrop-filter:blur(5px);font-family:system-ui;color:#fff;padding:12px;box-sizing:border-box}
+  #gLogin.on{display:grid}
+  #gLogin .gl-c{position:relative;width:min(400px,100%);max-height:94vh;overflow:auto;padding:24px 22px 20px;border-radius:22px;text-align:center;background:radial-gradient(circle at 50% 0,#4285F455,transparent 60%),#0d1426;border:2px solid rgba(255,255,255,.2);box-shadow:0 20px 60px #000b;animation:wrP .35s cubic-bezier(.2,.9,.3,1.3)}
+  #gLogin .gl-x{position:absolute;top:10px;right:12px;width:34px;height:34px;border:0;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;font:700 18px system-ui;cursor:pointer}
+  #gLogin .gl-ph{margin:-4px auto 2px;width:min(260px,72%)}#gLogin .gl-ph canvas{width:100%;display:block}#gLogin .gl-lgx{width:54px;height:54px;margin:0 auto 8px;background:#fff;border-radius:50%;padding:11px;box-sizing:border-box}
+  #gLogin h3{margin:0 0 4px;font-size:21px}#gLogin p.s{margin:0 0 14px;opacity:.75;font-size:13px}
+  #gLogin ul{list-style:none;margin:0 0 16px;padding:0;text-align:left}
+  #gLogin li{display:flex;gap:12px;align-items:center;padding:10px 12px;margin-bottom:8px;border-radius:14px;background:rgba(255,255,255,.08);font:600 14px/1.3 system-ui}
+  #gLogin li i{font-style:normal;font-size:22px;flex:none}#gLogin li small{display:block;opacity:.65;font-size:12px;font-weight:500}
+  #gLogin li.gift{background:linear-gradient(90deg,#4285F433,#EA433533,#FBBC0533,#34A85333);border:1px solid #fbbc0577}
+  #gGo{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:14px;border:0;border-radius:14px;background:#fff;color:#222;font:800 16px system-ui;cursor:pointer;box-shadow:0 6px 18px #0006}
+  #gGo svg{width:22px;height:22px}#gGo:active{transform:scale(.97)}
+  #gLogin .gl-n{margin:10px 0 0;font-size:11px;opacity:.55}
+</style>
+<div id="gLogin"><div class="gl-c">
+  <button class="gl-x" id="gLx" type="button" aria-label="Fechar">✕</button>
+  <div class="gl-ph"><canvas id="gPhone" width="360" height="280"></canvas></div>
+  <h3>Entre com sua conta Google</h3><p class="s">Grátis, em um toque. Veja o que você ganha:</p>
+  <ul>
+    <li class="gift"><i>🎁</i><span>Presente de boas-vindas<small>Bola Google + Boné Google exclusivos</small></span></li>
+    <li><i>☁️</i><span>Progresso salvo na nuvem<small>Time, escudo, nomes e configurações</small></span></li>
+    <li><i>📱</i><span>Jogue em qualquer aparelho<small>Celular, tablet ou computador com o mesmo jogo</small></span></li>
+    <li><i>👕</i><span>Vestiário com itens extras<small>Skins de bola, chapéus e cabelos</small></span></li>
+  </ul>
+  <button id="gGo" type="button"></button>
+  <p class="gl-n">Só guardamos o jogo na sua pasta privada do app no Drive. Ao sair da conta, o jogo deste aparelho volta do zero.</p>
+</div></div>
 <div id="gModal"><div>
   <h3>Qual jogo você quer usar?</h3>
   <p id="gModalTxt">Encontramos um jogo salvo na sua conta e outro neste aparelho.</p>
@@ -6992,9 +7020,13 @@ addEventListener('resize', () => {
     location.reload();   // volta do zero
   }
   $('gChip').onclick = () => {
-    if (!sess) return connect();
+    if (!sess) { $('gLogin').classList.add('on'); return; }
     render(); $('gMenu').classList.toggle('on');
   };
+  $('gGo').innerHTML = GLOGO + '<span>Entrar com Google</span>';
+  $('gLx').onclick = () => $('gLogin').classList.remove('on');
+  $('gLogin').addEventListener('click', e => { if (e.target.id === 'gLogin') $('gLogin').classList.remove('on'); });
+  $('gGo').onclick = () => { $('gLogin').classList.remove('on'); connect(); };
   $('gRe').onclick = () => { $('gMenu').classList.remove('on'); connect(); };
   $('gNow').onclick = () => { $('gMenu').classList.remove('on'); push(); };
   $('gOut').onclick = () => { $('gMenu').classList.remove('on'); logout(); };
@@ -7059,7 +7091,7 @@ addEventListener('resize', () => {
   #wrGift canvas{width:130px;height:130px}
 </style>
 <div id="wrPop"><div class="wrBox">
-  <div class="wrStage"><div class="wrTitle">VESTIÁRIO<small>Arraste nada: gira sozinho</small></div><div id="wrBig"></div><div id="wrCap"></div></div>
+  <div class="wrStage"><div class="wrTitle">VESTIÁRIO<small>Seu jogador e sua bola</small></div><div id="wrBig"></div><div id="wrCap"></div></div>
   <div class="wrSide">
     <div class="wrTabs"><button type="button" data-t="ball" class="on">⚽ Bolas</button><button type="button" data-t="hat">🧢 Chapéus e cabelos</button></div>
     <div class="wrG" id="wrGrid"></div>
@@ -7081,7 +7113,6 @@ addEventListener('resize', () => {
   const setW = w => LS.setItem('futio_wr', JSON.stringify(w));
   const ITEMS = { ball: [{ id: 'classic', n: 'Bola Clássica' }, { id: 'google', n: 'Bola Google', lock: 1 }],
                   hat: [{ id: null, n: 'Sem acessório' }, { id: 'google', n: 'Boné Google', lock: 1 }] };
-
   function gLogo(c, x, y, r) {
     c.save(); c.lineWidth = r * .32; c.lineCap = 'butt';
     [[-.25, .02, 0], [.02, .6, 3], [.6, 1, 2], [1, 1.75, 1]].forEach(([a, b, i]) => { c.strokeStyle = GH[i]; c.beginPath(); c.arc(x, y, r * .72, a * Math.PI, b * Math.PI); c.stroke(); });
@@ -7090,38 +7121,23 @@ addEventListener('resize', () => {
   let _tex = null;
   const gTex = () => _tex || (_tex = (() => { const cv = document.createElement('canvas'); cv.width = cv.height = 128; const c = cv.getContext('2d');
     c.fillStyle = '#fff'; c.beginPath(); c.arc(64, 64, 62, 0, 7); c.fill(); gLogo(c, 64, 64, 50); return new THREE.CanvasTexture(cv); })());
-  const MT = (lit, o) => lit ? new THREE.MeshStandardMaterial(Object.assign({ roughness: .35, metalness: .08 }, o)) : new THREE.MeshLambertMaterial(o);
+  const LM = o => new THREE.MeshLambertMaterial(o);
+  const HAT_Y = .42, HAT_RX = -.12, REAL = { body, head, handL, handR, footL, footR }, KEYS = ['body', 'head', 'handL', 'handR', 'footL', 'footR'];
 
-  /* ---------- modelos 3D ---------- */
-  function buildBall(kind, lit, R) {
-    R = R || 1; const g = new THREE.Group(), gg = kind === 'google';
-    g.add(new THREE.Mesh(new THREE.SphereGeometry(R, 36, 28), MT(lit, { color: 0xf8f9fa })));
-    [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]].forEach((d, i) => {
-      const n = new THREE.Vector3(...d), q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), n);
-      const p = new THREE.Mesh(new THREE.SphereGeometry(1, 18, 12), MT(lit, { color: gg ? GC[i % 4] : 0x232323 }));
-      p.scale.set(.42 * R, .42 * R, .13 * R); p.position.copy(n).multiplyScalar(R * .97); p.quaternion.copy(q); g.add(p);
-      if (gg) { const d2 = new THREE.Mesh(new THREE.CircleGeometry(.36 * R, 24), new THREE.MeshBasicMaterial({ map: gTex(), transparent: true }));
-        d2.position.copy(n).multiplyScalar(R * 1.012); d2.quaternion.copy(q); g.add(d2); }
-    });
+  /* ---------- boné Google (mesmo estilo do jogo: contorno escuro) ---------- */
+  function buildHat() {
+    const g = new THREE.Group(), R = 1.22, ord = [1, 0, 2, 3], blk = () => new THREE.MeshBasicMaterial({ color: 0x151515, side: THREE.BackSide });
+    for (let i = 0; i < 4; i++) g.add(new THREE.Mesh(new THREE.SphereGeometry(R, 24, 14, -Math.PI / 4 + i * Math.PI / 2, Math.PI / 2, 0, Math.PI / 2), LM({ color: GC[ord[i]], side: THREE.DoubleSide })));
+    g.add(new THREE.Mesh(new THREE.SphereGeometry(R + .08, 28, 16, 0, Math.PI * 2, 0, Math.PI / 2), blk()));
+    const btn = new THREE.Mesh(new THREE.SphereGeometry(.17, 12, 10), LM({ color: 0xffffff })); btn.position.y = R + .02; g.add(btn);
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(R, .07, 8, 40), LM({ color: 0xffffff })); rim.rotation.x = Math.PI / 2; g.add(rim);
+    const vis = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 8, 0, Math.PI * 2, 0, Math.PI / 2), LM({ color: GC[1], side: THREE.DoubleSide }));
+    vis.scale.set(R * .8, .2, R * .95); vis.position.set(0, .03, R * .82); vis.rotation.x = .12; g.add(vis);
+    const vo = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 8, 0, Math.PI * 2, 0, Math.PI / 2), blk()); vo.scale.set(R * .8 + .08, .28, R * .95 + .08); vo.position.copy(vis.position); vo.rotation.x = .12; g.add(vo);
+    const dec = new THREE.Mesh(new THREE.CircleGeometry(.36, 24), new THREE.MeshBasicMaterial({ map: gTex(), transparent: true }));
+    const y = R * Math.cos(.9) * 1.01, z = R * Math.sin(.9) * 1.01; dec.position.set(0, y, z); dec.lookAt(0, y * 2, z * 2); g.add(dec);
     return g;
   }
-  function buildHat(lit) {   // boné com 4 gomos nas cores do Google, aba vermelha e botão branco
-    const g = new THREE.Group(), R = 1.1, ord = [1, 0, 2, 3];
-    for (let i = 0; i < 4; i++) g.add(new THREE.Mesh(new THREE.SphereGeometry(R, 20, 14, -Math.PI / 4 + i * Math.PI / 2, Math.PI / 2, 0, Math.PI / 2), MT(lit, { color: GC[ord[i]], side: THREE.DoubleSide })));
-    const btn = new THREE.Mesh(new THREE.SphereGeometry(.14, 12, 10), MT(lit, { color: 0xffffff })); btn.position.y = R; g.add(btn);
-    const rim = new THREE.Mesh(new THREE.TorusGeometry(R, .05, 8, 36), MT(lit, { color: 0xffffff })); rim.rotation.x = Math.PI / 2; g.add(rim);
-    const vis = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 8, 0, Math.PI * 2, 0, Math.PI / 2), MT(lit, { color: GC[1], side: THREE.DoubleSide }));
-    vis.scale.set(.85, .16, 1.05); vis.position.set(0, .02, R * .85); vis.rotation.x = .1; g.add(vis);
-    const dec = new THREE.Mesh(new THREE.CircleGeometry(.3, 24), new THREE.MeshBasicMaterial({ map: gTex(), transparent: true }));
-    const th = .9, y = R * Math.cos(th) * 1.01, z = R * Math.sin(th) * 1.01; dec.position.set(0, y, z); dec.lookAt(0, y * 2, z * 2); g.add(dec);
-    return g;
-  }
-  function buildHead(lit) {
-    const g = new THREE.Group(); g.add(new THREE.Mesh(new THREE.SphereGeometry(1, 32, 24), MT(lit, { color: 0xf8ffc4 })));
-    [-1, 1].forEach(sx => { const e = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 10), new THREE.MeshBasicMaterial({ color: 0x232323 })); e.scale.set(.1, .17, .06); e.position.set(sx * .3, .12, .95); e.lookAt(sx * .6, .12, 1.9); g.add(e); });
-    return g;
-  }
-  const HAT_Y = .42, HAT_RX = -.12;
 
   /* ---------- aplicar no jogo ---------- */
   let gDecals = [], origPatch = null, hat = null;
@@ -7132,7 +7148,7 @@ addEventListener('resize', () => {
     if (id !== 'google') return;
     ballSpin.children.slice().forEach((p, i) => {
       if (!origPatch[i]) return;
-      p.material = new THREE.MeshBasicMaterial({ color: GC[i % 4] });
+      p.material = stencilize(new THREE.MeshBasicMaterial({ color: GC[i % 4] }), 2);
       const d = new THREE.Mesh(new THREE.CircleGeometry(.2, 20), new THREE.MeshBasicMaterial({ map: gTex(), transparent: true }));
       d.position.copy(p.position).normalize().multiplyScalar(.462); d.quaternion.copy(p.quaternion); d.renderOrder = 2; ballSpin.add(d); gDecals.push(d);
     });
@@ -7140,37 +7156,82 @@ addEventListener('resize', () => {
   function applyHat(id) {
     if (hat) { head.remove(hat); hat = null; }
     if (id !== 'google') return;
-    hat = buildHat(false); hat.position.set(0, 3.12 + HAT_Y, .28); hat.rotation.x = HAT_RX; head.add(hat);
+    hat = buildHat(); hat.position.set(0, HAT_Y, 0); hat.rotation.x = HAT_RX; head.add(hat);   // a cabeça já fica na altura certa dentro do grupo
   }
   const equipped = () => { const w = unlocked() ? getW() : {}; return { ball: w.ball || 'classic', hat: w.hat || null }; };
   function applyAll() { const e = equipped(); try { applyBall(e.ball); applyHat(e.hat); } catch (err) { console.error(err); } }
 
-  /* ---------- prévias 3D no painel ---------- */
-  let R1 = null, R2 = null, tabK = 'ball', drawables = [], raf = 0, stage = null;
-  const lights = sc => { sc.add(new THREE.HemisphereLight(0xffffff, 0x8899bb, .95)); const d = new THREE.DirectionalLight(0xffffff, .95); d.position.set(3, 5, 4); sc.add(d); };
-  function card3d(kind, id, canvas) {
+  /* ---------- modelos ORIGINAIS do jogo para os pop-ups ---------- */
+  function mkChar(hatId) {
+    const ch = makeChar(50, 0xffffff, 0xffffff); scene.remove(ch.g);
+    ch.handL.scale.setScalar(1 / 1.35); ch.handR.scale.setScalar(1 / 1.35);
+    KEYS.forEach(k => { const a = REAL[k].children[0].material, b = ch[k].children[0].material; b.color.copy(a.color); if (a.map) { b.map = a.map; b.needsUpdate = true; } });
+    if (hatId === 'google') { const h = buildHat(); h.position.set(0, HAT_Y, 0); h.rotation.x = HAT_RX; ch.head.add(h); }
+    return ch;
+  }
+  function mkBall(kind) {
+    const g = part(0xf8f9fa, BR, BR, BR, 0, 0, 0, 51), spin = new THREE.Group(), gg = kind === 'google'; g.add(spin);
+    const pg = new THREE.SphereGeometry(1, 8, 6);
+    [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]].forEach((d, i) => {
+      const n = new THREE.Vector3(...d), q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), n);
+      const p = new THREE.Mesh(pg, stencilize(new THREE.MeshBasicMaterial({ color: gg ? GC[i % 4] : 0x232323 }), 51));
+      p.scale.set(.19, .19, .06); p.position.copy(n).multiplyScalar(BR - .01); p.quaternion.copy(q); p.renderOrder = 1; spin.add(p);
+      if (gg) { const d2 = new THREE.Mesh(new THREE.CircleGeometry(.2, 20), new THREE.MeshBasicMaterial({ map: gTex(), transparent: true }));
+        d2.position.copy(n).multiplyScalar(BR + .012); d2.quaternion.copy(q); d2.renderOrder = 2; spin.add(d2); }
+    });
+    return { g, spin };
+  }
+  const mkRend = (w, h) => { const r = new THREE.WebGLRenderer({ alpha: true, antialias: true, stencil: true, preserveDrawingBuffer: true }); r.setSize(w, h, false); r.setPixelRatio(1); r.setClearColor(0, 0); return r; };
+  const lights = sc => { sc.add(new THREE.AmbientLight(0xffffff, .9)); const d = new THREE.DirectionalLight(0xffffff, .6); d.position.set(3, 6, 5); sc.add(d); };
+  let R1 = null, R2 = null, R3 = null, tabK = 'ball', drawables = [], phoneD = null, raf = 0;
+
+  function card3d(kind, id, canvas) {   // kind 'ball' = bola; 'hat' = boneco com o acessório
     const sc = new THREE.Scene(), root = new THREE.Group(); sc.add(root); lights(sc);
-    if (kind === 'ball') root.add(buildBall(id, true));
-    else { root.add(buildHead(true)); if (id === 'google') { const h = buildHat(true); h.position.y = HAT_Y; h.rotation.x = HAT_RX; root.add(h); } }
-    const cam = new THREE.PerspectiveCamera(30, 1, .1, 50), ball = kind === 'ball'; cam.position.set(0, ball ? 0 : .5, ball ? 5.2 : 7.6); cam.lookAt(0, ball ? 0 : .55, 0);
+    const isB = kind === 'ball', cam = new THREE.PerspectiveCamera(30, 1, .1, 60); let b = null;
+    if (isB) { b = mkBall(id); b.g.scale.setScalar(2.1); root.add(b.g); cam.position.set(0, 0, 5.2); cam.lookAt(0, 0, 0); }
+    else { root.add(mkChar(id).g); cam.position.set(0, 2.6, 6.6); cam.lookAt(0, 2.45, 0); }
     const ctx = canvas.getContext('2d');
-    return { draw(t) { root.rotation.y = ball ? t * 1.1 : Math.sin(t * 1.2) * .9; R1.render(sc, cam); ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.drawImage(R1.domElement, 0, 0, canvas.width, canvas.height); } };
+    return { draw(t) { if (isB) { root.rotation.y = t * 1.1; } else root.rotation.y = Math.sin(t * 1.2) * .8; R1.render(sc, cam); ctx.clearRect(0, 0, 220, 220); ctx.drawImage(R1.domElement, 0, 0, 220, 220); } };
   }
   function stage3d(host) {
-    if (!R2) { R2 = new THREE.WebGLRenderer({ alpha: true, antialias: true }); R2.setSize(420, 340, false); R2.setPixelRatio(Math.min(devicePixelRatio || 1, 2)); }
-    host.innerHTML = ''; host.appendChild(R2.domElement);
+    if (!R2) R2 = mkRend(420, 340);
+    host.innerHTML = ''; host.appendChild(R2.domElement); R2.domElement.style.cssText = 'width:100%;max-width:420px;height:auto';
     const e = equipped(), sc = new THREE.Scene(); lights(sc);
-    const hr = new THREE.Group(), hd = buildHead(true); hr.add(hd);
-    if (e.hat === 'google') { const h = buildHat(true); h.position.y = HAT_Y; h.rotation.x = HAT_RX; hr.add(h); }
-    hr.position.set(-1.5, .2, 0); sc.add(hr);
-    const br = new THREE.Group(); br.add(buildBall(e.ball, true)); br.scale.setScalar(.85); br.position.set(1.7, -.35, 0); sc.add(br);
-    const fl = new THREE.Mesh(new THREE.CircleGeometry(3.4, 40), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: .28 })); fl.rotation.x = -Math.PI / 2; fl.position.y = -1.3; sc.add(fl);
-    const cam = new THREE.PerspectiveCamera(32, 420 / 340, .1, 60); cam.position.set(0, .9, 9.5); cam.lookAt(.1, .1, 0);
-    return { draw(t) { hr.rotation.y = Math.sin(t * .9) * .8; br.rotation.y = t * 1.2; br.rotation.x = t * .4; R2.render(sc, cam); } };
+    const ch = mkChar(e.hat); ch.g.position.x = -1.5; sc.add(ch.g);
+    const b = mkBall(e.ball); b.g.scale.setScalar(1.7); b.g.position.set(1.7, .45 * 1.7, .6); sc.add(b.g);
+    const cam = new THREE.PerspectiveCamera(32, 420 / 340, .1, 60); cam.position.set(0, 2.3, 9.2); cam.lookAt(0, 1.75, 0);
+    return { draw(t) { ch.g.rotation.y = Math.sin(t * .9) * .7; b.g.rotation.y = t * .6; b.spin.rotation.x = t * 1.4; R2.render(sc, cam); } };
   }
+  function phoneCard() {   // jogador mexendo no celular com a logo do Google
+    if (!R3) R3 = mkRend(360, 280);
+    const sc = new THREE.Scene(); lights(sc); const root = new THREE.Group(); sc.add(root);
+    const ch = mkChar(null); root.add(ch.g);
+    const ph = new THREE.Group(); ch.model.add(ph);
+    ph.add(new THREE.Mesh(new THREE.BoxGeometry(.95, 1.6, .13), LM({ color: 0x202124 })));
+    const cv = document.createElement('canvas'); cv.width = 128; cv.height = 220; const c = cv.getContext('2d');
+    c.fillStyle = '#fff'; c.fillRect(0, 0, 128, 220); c.fillStyle = '#e8eaed'; for (let i = 0; i < 4; i++) c.fillRect(14, 140 + i * 18, i % 2 ? 70 : 100, 9);
+    const scr = new THREE.Mesh(new THREE.PlaneGeometry(.85, 1.46), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(cv) })); scr.position.z = .07; ph.add(scr);
+    const gl = new THREE.Mesh(new THREE.PlaneGeometry(.55, .55), new THREE.MeshBasicMaterial({ map: gTex(), transparent: true })); gl.position.set(0, .22, .075); ph.add(gl);
+    ch.head.rotation.order = 'YXZ';
+    const cam = new THREE.PerspectiveCamera(30, 360 / 280, .1, 60); cam.position.set(0, 2.15, 6.6); cam.lookAt(0, 1.95, 0);
+    const ctx = $('gPhone').getContext('2d');
+    return { draw(t) {
+      const jt = t % 5, jump = jt < .6 ? Math.sin(jt / .6 * Math.PI) * .5 : 0;
+      ch.model.position.y = jump + Math.abs(Math.sin(t * 2.2)) * .05; root.rotation.y = Math.sin(t * .7) * .25;
+      ph.position.set(0, 2.35 + Math.sin(t * 2.6) * .03, 1.3); ph.rotation.set(-.15 + Math.sin(t * 1.7) * .1, Math.sin(t * .8) * .15, Math.sin(t * 1.1) * .08);
+      gl.scale.setScalar(1 + Math.sin(t * 4) * .1);
+      ch.head.rotation.x = .2 + Math.sin(t * 3.1) * .08; ch.head.rotation.y = Math.sin(t * 1.1) * .3;
+      const s = (t * 1.3) % 1, k = s < .55 ? s / .55 : 1 - (s - .55) / .45;   // dedão deslizando a tela
+      ch.handL.position.set(-.62, 1.95 + Math.sin(t * 3) * .02, 1.2);
+      ch.handR.position.set(.62 - .45 * k, 1.95 + .6 * k, 1.28 + .05 * k);
+      R3.render(sc, cam); ctx.clearRect(0, 0, 360, 280); ctx.drawImage(R3.domElement, 0, 0);
+    } };
+  }
+
+  /* ---------- UI ---------- */
   const NAMES = { classic: 'Bola Clássica', google: 'Bola Google' };
   function build() {
-    if (!R1) { R1 = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true }); R1.setSize(220, 220, false); R1.setPixelRatio(1); }
+    if (!R1) R1 = mkRend(220, 220);
     const ok = unlocked(), e = equipped(), grid = $('wrGrid'); grid.innerHTML = ''; drawables = [];
     ITEMS[tabK].forEach(it => {
       const lk = it.lock && !ok, on = (tabK === 'ball' ? e.ball : e.hat) === it.id;
@@ -7181,13 +7242,15 @@ addEventListener('resize', () => {
       d.onclick = () => { if (lk) return; const w = getW(); w[tabK] = (it.id === 'classic') ? null : it.id; setW(w); applyAll(); build(); };
       grid.appendChild(d); drawables.push(card3d(tabK, it.id, cv));
     });
-    stage = stage3d($('wrBig')); drawables.push(stage);
+    drawables.push(stage3d($('wrBig')));
     $('wrCap').textContent = 'Equipado: ' + NAMES[e.ball] + ' • ' + (e.hat === 'google' ? 'Boné Google' : 'Sem acessório');
     document.querySelectorAll('.wrTabs button').forEach(b => b.classList.toggle('on', b.dataset.t === tabK));
   }
   function loop(ms) {
-    if (!$('wrPop').classList.contains('on') && !$('wrGift').classList.contains('on')) { raf = 0; return; }
-    const t = ms / 1000; drawables.forEach(d => d.draw(t)); raf = requestAnimationFrame(loop);
+    const w = $('wrPop').classList.contains('on'), g = $('wrGift').classList.contains('on'), l = $('gLogin').classList.contains('on');
+    if (!w && !g && !l) { raf = 0; return; }
+    const t = ms / 1000; try { if (w || g) drawables.forEach(d => d.draw(t)); if (l && phoneD) phoneD.draw(t); } catch (err) { console.error(err); }
+    raf = requestAnimationFrame(loop);
   }
   const start = () => { if (!raf) raf = requestAnimationFrame(loop); };
   document.querySelectorAll('.wrTabs button').forEach(b => b.onclick = () => { tabK = b.dataset.t; build(); });
@@ -7195,7 +7258,8 @@ addEventListener('resize', () => {
   $('wrClose').onclick = () => $('wrPop').classList.remove('on');
   $('wrPop').addEventListener('click', e => { if (e.target.id === 'wrPop') $('wrPop').classList.remove('on'); });
   $('wgOk').onclick = () => $('wrGift').classList.remove('on');
-  window.__wr = { gift() { applyAll(); if (!R1) { R1 = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true }); R1.setSize(220, 220, false); R1.setPixelRatio(1); }
+  new MutationObserver(() => { if ($('gLogin').classList.contains('on')) { try { if (!phoneD) phoneD = phoneCard(); } catch (err) { console.error(err); } start(); } }).observe($('gLogin'), { attributes: true, attributeFilter: ['class'] });
+  window.__wr = { gift() { applyAll(); if (!R1) R1 = mkRend(220, 220);
     drawables = [card3d('ball', 'google', $('wgB')), card3d('hat', 'google', $('wgH'))]; $('wrGift').classList.add('on'); start(); } };
   applyAll();
 })();
