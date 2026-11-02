@@ -479,6 +479,14 @@ body[data-m="mode"] #modePop{display:grid}
 #ver{position:fixed;right:max(10px,env(safe-area-inset-right));bottom:max(8px,env(safe-area-inset-bottom));z-index:200001;font:700 11px system-ui;letter-spacing:1px;color:rgba(255,255,255,.55);pointer-events:none;text-shadow:0 1px 3px #000}
 body[data-m="play"] #ver,body[data-m="train"] #ver{display:none}
 </style>
+<style>
+/* logo e créditos sem background-clip (evita letra cortada/sumida) */
+#menu .logo{background:none!important;-webkit-background-clip:border-box!important;background-clip:border-box!important;color:#fff!important;filter:drop-shadow(0 4px 0 #000) drop-shadow(0 0 18px rgba(255,213,74,.4))!important;padding:0 .1em 0 0!important}
+#menu .logo span{color:#ffd54a!important;padding:0!important}
+#splash .sp-nm{white-space:nowrap;padding:0 .1em}
+#splash .sp-nm span{background:none!important;-webkit-background-clip:border-box!important;background-clip:border-box!important;color:#fff!important;animation:none!important;padding:0!important;text-shadow:0 0 28px rgba(255,213,74,.55),0 0 2px rgba(255,255,255,.6)}
+#menu{max-width:100vw}
+</style>
 </head>
 <body>
 <div id="ver">Kick.io v1.0.0</div>
@@ -6701,6 +6709,15 @@ addEventListener('resize', () => {
     if(e>1500*(1+Math.floor(e/1500))-1500&&Math.floor(e/1500)!==(window.__ldk||0)){window.__ldk=Math.floor(e/1500);tp.textContent=tips[(ti+window.__ldk)%tips.length];}
   },80);
 })();
+</script>
+<script>
+// mantém o campo de visão horizontal em telas mais estreitas (antes cortava as laterais)
+(() => { const R = renderer.render.bind(renderer), REF = 16 / 9;
+  renderer.render = (sc, cam) => {
+    const a = innerWidth / innerHeight;
+    if (cam === camera && a < REF) { const f0 = camera.fov; camera.fov = Math.min(105, 2 * Math.atan(Math.tan(f0 * Math.PI / 360) * REF / a) * 180 / Math.PI); camera.updateProjectionMatrix(); R(sc, cam); camera.fov = f0; camera.updateProjectionMatrix(); }
+    else R(sc, cam);
+  }; })();
 </script>
 </body>
 </html>
