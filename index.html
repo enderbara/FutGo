@@ -492,6 +492,30 @@ html,body{touch-action:manipulation;overscroll-behavior:none;-webkit-user-select
 input,textarea,select{-webkit-user-select:text;user-select:text}
 img,canvas{-webkit-user-drag:none;user-drag:none}
 </style>
+
+<style>
+/* ===== MOBILE: UI menor e sem textos estourando ===== */
+html.mob .tb small{font-size:.8em;letter-spacing:0}
+html.mob .tb .tbi{display:flex;flex-direction:column;align-items:center;gap:1px;line-height:1}
+html.mob .tb .tbi i{font-size:1.5em}
+html.mob #coach,html.mob #penHint{display:none!important}
+html.mob #hud{transform:scale(.78);transform-origin:top center}
+html.mob #bars{transform:scale(.8);transform-origin:bottom center;bottom:max(6px,env(safe-area-inset-bottom))!important;left:50%;margin-left:-50%;width:100%;justify-content:center}
+html.mob #score{font-size:clamp(22px,8vmin,40px)!important}html.mob #score small{font-size:clamp(12px,4vmin,22px)!important}
+html.mob #call{font-size:clamp(18px,5.5vmin,32px)!important;top:20%}html.mob #call small{font-size:clamp(10px,2.6vmin,15px)!important}
+html.mob #note{font-size:11px!important;top:calc(max(6px,env(safe-area-inset-top)) + 40px)!important;max-width:60vw!important}
+html.mob #goalMk{font-size:11px;padding:2px 7px}
+html.mob #endBox h1{font-size:clamp(24px,8vmin,44px)!important}html.mob #endBox p{font-size:clamp(12px,3vmin,17px)!important}
+html.mob #inTitle{font-size:18px!important}html.mob .inCard b{font-size:12px!important}
+html.mob #menu{width:min(380px,58%)!important}html.mob #menu .logo{font-size:30px!important}
+html.mob .mbtn{padding:6px 12px!important;margin:3px 0!important;gap:10px!important}html.mob .mbtn b{font-size:14px!important}html.mob .mbtn small{display:none!important}html.mob .mbtn .ic{font-size:18px!important;width:24px!important}
+html.mob button.b,html.mob .b{font-size:12px!important;padding:6px 10px!important;min-height:34px!important}
+html.mob h2{font-size:17px!important}html.mob h3,html.mob h4{font-size:13px!important}
+html.mob #teamPop>div,html.mob #joinPop>div,html.mob #cfgPop>div{width:min(94vw,560px)!important;padding:10px 12px!important;font-size:12px}
+html.mob .crow,html.mob .crow span{font-size:12px!important}html.mob .kbtn{min-width:70px}
+html.mob .tcard{padding:5px 9px!important}html.mob .tcard b{font-size:13px!important}
+html.mob #tcSkip{font-size:13px;padding:8px 14px}
+</style>
 </head>
 <body>
 <div id="ver">Kick.io v1.0.0</div>
@@ -515,7 +539,7 @@ img,canvas{-webkit-user-drag:none;user-drag:none}
   <button class="mbtn" id="bCfg">
     <span class="ic"><i class="fa-solid fa-gear"></i></span><span><b>CONFIGURAÇÕES</b><small>Controles, sensibilidade da câmera e mais</small></span>
   </button>
-  <div class="foot">Alt: mouse-look • M: menu</div>
+  <div class="foot">Alt: mouse-look • ESC: pausa</div>
 </div>
 <div id="cfgPop" class="ui"><div>
   <h2><i class="fa-solid fa-gear"></i> CONFIGURAÇÕES</h2>
@@ -529,7 +553,7 @@ img,canvas{-webkit-user-drag:none;user-drag:none}
   <label class="crow"><span>Volume dos sons</span><input type="range" id="cVol" min="0" max="2" step="0.05"><output id="oVol"></output></label>
   <h4>CONTROLES • clique numa tecla e aperte a nova (Esc cancela)</h4>
   <div class="kgrid" id="cfgKeys"></div>
-  <div id="vkInfo"></div><div id="vkb"></div>
+  
   <div class="row" style="margin-top:20px"><button class="b danger" id="cfgReset"><i class="fa-solid fa-rotate-left"></i>Restaurar padrão</button><button class="b go" id="cfgX"><i class="fa-solid fa-check"></i>Voltar</button></div>
 </div></div>
 <div id="joinPop" class="ui"><div>
@@ -772,9 +796,10 @@ scene.fog = new THREE.Fog(SKY, 400, 1200);
 
 const hyp2 = (x, y) => Math.sqrt(x * x + y * y);   // Math.hypot é bem mais lento que sqrt direto
 const camera = new THREE.PerspectiveCamera(38, innerWidth / innerHeight, 0.1, 1500);
-const renderer = new THREE.WebGLRenderer({ antialias: false, stencil: true, powerPreference: "high-performance" });
+const LOWEND = /Android|iPhone|iPod|Mobile/i.test(navigator.userAgent) || matchMedia("(pointer: coarse)").matches || (navigator.hardwareConcurrency || 8) <= 4;
+const renderer = new THREE.WebGLRenderer({ antialias: false, stencil: true, alpha: false, powerPreference: "high-performance", precision: LOWEND ? "mediump" : "highp" });
 renderer.setSize(innerWidth, innerHeight);
-renderer.setPixelRatio(Math.min(devicePixelRatio, 1));   // começa leve; se a máquina aguentar, o ajuste automático sobe até 1.25
+renderer.setPixelRatio(LOWEND ? 0.65 : Math.min(devicePixelRatio, 1));   // começa leve; se a máquina aguentar, o ajuste automático sobe até 1.25
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFShadowMap;            // bem mais barata que a "Soft" e quase igual no estilo toon
 document.body.appendChild(renderer.domElement);
@@ -782,7 +807,7 @@ document.body.appendChild(renderer.domElement);
 scene.add(new THREE.HemisphereLight(0xffffff, 0x556677, 0.85));
 const sun = new THREE.DirectionalLight(0xffffff, 0.5);
 sun.castShadow = true;
-sun.shadow.mapSize.set(1024, 1024);
+sun.shadow.mapSize.set(LOWEND ? 512 : 1024, LOWEND ? 512 : 1024);
 sun.shadow.camera.left = -12; sun.shadow.camera.right = 12;
 sun.shadow.camera.top = 12;   sun.shadow.camera.bottom = -12;
 sun.shadow.camera.near = 1;    sun.shadow.camera.far = 60;
@@ -1126,7 +1151,7 @@ function updateCrowdLOD() {
   const k = 1 / 2.15, cx = camera.position.x * k, cy = camera.position.y * k, cz = camera.position.z * k;
   for (const o of crowdLOD) {
     const dx = o.c.x - cx, dy = o.c.y - cy, dz = o.c.z - cz, d = Math.sqrt(dx * dx + dy * dy + dz * dz) - o.r;
-    o.m.visible = d < 46; o.e.visible = d < 62;
+    o.m.visible = d < (LOWEND ? 32 : 46); o.e.visible = d < (LOWEND ? 44 : 62);
   }
 }
 
@@ -1473,11 +1498,6 @@ addEventListener('keydown', e => {
   if (e.code.startsWith('Arrow')) e.preventDefault();
 });
 addEventListener('keyup', e => keys[e.code] = false);
-addEventListener('keydown', e => {                              // soco (Z por padrão; a tecla pode ser trocada nos controles)
-  if (e.code !== 'KeyZ' || e.repeat || menu.mode !== 'play') return;
-  const t = e.target; if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return;
-  e.preventDefault(); userPunch();
-});
 addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
 
 // ---------- Câmera ----------
@@ -1485,7 +1505,7 @@ addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
 // ---------- Configurações: câmera e controles (salvas no navegador) ----------
 const CFG_DEF = { sens: 1, zoom: 1, fov: 38, inv: 1, fps: false, aim: true, vol: 1 };          // inv: 1 normal, -1 eixo vertical invertido
 const ACTS = [['up', 'Frente', 'KeyW'], ['down', 'Trás', 'KeyS'], ['left', 'Esquerda', 'KeyA'], ['right', 'Direita', 'KeyD'], ['run', 'Correr', 'KeyQ'],
-  ['shoot', 'Chutar / desarmar', 'Space'], ['lob', 'Lançamento / cruzamento', 'KeyV'], ['curveR', 'Efeito (curva) no chute', 'KeyX'], ['slide', 'Carrinho', 'KeyC'], ['punch', 'Soco', 'KeyZ'], ['replay', 'Replay', 'KeyR'],
+  ['shoot', 'Chutar / desarmar', 'Space'], ['lob', 'Lançamento / cruzamento', 'KeyV'], ['curveR', 'Efeito (curva) no chute', 'KeyX'], ['slide', 'Carrinho', 'KeyC'], ['replay', 'Replay', 'KeyR'],
   ['chip', 'Chapéu', 'KeyF'], ['call', 'Pedir a bola', 'KeyE']];
 const CFG = Object.assign({}, CFG_DEF), BIND = {};
 for (const a of ACTS) BIND[a[0]] = a[2];
@@ -2985,7 +3005,7 @@ function renderCfg() {
   $('cZoom').value = CFG.zoom; $('oZoom').textContent = CFG.zoom.toFixed(2) + 'x';
   $('cFov').value = CFG.fov; $('oFov').textContent = CFG.fov + '°';
   $('cAim').checked = CFG.aim; $('cInv').checked = CFG.inv < 0; $('cFps').checked = CFG.fps;
-  $('cVol').value = CFG.vol; $('oVol').textContent = Math.round(CFG.vol * 100) + '%'; renderVK();
+  $('cVol').value = CFG.vol; $('oVol').textContent = Math.round(CFG.vol * 100) + '%';
 }
 $('cVol').oninput = e => { CFG.vol = +e.target.value; $('oVol').textContent = Math.round(CFG.vol * 100) + '%'; saveCfg(); };
 $('cSens').oninput = e => { CFG.sens = +e.target.value; $('oSens').textContent = CFG.sens.toFixed(2) + 'x'; saveCfg(); };
@@ -3018,14 +3038,53 @@ addEventListener('keydown', e => {
   const m = menu.mode;
   if (m === 'join') $('jCancel').click(); else if (m === 'team') $('bTeamX').click(); else if (m === 'edit') $('eCancel').click(); else if (m === 'squad' || m === 'focus') $('sBack').click(); else if (m === 'mode') $('bModeBack').click(); else if (m === 'cfg') $('cfgX').click();
 });
-addEventListener('keydown', e => {
-  if (menu.mode !== 'play' || e.code !== 'KeyM' || replay.on || cel.on) return;
-  fadeTo(() => {
-    slideT = -1; kickT = -1; hasBall = false; vel.set(0, 0, 0); resetPlayerPose(); endMatch();
-    player.position.copy(MENU_POS); player.rotation.y = 0;
-    mCamPos.copy(camera.position); mCamTgt.copy(camTarget); mInit = true; setMode('menu');
+// ================= PAUSA (ESC) =================
+(function () {
+  const st = document.createElement('style');
+  st.textContent = `#pBack{position:fixed;inset:0;z-index:50;background:rgba(4,8,18,.55);opacity:0;pointer-events:none;transition:opacity .3s}
+  #pPanel{position:fixed;left:0;top:0;bottom:0;width:min(320px,78vw);z-index:51;box-sizing:border-box;padding:max(18px,env(safe-area-inset-top)) 22px 18px max(22px,env(safe-area-inset-left));display:flex;flex-direction:column;justify-content:center;gap:10px;color:#fff;font-family:system-ui,sans-serif;
+    background:linear-gradient(90deg,rgba(6,10,22,.97) 70%,rgba(6,10,22,.82));border-right:3px solid #ffd54a;transform:translateX(-105%);transition:transform .38s cubic-bezier(.2,.9,.3,1);pointer-events:none}
+  #pPanel h2{margin:0 0 8px;font:900 34px system-ui;letter-spacing:5px;color:#ffd54a}
+  #pPanel button{display:flex;align-items:center;gap:12px;font:800 16px system-ui;letter-spacing:1px;color:#fff;background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.25);padding:12px 16px;border-radius:12px;cursor:pointer;opacity:0;transform:translateX(-24px);transition:opacity .3s,transform .3s,background .15s}
+  #pPanel button:hover{background:rgba(255,255,255,.22)} #pPanel button i{width:22px;text-align:center}
+  #pPanel button.go{background:#43a047;border-color:#81c784}
+  body.paused #pBack{opacity:1;pointer-events:auto} body.paused #pPanel{transform:none;pointer-events:auto}
+  body.paused #pPanel button{opacity:1;transform:none} body.paused #pPanel button:nth-of-type(1){transition-delay:.12s} body.paused #pPanel button:nth-of-type(2){transition-delay:.18s} body.paused #pPanel button:nth-of-type(3){transition-delay:.24s}
+  body.paused.pcfg #pPanel{transform:translateX(-105%)} body.pcfg #cfgPop{display:flex;z-index:60}
+  .mob #pPanel{width:min(250px,60vw);gap:7px;padding-right:14px;padding-left:max(16px,env(safe-area-inset-left))} .mob #pPanel h2{font-size:22px;margin-bottom:4px} .mob #pPanel button{font-size:13px;padding:8px 12px}`;
+  document.head.appendChild(st);
+  const back = document.createElement('div'); back.id = 'pBack';
+  const pan = document.createElement('div'); pan.id = 'pPanel';
+  pan.innerHTML = '<h2>PAUSA</h2><button class="go" id="pResume"><i class="fa-solid fa-play"></i>Despausar</button><button id="pCfg"><i class="fa-solid fa-gear"></i>Configurações</button><button id="pQuit"><i class="fa-solid fa-right-from-bracket"></i>Sair</button>';
+  document.body.append(back, pan);
+  const B = document.body;
+  const canPause = () => menu.mode === 'play' && !replay.on && !cel.on && !intro.on && !window.__mobBlock;
+  function setPause(on) {
+    if (on === !!window.__paused) return;
+    if (on && !canPause()) return;
+    window.__paused = on; B.classList.toggle('paused', on); if (!on) B.classList.remove('pcfg');
+    if (on) { for (const k in keys) keys[k] = false; joy.x = joy.y = joy.m = joy.s = 0; try { document.exitPointerLock(); } catch (_) {} }
+    try { if (typeof actx !== 'undefined' && actx) on ? actx.suspend() : actx.resume(); } catch (_) {}
+    clock.getDelta();
+  }
+  window.__setPause = setPause; window.__togglePause = () => setPause(!window.__paused);
+  $('pResume').onclick = () => setPause(false);
+  $('pCfg').onclick = () => { capAct = null; renderCfg(); B.classList.add('pcfg'); };
+  $('cfgPop').addEventListener('click', e => { if (window.__paused && e.target.closest('#cfgX')) { e.stopPropagation(); capAct = null; B.classList.remove('pcfg'); } }, true);
+  window.__quitToMenu = () => {
+    fadeTo(() => {
+      slideT = -1; kickT = -1; hasBall = false; vel.set(0, 0, 0); resetPlayerPose(); endMatch();
+      player.position.copy(MENU_POS); player.rotation.y = 0;
+      mCamPos.copy(camera.position); mCamTgt.copy(camTarget); mInit = true; setMode('menu');
+    });
+  };
+  $('pQuit').onclick = () => { setPause(false); window.__quitToMenu(); };
+  addEventListener('keydown', e => {
+    if (e.code !== 'Escape' || e.repeat) return;
+    if (window.__paused) { if (B.classList.contains('pcfg')) { if (!capAct) $('cfgX').click(); } else setPause(false); return; }
+    if (canPause()) setPause(true);
   });
-});
+})();
 
 // ================= NÚMEROS ÚNICOS =================
 function setNum(m, n) {
@@ -3492,7 +3551,7 @@ function startBrawl(vic, off, hint) {
   inst.ang = oth.ang = 0; vic.down = Math.min(vic.down, 0.5);
   ref.mode = 'brawl'; ref.modeT = 0; ref.fp = null; ref.q.length = 0;
   whistle(0.9); crowdBoo(2.4);
-  setTimeout(() => { if (match.on && match.brawl === B) showCall('BRIGA!', B.uStart ? 'Aperte ' + kName(BIND.punch) + ' pra socar!' : 'Os ânimos esquentaram', '#ff8a65'); }, 900);
+  setTimeout(() => { if (match.on && match.brawl === B) showCall('BRIGA!', 'Os ânimos esquentaram', '#ff8a65'); }, 900);
   return B;
 }
 function brawlSep(B) {                                       // juiz chegou: separa os dois
@@ -4747,7 +4806,7 @@ function nextPhase() {
     window.__repMsg = '+' + gain + ' reputação' + (tierOf(stats.rep) > old ? ' • SUBIU PARA ' + TIERS[tierOf(stats.rep)][1].toUpperCase() + '!' : '') + ' • ' + mm.name; }
   const w = scoreHome > scoreAway ? 'VITÓRIA!' : scoreHome < scoreAway ? 'DERROTA' : 'EMPATE', eb = $('endBox');
   eb.innerHTML = '<div><small>FIM DE JOGO</small><h1>' + w + '</h1><p>' + teamLabel + ' ' + scoreHome + ' × ' + scoreAway + ' VISITANTE</p><p style="color:#ffd54a;font-weight:800">' + window.__repMsg + '</p><button class="b go" id="endBtn">Voltar ao menu</button></div>';
-  eb.style.display = 'flex'; $('endBtn').onclick = () => dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyM' }));
+  eb.style.display = 'flex'; $('endBtn').onclick = () => window.__quitToMenu();
 }
 function stepRules(dt) {
   updRing();
@@ -5006,7 +5065,7 @@ function startBot() {
 loadSaved();
 
 let menuAcc = 0, menuFrame = 0, qPR = renderer.getPixelRatio(), qN = 0, qT = performance.now(), qWarm = 0;
-const qMax = Math.min(devicePixelRatio, 1.25); let qPeak = 0, qGood = 0, qNoUp = false, shF = 0, dtSm = 1 / 60;
+const qMax = LOWEND ? 0.9 : Math.min(devicePixelRatio, 1.25); let qPeak = 0, qGood = 0, qNoUp = false, shF = 0, dtSm = 1 / 60;
 const fpsEl = document.getElementById('fps');
 addEventListener('keydown', e => { if (e.code === 'F3') { e.preventDefault(); fpsEl.style.display = fpsEl.style.display === 'block' ? 'none' : 'block'; } });
 const _pv = new THREE.Vector3();
@@ -5113,14 +5172,15 @@ function updateTags(dt = 1 / 60) {
 
 function animate() {
   requestAnimationFrame(animate);
-  if (window.__mobBlock) { clock.getDelta(); return; }
+  if (LOWEND) { const _t = performance.now(); if (_t - (window.__lf || 0) < 15.5) return; window.__lf = _t; }
+  if (window.__mobBlock || window.__paused) { clock.getDelta(); return; }
   const _n = performance.now(); qN++;                       // se o FPS cair, reduz a resolução aos poucos (só diminui)
   if (_n - qT >= 1000) {
     const fps = qN * 1000 / (_n - qT);
     if (fps > qPeak && fps < 250) qPeak = fps;                                   // pico medido ≈ taxa de atualização da tela
     if (++qWarm > 3 && _n - qT < 2500 && menu.mode === 'play') {
-      const low = Math.max(40, qPeak * 0.82);
-      if (fps < low && qPR > 0.6) { qPR = Math.max(0.6, qPR - 0.1); renderer.setPixelRatio(qPR); qGood = 0; if (qPR < qMax - 0.2) qNoUp = true; }
+      const low = Math.max(LOWEND ? 52 : 40, qPeak * 0.88);
+      if (fps < low && qPR > 0.45) { qPR = Math.max(0.45, qPR - 0.1); renderer.setPixelRatio(qPR); qGood = 0; if (qPR < qMax - 0.2) qNoUp = true; }
       else if (fps >= qPeak * 0.95 && qPR < qMax && !qNoUp && ++qGood >= 10) { qPR = Math.min(qMax, qPR + 0.1); renderer.setPixelRatio(qPR); qGood = 0; }
       else if (fps < qPeak * 0.95) qGood = 0;
     }
@@ -5135,7 +5195,7 @@ function animate() {
   drawScoreboard(false);
   dtSm += (dt - dtSm) * 0.05;
   renderer.shadowMap.autoUpdate = false;
-  if (menu.mode === 'play' && ++shF % (dtSm > 0.022 ? 3 : 2) === 0) renderer.shadowMap.needsUpdate = true;   // sombra a cada 2 quadros (3 se o jogo estiver pesado)
+  if (menu.mode === 'play' && ++shF % (LOWEND ? 4 : dtSm > 0.022 ? 3 : 2) === 0) renderer.shadowMap.needsUpdate = true;   // sombra a cada 2 quadros (3 se o jogo estiver pesado)
   if ((++lodF & 15) === 0) updateCrowdLOD();
   if (menu.mode === 'train' && window.__trStep) { window.__trStep(dt); return; }
   if (menu.mode !== 'play') { updateTags(); try { sfxStep(dt); } catch (_) {} menuAcc += dt; if (menuAcc < 1 / 32) return; menuStep(menuAcc); menuAcc = 0; return; }
@@ -5660,9 +5720,7 @@ function sfxStep(dt, list) {
 // ======================================================================
 (function () {
   const s = document.createElement('style');
-  s.textContent = `#vkInfo{margin:10px 0 6px;font:700 13px system-ui;color:#ffd54a;min-height:18px}#vkb{display:flex;flex-direction:column;gap:5px;align-items:center;user-select:none}
-  .vkr{display:flex;gap:5px}.vk{min-width:38px;height:42px;padding:0 4px;box-sizing:border-box;border-radius:8px;background:#2b3140;border:2px solid #3d4558;color:#fff;font:800 13px system-ui;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;line-height:1.1}
-  .vk small{font:700 8px system-ui;color:#ffd54a;max-width:46px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.vk:hover{border-color:#fff}.vk.bd{background:#3a4a6b;border-color:#6f8fd0}.vk.sel{background:#ffd54a;color:#111;border-color:#ffd54a}.vk.sel small{color:#111}.vk.rs{opacity:.3;cursor:not-allowed}
+  s.textContent = `
   #crestEd{inset:0;align-items:center;justify-content:center;background:rgba(0,0,0,.65);z-index:20}#crestEd>div{background:#1b1f27;border-radius:18px;padding:20px;width:min(640px,94vw);max-height:94vh;overflow:auto;box-sizing:border-box;box-shadow:0 20px 60px #000a}
   #crestEd h2{margin:0 0 12px;font-size:22px;letter-spacing:2px}#crestEd label{display:block;font:700 12px system-ui;letter-spacing:1px;text-transform:uppercase;opacity:.8;margin:10px 0 5px}
   .ceG{display:grid;grid-template-columns:170px 1fr;gap:18px}.ceG canvas{width:170px;height:170px;background:#ffffff10;border-radius:14px}.ceRow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font:700 12px system-ui}
@@ -5671,26 +5729,6 @@ function sfxStep(dt, list) {
   @media(max-width:560px){.ceG{grid-template-columns:1fr}.ceG canvas{margin:0 auto}}`;
   document.head.appendChild(s);
 })();
-const VK_ROWS = [['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7', 'Digit8', 'Digit9', 'Digit0'], ['KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyT', 'KeyY', 'KeyU', 'KeyI', 'KeyO', 'KeyP'], ['KeyA', 'KeyS', 'KeyD', 'KeyF', 'KeyG', 'KeyH', 'KeyJ', 'KeyK', 'KeyL'], ['KeyZ', 'KeyX', 'KeyC', 'KeyV', 'KeyB', 'KeyN', 'KeyM'], ['ShiftLeft', 'ControlLeft', 'Space', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'ArrowRight']];
-const VK_SHORT = { up: 'Frente', down: 'Trás', left: 'Esq.', right: 'Dir.', run: 'Correr', shoot: 'Chute', pass: 'Passe', lob: 'Lança', curveR: 'Efeito', slide: 'Slide', punch: 'Soco', replay: 'Replay', chip: 'Chapéu', call: 'Pedir' };
-function renderVK() {
-  const box = $('vkb'); if (!box) return; box.innerHTML = '';
-  const cur = capAct ? ACTS.find(a => a[0] === capAct) : null;
-  $('vkInfo').textContent = cur ? 'Escolha a tecla para "' + cur[1] + '" (atual: ' + kName(BIND[cur[0]]) + ')' : 'Teclado virtual: clique numa tecla azul para editar a ação dela, ou clique numa ação acima e depois na tecla nova.';
-  for (const row of VK_ROWS) {
-    const r = document.createElement('div'); r.className = 'vkr';
-    for (const code of row) {
-      const act = ACTS.find(a => BIND[a[0]] === code), d = document.createElement('div');
-      d.className = 'vk' + (act ? ' bd' : '') + (act && capAct === act[0] ? ' sel' : '') + (CFG_RESERVED.includes(code) ? ' rs' : '');
-      d.style.minWidth = code === 'Space' ? '150px' : /Shift|Control/.test(code) ? '64px' : ''; d.title = act ? act[1] : 'livre';
-      d.innerHTML = kName(code) + '<small>' + (act ? VK_SHORT[act[0]] || '' : '') + '</small>';
-      d.onclick = () => { if (CFG_RESERVED.includes(code)) return; if (capAct) capCb(code); else if (act) startCap(act[0]); };
-      r.appendChild(d);
-    }
-    box.appendChild(r);
-  }
-}
-
 // ======================================================================
 //  EDITOR LIVRE EM ABAS (escudo e uniforme): camadas de ícones (API Iconify), textos e formas
 // ======================================================================
@@ -5912,7 +5950,7 @@ if (IS_MOBILE) (function () {
   const zone = mk('div', 'joyZone', tc), base = mk('div', 'joyBase', tc), knob = mk('div', 'joyKnob', base);
   let BS = 120, R = 60, penKeys = false, jid = null, jcx = 0, jcy = 0;
   const setBase = (x, y) => { base.style.width = base.style.height = BS + 'px'; base.style.left = (x - R) + 'px'; base.style.top = (y - R) + 'px'; };
-  const defBase = () => { BS = Math.max(96, Math.min(150, innerHeight * 0.36)); R = BS / 2; setBase(Math.max(R + 28, innerWidth * 0.1), innerHeight - R - 24); };
+  const defBase = () => { BS = Math.max(80, Math.min(120, innerHeight * 0.3)); R = BS / 2; setBase(Math.max(R + 28, innerWidth * 0.1), innerHeight - R - 24); };
   const clearPen = () => { if (penKeys) { keys.KeyW = keys.KeyA = keys.KeyS = keys.KeyD = false; penKeys = false; } };
   const joyReset = () => { jid = null; joy.x = joy.y = joy.m = joy.s = 0; knob.style.transform = ''; base.classList.remove('act'); clearPen(); defBase(); };
   const jset = e => {
@@ -5944,13 +5982,16 @@ if (IS_MOBILE) (function () {
     b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up); b.addEventListener('lostpointercapture', up);
     return b;
   };
-  mkBtn('CHUTE', 'Space', 'hold', pos(0, 0, 24), 'big');
-  mkBtn('LANÇA', 'KeyV', 'tap', pos(24, 21, 16));
-  mkBtn('CHAPÉU', 'KeyF', 'tap', pos(3, 27, 16));
-  mkBtn('SLIDE', 'KeyC', 'tap', pos(44, 3, 14));
-  mkBtn('CORRER', 'KeyQ', 'hold', pos(41, 20, 14));
-  [['REPLAY', 'KeyR', 'tap'], ['PEDIR', 'KeyE', 'tap'], ['SOCO', 'KeyZ', 'tap'], ['EFEITO', 'KeyX', 'toggle']].forEach((a, i) =>
-    mkBtn(a[0], a[1], a[2], 'right:calc(env(safe-area-inset-right,0px) + 2vw + ' + i * 13 + 'vh);top:calc(env(safe-area-inset-top,0px) + 2vh);width:12vh;height:12vh;font-size:2.2vh;opacity:.85'));
+  mkBtn('CHUTE', 'Space', 'hold', pos(0, 0, 19), 'big');
+  mkBtn('LANÇA', 'KeyV', 'tap', pos(21, 0, 11));
+  mkBtn('SLIDE', 'KeyC', 'tap', pos(21, 12, 11));
+  mkBtn('CHAPÉU', 'KeyF', 'tap', pos(13, 23, 11));
+  mkBtn('CORRER', 'KeyQ', 'hold', pos(0, 21, 11));
+  [['REPLAY', 'KeyR', 'tap'], ['PEDIR', 'KeyE', 'tap'], ['EFEITO', 'KeyX', 'toggle']].forEach((a, i) =>
+    mkBtn(a[0], a[1], a[2], 'right:calc(env(safe-area-inset-right,0px) + 2vw + ' + i * 10 + 'vh);top:calc(env(safe-area-inset-top,0px) + 2vh);width:9vh;height:9vh;font-size:1.7vh;opacity:.8'));
+  const pz = mk('div', 'tcPause', tc); pz.className = 'tb'; pz.innerHTML = '<i class="fa-solid fa-pause"></i>';
+  pz.style.cssText = 'left:calc(env(safe-area-inset-left,0px) + 2vw);top:calc(env(safe-area-inset-top,0px) + 2vh);width:9vh;height:9vh;font-size:3.4vh;opacity:.85';
+  pz.addEventListener('pointerdown', e => { e.preventDefault(); buzz(10); window.__togglePause(); });
   const skip = mk('div', 'tcSkip'); skip.textContent = 'PULAR ▶';
   skip.addEventListener('pointerdown', e => { e.preventDefault(); vk('keydown', 'Enter'); setTimeout(() => vk('keyup', 'Enter'), 60); });
 
@@ -5998,7 +6039,7 @@ if (IS_MOBILE) (function () {
       ovB.style.display = needFS ? 'block' : 'none';
       ovI.textContent = (isIOS && !canFS && !navigator.standalone) ? 'Dica (iPhone): toque em Compartilhar → "Adicionar à Tela de Início" para abrir em tela cheia.' : '';
     }
-    const special = !!(intro.on || replay.on || cel.on), play = menu.mode === 'play' && !blk;
+    const special = !!(intro.on || replay.on || cel.on), play = menu.mode === 'play' && !blk && !window.__paused;
     tc.style.display = play && !special ? 'block' : 'none';
     skip.style.display = play && special ? 'flex' : 'none';
     if (!play || special) joyReset();
