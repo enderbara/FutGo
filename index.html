@@ -6779,5 +6779,210 @@ addEventListener('resize', () => {
   const vp = document.querySelector('meta[name=viewport]'); if (vp) vp.content = 'width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover';
 })();
 </script>
+<!-- ===== Salvar na conta Google (Drive appDataFolder, sem servidor) ===== -->
+<style>
+  #gAcc { position: fixed; top: 14px; right: 14px; z-index: 60; display: none; flex-direction: column; align-items: flex-end; gap: 6px; font: 700 14px system-ui; color: #fff; }
+  body[data-m="menu"] #gAcc, body[data-m="team"] #gAcc { display: flex; }
+  #gAcc button { font: inherit; color: inherit; cursor: pointer; }
+  #gChip { display: flex; align-items: center; gap: 9px; padding: 7px 14px 7px 8px; border-radius: 999px; background: rgba(8,12,24,.85); border: 2px solid rgba(255,255,255,.25); max-width: 260px; }
+  #gChip:hover { background: rgba(40,48,72,.95); }
+  #gChip img, #gChip .gl { width: 28px; height: 28px; border-radius: 50%; flex: none; background: #fff; display: grid; place-items: center; }
+  #gChip .gl svg { width: 18px; height: 18px; }
+  #gChip .tx { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.15; min-width: 0; text-align: left; }
+  #gChip .tx b { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+  #gChip .tx small { font-size: 11px; font-weight: 700; opacity: .85; display: flex; align-items: center; gap: 5px; }
+  #gChip .dot { width: 8px; height: 8px; border-radius: 50%; background: #9e9e9e; }
+  #gAcc[data-s="ok"] .dot { background: #4caf50; } #gAcc[data-s="saving"] .dot, #gAcc[data-s="syncing"] .dot { background: #ffd54a; animation: gp 1s infinite; }
+  #gAcc[data-s="pending"] .dot, #gAcc[data-s="auth"] .dot { background: #ff9800; } #gAcc[data-s="error"] .dot, #gAcc[data-s="offline"] .dot { background: #e53935; }
+  @keyframes gp { 50% { opacity: .3; } }
+  #gMenu { display: none; flex-direction: column; min-width: 190px; padding: 6px; border-radius: 14px; background: rgba(8,12,24,.95); border: 2px solid rgba(255,255,255,.2); box-shadow: 0 10px 30px rgba(0,0,0,.5); }
+  #gMenu.on { display: flex; } #gMenu button { background: none; border: 0; text-align: left; padding: 10px 12px; border-radius: 9px; }
+  #gMenu button:hover { background: rgba(255,255,255,.14); } #gMenu .em { font: 600 11px system-ui; opacity: .6; padding: 6px 12px 4px; word-break: break-all; }
+  #gModal { position: fixed; inset: 0; z-index: 200; display: none; place-items: center; background: rgba(0,0,0,.7); font-family: system-ui; color: #fff; }
+  #gModal.on { display: grid; } #gModal > div { width: min(440px, 92vw); padding: 22px; border-radius: 18px; background: #0d1426; border: 2px solid rgba(255,255,255,.2); }
+  #gModal h3 { margin: 0 0 6px; font-size: 20px; } #gModal p { margin: 0 0 14px; opacity: .8; font-size: 14px; line-height: 1.4; }
+  #gModal .opt { display: block; width: 100%; text-align: left; margin-bottom: 10px; padding: 12px 14px; border-radius: 12px; cursor: pointer; font: 800 15px system-ui; color: #fff; background: rgba(255,255,255,.1); border: 2px solid rgba(255,255,255,.3); }
+  #gModal .opt:hover { background: rgba(255,255,255,.2); } #gModal .opt small { display: block; font-weight: 600; opacity: .75; margin-top: 3px; }
+  @media (max-width: 560px) { #gAcc { top: 8px; right: 8px; } #gChip .tx b { max-width: 90px; } }
+</style>
+<div id="gAcc" data-s="off">
+  <button id="gChip" type="button" title="Salvar o jogo na sua conta Google"></button>
+  <div id="gMenu">
+    <div class="em" id="gEmail"></div>
+    <button type="button" id="gNow">☁ Salvar agora</button>
+    <button type="button" id="gLoad">⬇ Carregar da nuvem</button>
+    <button type="button" id="gOut">⎋ Sair da conta</button>
+  </div>
+</div>
+<div id="gModal"><div>
+  <h3>Qual jogo você quer usar?</h3>
+  <p id="gModalTxt">Encontramos um jogo salvo na sua conta e outro neste aparelho.</p>
+  <button class="opt" id="gUseCloud" type="button">Usar o da conta Google<small id="gCloudInfo"></small></button>
+  <button class="opt" id="gUseLocal" type="button">Manter o deste aparelho<small id="gLocalInfo"></small></button>
+</div></div>
+<script>
+(() => {
+  const CID = '125391546550-36slfe7gqlf9sdr1qs9cto5dmpvjpa22.apps.googleusercontent.com';
+  const SCOPE = 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/userinfo.profile';
+  const FILE = 'kickio-save.json', K_SESS = 'gsave_sess', K_TS = 'gsave_ts', K_UID = 'gsave_uid';
+  const $ = id => document.getElementById(id);
+  const LS = localStorage, SP = Storage.prototype, rawSet = SP.setItem, rawRm = SP.removeItem;
+  const isSave = k => typeof k === 'string' && k.startsWith('futio_');     // tudo que o jogo grava começa com futio_
+  let sess = null, tok = null, tc = null, waiter = null, fileId = null, pending = false, busy = false, mute = false, timer = 0, status = 'off';
+  try { sess = JSON.parse(LS.getItem(K_SESS) || 'null'); } catch (_) {}
+  const tokOk = () => tok && tok.exp > Date.now();
+
+  /* ---------- interface ---------- */
+  const GLOGO = '<svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z"/><path fill="#FBBC05" d="M10.5 28.7A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.7l-7.9-6.1A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.8l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.9 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>';
+  const LABEL = { off: 'Salvar na nuvem', ok: 'Salvo na nuvem', saving: 'Salvando…', syncing: 'Sincronizando…', pending: 'Alterações pendentes', auth: 'Toque para reconectar', offline: 'Sem conexão', error: 'Erro ao salvar' };
+  function render() {
+    const acc = $('gAcc'), chip = $('gChip'); acc.dataset.s = sess ? status : 'off';
+    if (!sess) { chip.innerHTML = '<span class="gl">' + GLOGO + '</span><span class="tx"><b>Entrar com Google</b><small>Salve seu jogo na nuvem</small></span>'; $('gMenu').classList.remove('on'); return; }
+    chip.innerHTML = (sess.picture ? '<img referrerpolicy="no-referrer" alt="">' : '<span class="gl">' + GLOGO + '</span>') + '<span class="tx"><b></b><small><i class="dot"></i><span></span></small></span>';
+    const im = chip.querySelector('img'); if (im) im.src = sess.picture;
+    chip.querySelector('b').textContent = sess.name || 'Jogador'; chip.querySelector('small span').textContent = LABEL[status] || '';
+    $('gEmail').textContent = sess.name || '';
+  }
+  const setStatus = s => { status = s; render(); };
+
+  /* ---------- autenticação (Google Identity Services) ---------- */
+  function initGIS() {
+    if (tc || !window.google || !google.accounts || !google.accounts.oauth2) return false;
+    tc = google.accounts.oauth2.initTokenClient({
+      client_id: CID, scope: SCOPE,
+      callback: r => { const w = waiter; waiter = null; if (!w) return;
+        if (r.error || !r.access_token) w.rej(Object.assign(new Error(r.error || 'auth'), { auth: true }));
+        else { tok = { v: r.access_token, exp: Date.now() + (r.expires_in - 90) * 1000 }; w.res(tok.v); } },
+      error_callback: e => { const w = waiter; waiter = null; if (w) w.rej(Object.assign(new Error(e && e.type || 'auth'), { auth: true })); }
+    });
+    return true;
+  }
+  const getToken = () => new Promise((res, rej) => {
+    if (tokOk()) return res(tok.v);
+    if (!initGIS()) return rej(Object.assign(new Error('gis'), { auth: true }));
+    waiter = { res, rej }; tc.requestAccessToken({ prompt: '' });
+  });
+  async function api(url, opt = {}, retry = true) {
+    const t = await getToken();
+    const r = await fetch(url, { ...opt, headers: { ...(opt.headers || {}), Authorization: 'Bearer ' + t } });
+    if (r.status === 401 && retry) { tok = null; return api(url, opt, false); }
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r;
+  }
+
+  /* ---------- Drive: um arquivo JSON escondido na pasta do app ---------- */
+  const snapshot = () => { const data = {}; for (let i = 0; i < LS.length; i++) { const k = LS.key(i); if (isSave(k)) data[k] = LS.getItem(k); }
+    if (!LS.getItem(K_TS)) rawSet.call(LS, K_TS, String(Date.now()));
+    return { v: 1, ts: +LS.getItem(K_TS), data }; };
+  async function findFile() {
+    const q = encodeURIComponent("name='" + FILE + "'");
+    const j = await (await api('https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&fields=files(id)&pageSize=1&q=' + q)).json();
+    return fileId = (j.files && j.files[0] && j.files[0].id) || null;
+  }
+  async function pull() {
+    if (!fileId && !(await findFile())) return null;
+    try { const j = await (await api('https://www.googleapis.com/drive/v3/files/' + fileId + '?alt=media')).json(); return j && j.data ? j : null; }
+    catch (e) { if (/404/.test(e.message)) { fileId = null; return null; } throw e; }
+  }
+  async function upload(body) {
+    if (!fileId) await findFile();
+    if (fileId) return api('https://www.googleapis.com/upload/drive/v3/files/' + fileId + '?uploadType=media', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body });
+    const b = 'kk' + Date.now();
+    const mp = '--' + b + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify({ name: FILE, parents: ['appDataFolder'] }) +
+      '\r\n--' + b + '\r\nContent-Type: application/json\r\n\r\n' + body + '\r\n--' + b + '--';
+    const j = await (await api('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', { method: 'POST', headers: { 'Content-Type': 'multipart/related; boundary=' + b }, body: mp })).json();
+    fileId = j.id;
+  }
+  async function push() {
+    if (!sess) return; if (busy) { pending = true; return; }
+    busy = true; clearTimeout(timer); setStatus('saving');
+    const snap = snapshot();
+    try { await upload(JSON.stringify(snap)); pending = LS.getItem(K_TS) !== String(snap.ts); setStatus('ok'); if (pending) schedule(); }
+    catch (e) { pending = true; setStatus(e.auth ? 'auth' : navigator.onLine ? 'error' : 'offline'); }
+    finally { busy = false; }
+  }
+  function schedule() {
+    if (!sess) return; pending = true; clearTimeout(timer);
+    if (!tokOk()) { setStatus(status === 'auth' ? 'auth' : 'pending'); return; }
+    setStatus('pending'); timer = setTimeout(push, 4000);
+  }
+
+  /* ---------- detecta qualquer gravação do jogo ---------- */
+  const touch = k => { if (mute || !isSave(k)) return; rawSet.call(LS, K_TS, String(Date.now())); schedule(); };
+  SP.setItem = function (k, v) { rawSet.call(this, k, v); if (this === LS) touch(k); };
+  SP.removeItem = function (k) { rawRm.call(this, k); if (this === LS) touch(k); };
+
+  /* ---------- reconciliar nuvem x aparelho ---------- */
+  const hasLocal = () => !!LS.getItem('futio_time_v1');
+  function describe(data) { try { const d = JSON.parse(data.futio_time_v1 || 'null'); if (!d || !d.team) return 'Sem time criado'; const s = d.stats || {};
+    return d.team.name + ' • ' + (s.j || 0) + ' partida(s) • ' + (s.rep || 0) + ' pts'; } catch (_) { return 'Dados salvos'; } }
+  function ask(cloud) {
+    return new Promise(res => {
+      $('gCloudInfo').textContent = describe(cloud.data); $('gLocalInfo').textContent = describe(snapshot().data);
+      const m = $('gModal'); m.classList.add('on');
+      const done = v => { m.classList.remove('on'); res(v); };
+      $('gUseCloud').onclick = () => done('cloud'); $('gUseLocal').onclick = () => done('local');
+    });
+  }
+  function applyCloud(cloud) {
+    mute = true;
+    try { const del = []; for (let i = 0; i < LS.length; i++) if (isSave(LS.key(i))) del.push(LS.key(i)); del.forEach(k => rawRm.call(LS, k));
+      for (const k in cloud.data) if (isSave(k)) rawSet.call(LS, k, cloud.data[k]);
+      rawSet.call(LS, K_TS, String(cloud.ts || Date.now())); rawSet.call(LS, K_UID, sess.sub); } finally { mute = false; }
+    setStatus('syncing'); location.reload();
+  }
+  async function reconcile() {
+    setStatus('syncing');
+    const cloud = await pull(), prev = LS.getItem(K_UID), localTs = +LS.getItem(K_TS) || 0;
+    if (!cloud) { rawSet.call(LS, K_UID, sess.sub); if (hasLocal()) await push(); else setStatus('ok'); return; }
+    let useCloud;
+    if (!hasLocal()) useCloud = true;
+    else if (prev === sess.sub) useCloud = (cloud.ts || 0) > localTs;
+    else if (JSON.stringify(cloud.data) === JSON.stringify(snapshot().data)) useCloud = false;
+    else useCloud = (await ask(cloud)) === 'cloud';
+    if (useCloud) return applyCloud(cloud);
+    rawSet.call(LS, K_UID, sess.sub); await push();
+  }
+
+  /* ---------- ações ---------- */
+  async function connect() {
+    if (busy) return; busy = true; setStatus('syncing');
+    try {
+      await getToken();
+      const u = await (await api('https://www.googleapis.com/oauth2/v3/userinfo')).json();
+      sess = { sub: u.sub, name: u.name || u.given_name || 'Jogador', picture: u.picture || '' };
+      rawSet.call(LS, K_SESS, JSON.stringify(sess)); fileId = null; busy = false; await reconcile();
+    } catch (e) { setStatus(sess ? (e.auth ? 'auth' : 'error') : 'off'); }
+    finally { busy = false; }
+  }
+  function logout() {
+    clearTimeout(timer); try { if (tok && window.google) google.accounts.oauth2.revoke(tok.v, () => {}); } catch (_) {}
+    tok = null; sess = null; fileId = null; pending = false; rawRm.call(LS, K_SESS); setStatus('off');
+  }
+  $('gChip').onclick = () => {
+    if (!sess) return connect();
+    if (status === 'auth' || !tokOk()) return connect();
+    $('gMenu').classList.toggle('on');
+  };
+  $('gNow').onclick = () => { $('gMenu').classList.remove('on'); push(); };
+  $('gOut').onclick = () => { $('gMenu').classList.remove('on'); logout(); };
+  $('gLoad').onclick = async () => {
+    $('gMenu').classList.remove('on');
+    try { setStatus('syncing'); const c = await pull();
+      if (!c) { setStatus('ok'); alert('Nenhum jogo salvo na nuvem ainda.'); return; }
+      if (confirm('Substituir o jogo deste aparelho pelo salvo na nuvem?\n\n' + describe(c.data))) applyCloud(c); else setStatus('ok');
+    } catch (e) { setStatus(e.auth ? 'auth' : 'error'); }
+  };
+  document.addEventListener('click', e => { if (!e.target.closest('#gAcc')) $('gMenu').classList.remove('on'); });
+  // Depois de recarregar a página, o Google exige um toque do jogador para renovar o acesso: fazemos isso no primeiro clique.
+  addEventListener('pointerdown', e => { if (sess && !tokOk() && !busy && !e.target.closest('#gAcc') && !$('gModal').classList.contains('on')) connect(); }, true);
+  addEventListener('online', () => { if (pending && tokOk()) push(); });
+  addEventListener('pagehide', () => { if (pending && sess && tokOk()) { try { const body = JSON.stringify(snapshot());
+    if (fileId && body.length < 60000) fetch('https://www.googleapis.com/upload/drive/v3/files/' + fileId + '?uploadType=media', { method: 'PATCH', keepalive: true, headers: { Authorization: 'Bearer ' + tok.v, 'Content-Type': 'application/json' }, body }); } catch (_) {} } });
+
+  render(); if (sess) setStatus('auth');
+  const s = document.createElement('script'); s.src = 'https://accounts.google.com/gsi/client'; s.async = true; s.onload = initGIS; document.head.appendChild(s);
+})();
+</script>
 </body>
 </html>
