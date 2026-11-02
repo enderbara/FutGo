@@ -6861,7 +6861,8 @@ addEventListener('resize', () => {
 
   /* ---------- autenticação (Google Identity Services) ---------- */
   function initGIS() {
-    if (tc || !window.google || !google.accounts || !google.accounts.oauth2) return false;
+    if (tc) return true;
+    if (!window.google || !google.accounts || !google.accounts.oauth2) return false;
     tc = google.accounts.oauth2.initTokenClient({
       client_id: CID, scope: SCOPE,
       callback: r => { const w = waiter; waiter = null; if (!w) return;
