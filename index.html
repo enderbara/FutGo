@@ -6824,7 +6824,7 @@ addEventListener('resize', () => {
   #gLogin.on{display:grid}
   #gLogin .gl-c{position:relative;width:min(400px,100%);max-height:94vh;overflow:auto;padding:24px 22px 20px;border-radius:22px;text-align:center;background:radial-gradient(circle at 50% 0,#4285F455,transparent 60%),#0d1426;border:2px solid rgba(255,255,255,.2);box-shadow:0 20px 60px #000b;animation:wrP .35s cubic-bezier(.2,.9,.3,1.3)}
   #gLogin .gl-x{position:absolute;top:10px;right:12px;width:34px;height:34px;border:0;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;font:700 18px system-ui;cursor:pointer}
-  #gLogin .gl-ph{margin:-4px auto 2px;width:min(260px,72%)}#gLogin .gl-ph canvas{width:100%;display:block}#gLogin .gl-lgx{width:54px;height:54px;margin:0 auto 8px;background:#fff;border-radius:50%;padding:11px;box-sizing:border-box}
+  #gLogin .gl-ph{margin:-4px auto 2px;width:min(300px,84%)}#gLogin .gl-ph canvas{width:100%;display:block}#gLogin .gl-lgx{width:54px;height:54px;margin:0 auto 8px;background:#fff;border-radius:50%;padding:11px;box-sizing:border-box}
   #gLogin h3{margin:0 0 4px;font-size:21px}#gLogin p.s{margin:0 0 14px;opacity:.75;font-size:13px}
   #gLogin ul{list-style:none;margin:0 0 16px;padding:0;text-align:left}
   #gLogin li{display:flex;gap:12px;align-items:center;padding:10px 12px;margin-bottom:8px;border-radius:14px;background:rgba(255,255,255,.08);font:600 14px/1.3 system-ui}
@@ -6836,10 +6836,10 @@ addEventListener('resize', () => {
 </style>
 <div id="gLogin"><div class="gl-c">
   <button class="gl-x" id="gLx" type="button" aria-label="Fechar">✕</button>
-  <div class="gl-ph"><canvas id="gPhone" width="360" height="280"></canvas></div>
+  <div class="gl-ph"><canvas id="gPhone" width="400" height="320"></canvas></div>
   <h3>Entre com sua conta Google</h3><p class="s">Grátis, em um toque. Veja o que você ganha:</p>
   <ul>
-    <li class="gift"><i>🎁</i><span>Presente de boas-vindas<small>Bola Google + Boné Google exclusivos</small></span></li>
+    <li class="gift"><i>🎁</i><span>Presente de boas-vindas<small>Bola, Boné e Chuteira Google exclusivos</small></span></li>
     <li><i>☁️</i><span>Progresso salvo na nuvem<small>Time, escudo, nomes e configurações</small></span></li>
     <li><i>📱</i><span>Jogue em qualquer aparelho<small>Celular, tablet ou computador com o mesmo jogo</small></span></li>
     <li><i>👕</i><span>Vestiário com itens extras<small>Skins de bola, chapéus e cabelos</small></span></li>
@@ -7009,7 +7009,7 @@ addEventListener('resize', () => {
       await getToken();
       const u = await (await api('https://www.googleapis.com/oauth2/v3/userinfo')).json();
       sess = { sub: u.sub, name: u.name || u.given_name || 'Jogador', picture: u.picture || '' };
-      rawSet.call(LS, K_SESS, JSON.stringify(sess)); fileId = null; busy = false; await reconcile(); if (!LS.getItem('futio_gift')) { LS.setItem('futio_gift', '1'); LS.setItem('futio_wr', JSON.stringify({ ball: 'google', hat: 'google' })); if (window.__wr) window.__wr.gift(); }
+      rawSet.call(LS, K_SESS, JSON.stringify(sess)); fileId = null; busy = false; await reconcile(); if (!LS.getItem('futio_gift')) { LS.setItem('futio_gift', '1'); LS.setItem('futio_wr', JSON.stringify({ ball: 'google', hat: 'google', cleat: 'google' })); if (window.__wr) window.__wr.gift(); }
     } catch (e) { toast(e); setStatus(sess ? (e.auth ? 'auth' : 'error') : 'off'); }
     finally { busy = false; }
   }
@@ -7072,7 +7072,7 @@ addEventListener('resize', () => {
   #wrBig{width:100%;flex:1;min-height:220px;display:grid;place-items:center}#wrBig canvas{width:100%;max-width:420px;height:auto}
   #wrCap{font:700 13px system-ui;text-align:center;background:rgba(0,0,0,.35);padding:8px 14px;border-radius:999px}
   .wrSide{padding:18px;display:flex;flex-direction:column;min-height:0}
-  .wrTabs{display:flex;gap:8px;margin-bottom:14px}.wrTabs button{flex:1;padding:10px;border:0;border-radius:12px;background:rgba(255,255,255,.08);color:#fff;font:800 14px system-ui;cursor:pointer}
+  .wrTabs{display:flex;gap:8px;margin-bottom:14px}.wrTabs button{flex:1;padding:10px 4px;font-size:13px!important;border:0;border-radius:12px;background:rgba(255,255,255,.08);color:#fff;font:800 14px system-ui;cursor:pointer}
   .wrTabs button.on{background:#ffd54a;color:#111}
   .wrG{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:12px;overflow:auto;padding:4px;flex:1;align-content:start}
   .wrI{position:relative;padding:10px 8px 12px;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.04));border:2px solid rgba(255,255,255,.14);cursor:pointer;text-align:center;font:800 13px system-ui;color:#fff;transition:transform .15s}
@@ -7088,12 +7088,12 @@ addEventListener('resize', () => {
   #wrGift{position:fixed;inset:0;z-index:200005;display:none;place-items:center;background:rgba(0,0,0,.78);font-family:system-ui;color:#fff;text-align:center}
   #wrGift.on{display:grid}#wrGift>div{width:min(400px,92vw);padding:26px;border-radius:22px;background:radial-gradient(circle at 50% 0,#3b5bdb55,transparent 60%),#0d1426;border:2px solid #ffd54a;animation:wrP .5s cubic-bezier(.2,.9,.3,1.4)}
   @keyframes wrP{from{transform:scale(.5);opacity:0}}
-  #wrGift canvas{width:130px;height:130px}
+  #wrGift canvas{width:104px;height:104px}
 </style>
 <div id="wrPop"><div class="wrBox">
   <div class="wrStage"><div class="wrTitle">VESTIÁRIO<small>Seu jogador e sua bola</small></div><div id="wrBig"></div><div id="wrCap"></div></div>
   <div class="wrSide">
-    <div class="wrTabs"><button type="button" data-t="ball" class="on">⚽ Bolas</button><button type="button" data-t="hat">🧢 Chapéus e cabelos</button></div>
+    <div class="wrTabs"><button type="button" data-t="ball" class="on">⚽ Bolas</button><button type="button" data-t="hat">🧢 Chapéus</button><button type="button" data-t="cleat">👟 Chuteiras</button></div>
     <div class="wrG" id="wrGrid"></div>
     <p class="wrNote">Itens com 🔒 são liberados ao entrar com a conta Google. Cabelos chegam em breve.</p>
     <button id="wrClose" type="button">Voltar</button>
@@ -7101,30 +7101,31 @@ addEventListener('resize', () => {
 </div></div>
 <div id="wrGift"><div>
   <div style="font-size:42px">🎁</div><h3 style="margin:6px 0">Presente da conta Google!</h3>
-  <div><canvas id="wgB" width="220" height="220"></canvas><canvas id="wgH" width="220" height="220"></canvas></div>
-  <p style="opacity:.85;font-size:14px;line-height:1.4;margin:6px 0 16px">Você ganhou a <b>Bola Google</b> e o <b>Boné Google</b>. Já estão equipados! Veja tudo no Vestiário.</p>
+  <div><canvas id="wgB" width="220" height="220"></canvas><canvas id="wgH" width="220" height="220"></canvas><canvas id="wgC" width="220" height="220"></canvas></div>
+  <p style="opacity:.85;font-size:14px;line-height:1.4;margin:6px 0 16px">Você ganhou a <b>Bola Google</b>, o <b>Boné Google</b> e a <b>Chuteira Google</b>. Já estão equipados! Veja tudo no Vestiário.</p>
   <button id="wgOk" type="button" style="padding:11px 26px;border:0;border-radius:12px;background:#ffd54a;color:#111;font:800 15px system-ui;cursor:pointer">Legal!</button>
 </div></div>
 <script>
 (() => {
-  const LS = localStorage, $ = id => document.getElementById(id), GC = [0x4285F4, 0xEA4335, 0xFBBC05, 0x34A853], GH = ['#4285F4', '#EA4335', '#FBBC05', '#34A853'];
+  const LS = localStorage, $ = id => document.getElementById(id), GC = [0x4285F4, 0xEA4335, 0xFBBC05, 0x34A853];
   const unlocked = () => LS.getItem('futio_gift') === '1' && !!LS.getItem('gsave_sess');
   const getW = () => { try { return JSON.parse(LS.getItem('futio_wr')) || {}; } catch (_) { return {}; } };
   const setW = w => LS.setItem('futio_wr', JSON.stringify(w));
   const ITEMS = { ball: [{ id: 'classic', n: 'Bola Clássica' }, { id: 'google', n: 'Bola Google', lock: 1 }],
-                  hat: [{ id: null, n: 'Sem acessório' }, { id: 'google', n: 'Boné Google', lock: 1 }] };
-  function gLogo(c, x, y, r) {
-    c.save(); c.lineWidth = r * .32; c.lineCap = 'butt';
-    [[-.25, .02, 0], [.02, .6, 3], [.6, 1, 2], [1, 1.75, 1]].forEach(([a, b, i]) => { c.strokeStyle = GH[i]; c.beginPath(); c.arc(x, y, r * .72, a * Math.PI, b * Math.PI); c.stroke(); });
-    c.fillStyle = GH[0]; c.fillRect(x, y - r * .16, r * .74, r * .32); c.restore();
-  }
+                  hat: [{ id: null, n: 'Sem acessório' }, { id: 'google', n: 'Boné Google', lock: 1 }],
+                  cleat: [{ id: null, n: 'Chuteira Clássica' }, { id: 'google', n: 'Chuteira Google', lock: 1 }] };
+  const GSVG = '<svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z"/><path fill="#FBBC05" d="M10.5 28.7A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.7l-7.9-6.1A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.8l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.9 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>'.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ');   // logo oficial do Google
+  const gImg = new Image(), onLogo = []; let logoOk = false;
+  gImg.onload = () => { logoOk = true; onLogo.forEach(f => f()); }; gImg.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(GSVG);
   let _tex = null;
-  const gTex = () => _tex || (_tex = (() => { const cv = document.createElement('canvas'); cv.width = cv.height = 128; const c = cv.getContext('2d');
-    c.fillStyle = '#fff'; c.beginPath(); c.arc(64, 64, 62, 0, 7); c.fill(); gLogo(c, 64, 64, 50); return new THREE.CanvasTexture(cv); })());
+  const gTex = () => { if (_tex) return _tex;
+    const cv = document.createElement('canvas'); cv.width = cv.height = 256; const c = cv.getContext('2d'), t = new THREE.CanvasTexture(cv);
+    const paint = () => { c.clearRect(0, 0, 256, 256); c.fillStyle = '#fff'; c.beginPath(); c.arc(128, 128, 124, 0, 7); c.fill(); if (logoOk) c.drawImage(gImg, 50, 50, 156, 156); t.needsUpdate = true; };
+    paint(); onLogo.push(paint); return _tex = t; };
   const LM = o => new THREE.MeshLambertMaterial(o);
-  const HAT_Y = .42, HAT_RX = -.12, REAL = { body, head, handL, handR, footL, footR }, KEYS = ['body', 'head', 'handL', 'handR', 'footL', 'footR'];
+  const HAT_Y = .42, HAT_RX = -.12, REAL = { body, head, handL, handR }, ORIG = { L: footL.children[0].material.color.getHex(), R: footR.children[0].material.color.getHex() };
 
-  /* ---------- boné Google (mesmo estilo do jogo: contorno escuro) ---------- */
+  /* ---------- boné Google ---------- */
   function buildHat() {
     const g = new THREE.Group(), R = 1.22, ord = [1, 0, 2, 3], blk = () => new THREE.MeshBasicMaterial({ color: 0x151515, side: THREE.BackSide });
     for (let i = 0; i < 4; i++) g.add(new THREE.Mesh(new THREE.SphereGeometry(R, 24, 14, -Math.PI / 4 + i * Math.PI / 2, Math.PI / 2, 0, Math.PI / 2), LM({ color: GC[ord[i]], side: THREE.DoubleSide })));
@@ -7138,9 +7139,22 @@ addEventListener('resize', () => {
     const y = R * Math.cos(.9) * 1.01, z = R * Math.sin(.9) * 1.01; dec.position.set(0, y, z); dec.lookAt(0, y * 2, z * 2); g.add(dec);
     return g;
   }
+  /* ---------- chuteira Google: pé azul/vermelho, bico amarelo, calcanhar verde, "G" e travas ---------- */
+  function cleatKit(fl, fr) {
+    const mk = side => { const g = new THREE.Group(), gm = () => new THREE.MeshBasicMaterial({ map: gTex(), transparent: true });
+      const toe = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 8), LM({ color: GC[2] })); toe.scale.set(.21, .13, .15); toe.position.set(0, -.02, .27);
+      const heel = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 8), LM({ color: GC[3] })); heel.scale.set(.19, .13, .1); heel.position.set(0, 0, -.27);
+      const top = new THREE.Mesh(new THREE.CircleGeometry(.14, 20), gm()); top.rotation.x = -Math.PI / 2; top.position.set(0, .212, .03);
+      const sd = new THREE.Mesh(new THREE.CircleGeometry(.12, 20), gm()); sd.rotation.y = side * Math.PI / 2; sd.position.set(side * .292, .02, .02);
+      g.add(toe, heel, top, sd);
+      [[-.12, .14], [.12, .14], [-.12, -.14], [.12, -.14]].forEach(([x, z]) => { const st = new THREE.Mesh(new THREE.CylinderGeometry(.045, .06, .1, 8), LM({ color: 0xffffff })); st.position.set(x, -.21, z); g.add(st); });
+      g.visible = false; return g; };
+    const gL = mk(-1), gR = mk(1); fl.add(gL); fr.add(gR);
+    return { on: false, set(v) { this.on = v; gL.visible = gR.visible = v; fl.children[0].material.color.setHex(v ? GC[0] : ORIG.L); fr.children[0].material.color.setHex(v ? GC[1] : ORIG.R); } };
+  }
 
   /* ---------- aplicar no jogo ---------- */
-  let gDecals = [], origPatch = null, hat = null;
+  let gDecals = [], origPatch = null, hat = null, realKit = null;
   function applyBall(id) {
     if (!origPatch) origPatch = ballSpin.children.map(p => p.material);
     gDecals.forEach(d => ballSpin.remove(d)); gDecals = [];
@@ -7156,16 +7170,22 @@ addEventListener('resize', () => {
   function applyHat(id) {
     if (hat) { head.remove(hat); hat = null; }
     if (id !== 'google') return;
-    hat = buildHat(); hat.position.set(0, HAT_Y, 0); hat.rotation.x = HAT_RX; head.add(hat);   // a cabeça já fica na altura certa dentro do grupo
+    hat = buildHat(); hat.position.set(0, HAT_Y, 0); hat.rotation.x = HAT_RX; head.add(hat);
   }
-  const equipped = () => { const w = unlocked() ? getW() : {}; return { ball: w.ball || 'classic', hat: w.hat || null }; };
-  function applyAll() { const e = equipped(); try { applyBall(e.ball); applyHat(e.hat); } catch (err) { console.error(err); } }
+  function applyCleat(id) { if (!realKit) realKit = cleatKit(footL, footR); realKit.set(id === 'google'); }
+  const equipped = () => { const w = unlocked() ? getW() : {}; return { ball: w.ball || 'classic', hat: w.hat || null, cleat: w.cleat || null }; };
+  function applyAll() {
+    if (unlocked()) { const w = getW(); if (w.cleat === undefined) { w.cleat = 'google'; setW(w); } }   // quem já tinha o presente ganha a chuteira equipada
+    const e = equipped(); try { applyBall(e.ball); applyHat(e.hat); applyCleat(e.cleat); } catch (err) { console.error(err); }
+  }
 
   /* ---------- modelos ORIGINAIS do jogo para os pop-ups ---------- */
-  function mkChar(hatId) {
+  function mkChar(hatId, cleatId) {
     const ch = makeChar(50, 0xffffff, 0xffffff); scene.remove(ch.g);
     ch.handL.scale.setScalar(1 / 1.35); ch.handR.scale.setScalar(1 / 1.35);
-    KEYS.forEach(k => { const a = REAL[k].children[0].material, b = ch[k].children[0].material; b.color.copy(a.color); if (a.map) { b.map = a.map; b.needsUpdate = true; } });
+    for (const k in REAL) { const a = REAL[k].children[0].material, b = ch[k].children[0].material; b.color.copy(a.color); if (a.map) { b.map = a.map; b.needsUpdate = true; } }
+    ch.footL.children[0].material.color.setHex(ORIG.L); ch.footR.children[0].material.color.setHex(ORIG.R);
+    ch.kit = cleatKit(ch.footL, ch.footR); ch.kit.set(cleatId === 'google');
     if (hatId === 'google') { const h = buildHat(); h.position.set(0, HAT_Y, 0); h.rotation.x = HAT_RX; ch.head.add(h); }
     return ch;
   }
@@ -7183,48 +7203,92 @@ addEventListener('resize', () => {
   }
   const mkRend = (w, h) => { const r = new THREE.WebGLRenderer({ alpha: true, antialias: true, stencil: true, preserveDrawingBuffer: true }); r.setSize(w, h, false); r.setPixelRatio(1); r.setClearColor(0, 0); return r; };
   const lights = sc => { sc.add(new THREE.AmbientLight(0xffffff, .9)); const d = new THREE.DirectionalLight(0xffffff, .6); d.position.set(3, 6, 5); sc.add(d); };
+  const floor = r => { const f = new THREE.Mesh(new THREE.CircleGeometry(r, 36), new THREE.MeshBasicMaterial({ color: 0, transparent: true, opacity: .2 })); f.rotation.x = -Math.PI / 2; f.position.y = .01; return f; };
   let R1 = null, R2 = null, R3 = null, tabK = 'ball', drawables = [], phoneD = null, raf = 0;
 
-  function card3d(kind, id, canvas) {   // kind 'ball' = bola; 'hat' = boneco com o acessório
+  function card3d(kind, id, canvas) {   // 'ball' = bola; 'hat' = boneco com chapéu; 'cleat' = pés com chuteira
     const sc = new THREE.Scene(), root = new THREE.Group(); sc.add(root); lights(sc);
-    const isB = kind === 'ball', cam = new THREE.PerspectiveCamera(30, 1, .1, 60); let b = null;
-    if (isB) { b = mkBall(id); b.g.scale.setScalar(2.1); root.add(b.g); cam.position.set(0, 0, 5.2); cam.lookAt(0, 0, 0); }
-    else { root.add(mkChar(id).g); cam.position.set(0, 2.6, 6.6); cam.lookAt(0, 2.45, 0); }
+    const isB = kind === 'ball', cam = new THREE.PerspectiveCamera(30, 1, .1, 60);
+    if (isB) { const b = mkBall(id); b.g.scale.setScalar(2.1); root.add(b.g); cam.position.set(0, 0, 5.2); cam.lookAt(0, 0, 0); }
+    else if (kind === 'hat') { root.add(mkChar(id, null).g); cam.position.set(0, 2.6, 6.6); cam.lookAt(0, 2.45, 0); }
+    else { root.add(mkChar(null, id).g); cam.position.set(0, .85, 4.4); cam.lookAt(0, .75, 0); }
     const ctx = canvas.getContext('2d');
-    return { draw(t) { if (isB) { root.rotation.y = t * 1.1; } else root.rotation.y = Math.sin(t * 1.2) * .8; R1.render(sc, cam); ctx.clearRect(0, 0, 220, 220); ctx.drawImage(R1.domElement, 0, 0, 220, 220); } };
+    return { draw(t) { root.rotation.y = isB ? t * 1.1 : Math.sin(t * 1.2) * .8; R1.render(sc, cam); ctx.clearRect(0, 0, 220, 220); ctx.drawImage(R1.domElement, 0, 0, 220, 220); } };
   }
   function stage3d(host) {
     if (!R2) R2 = mkRend(420, 340);
     host.innerHTML = ''; host.appendChild(R2.domElement); R2.domElement.style.cssText = 'width:100%;max-width:420px;height:auto';
-    const e = equipped(), sc = new THREE.Scene(); lights(sc);
-    const ch = mkChar(e.hat); ch.g.position.x = -1.5; sc.add(ch.g);
+    const e = equipped(), sc = new THREE.Scene(); lights(sc); sc.add(floor(3));
+    const ch = mkChar(e.hat, e.cleat); ch.g.position.x = -1.5; sc.add(ch.g);
     const b = mkBall(e.ball); b.g.scale.setScalar(1.7); b.g.position.set(1.7, .45 * 1.7, .6); sc.add(b.g);
-    const cam = new THREE.PerspectiveCamera(32, 420 / 340, .1, 60); cam.position.set(0, 2.3, 9.2); cam.lookAt(0, 1.75, 0);
+    const cam = new THREE.PerspectiveCamera(32, 420 / 340, .1, 60); cam.position.set(0, 2.0, 9.6); cam.lookAt(0, 1.8, 0);
     return { draw(t) { ch.g.rotation.y = Math.sin(t * .9) * .7; b.g.rotation.y = t * .6; b.spin.rotation.x = t * 1.4; R2.render(sc, cam); } };
   }
-  function phoneCard() {   // jogador mexendo no celular com a logo do Google
-    if (!R3) R3 = mkRend(360, 280);
-    const sc = new THREE.Scene(); lights(sc); const root = new THREE.Group(); sc.add(root);
-    const ch = mkChar(null); root.add(ch.g);
-    const ph = new THREE.Group(); ch.model.add(ph);
+
+  /* ---------- pop-up de login: toca na tela -> APROVADO -> confete + boné + bola + chuteira ---------- */
+  function phoneCard() {
+    if (!R3) R3 = mkRend(400, 320);
+    const sc = new THREE.Scene(); lights(sc); const root = new THREE.Group(); sc.add(root); root.add(floor(2.3));
+    const ch = mkChar(null, null); root.add(ch.g); ch.head.rotation.order = 'YXZ';
+    const hat = buildHat(); hat.position.set(0, HAT_Y, 0); hat.rotation.x = HAT_RX; hat.scale.setScalar(.001); ch.head.add(hat);
+    const ph = new THREE.Group(); ch.model.add(ph); ph.scale.setScalar(.6);
     ph.add(new THREE.Mesh(new THREE.BoxGeometry(.95, 1.6, .13), LM({ color: 0x202124 })));
-    const cv = document.createElement('canvas'); cv.width = 128; cv.height = 220; const c = cv.getContext('2d');
-    c.fillStyle = '#fff'; c.fillRect(0, 0, 128, 220); c.fillStyle = '#e8eaed'; for (let i = 0; i < 4; i++) c.fillRect(14, 140 + i * 18, i % 2 ? 70 : 100, 9);
-    const scr = new THREE.Mesh(new THREE.PlaneGeometry(.85, 1.46), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(cv) })); scr.position.z = .07; ph.add(scr);
-    const gl = new THREE.Mesh(new THREE.PlaneGeometry(.55, .55), new THREE.MeshBasicMaterial({ map: gTex(), transparent: true })); gl.position.set(0, .22, .075); ph.add(gl);
-    ch.head.rotation.order = 'YXZ';
-    const cam = new THREE.PerspectiveCamera(30, 360 / 280, .1, 60); cam.position.set(0, 2.15, 6.6); cam.lookAt(0, 1.95, 0);
-    const ctx = $('gPhone').getContext('2d');
+    const cv = document.createElement('canvas'); cv.width = 128; cv.height = 220; const c = cv.getContext('2d'), tex = new THREE.CanvasTexture(cv);
+    const scr = new THREE.Mesh(new THREE.PlaneGeometry(.85, 1.46), new THREE.MeshBasicMaterial({ map: tex })); scr.position.z = .07; ph.add(scr);
+    let st = -1;
+    const drawScr = ok => { st = ok;
+      if (!ok) { c.fillStyle = '#fff'; c.fillRect(0, 0, 128, 220); if (logoOk) c.drawImage(gImg, 34, 22, 60, 60);
+        c.fillStyle = '#dadce0'; c.fillRect(20, 100, 88, 8); c.fillRect(30, 116, 68, 8); c.fillStyle = '#4285F4'; c.beginPath(); c.roundRect ? c.roundRect(14, 160, 100, 34, 17) : c.rect(14, 160, 100, 34); c.fill();
+        c.fillStyle = '#fff'; c.font = '700 15px system-ui'; c.textAlign = 'center'; c.fillText('Entrar', 64, 182); }
+      else { c.fillStyle = '#34A853'; c.fillRect(0, 0, 128, 220); c.fillStyle = '#fff'; c.beginPath(); c.arc(64, 90, 40, 0, 7); c.fill();
+        c.strokeStyle = '#34A853'; c.lineWidth = 11; c.lineCap = 'round'; c.lineJoin = 'round'; c.beginPath(); c.moveTo(44, 90); c.lineTo(59, 106); c.lineTo(86, 74); c.stroke();
+        c.fillStyle = '#fff'; c.font = '800 17px system-ui'; c.textAlign = 'center'; c.fillText('Aprovado!', 64, 170); }
+      tex.needsUpdate = true; };
+    onLogo.push(() => { st = -1; });
+    const ball = mkBall('google'); ball.g.scale.setScalar(1.5); ball.g.visible = false; root.add(ball.g);
+    const mats = GC.map(x => new THREE.MeshBasicMaterial({ color: x, side: THREE.DoubleSide })), pg = new THREE.PlaneGeometry(.13, .2), P = [];
+    for (let i = 0; i < 160; i++) { const m = new THREE.Mesh(pg, mats[i % 4]); m.visible = false; root.add(m); P.push({ m, v: new THREE.Vector3(), w: new THREE.Vector3(), life: 0 }); }
+    const burst = (n, ox, oy, oz, sp) => { let k = 0; for (const p of P) { if (p.life > 0) continue;
+      p.life = 2.2 + Math.random() * 1.2; p.m.scale.setScalar(1); p.m.position.set(ox, oy, oz); const a = Math.random() * 6.283, e = .3 + Math.random() * .9;
+      p.v.set(Math.cos(a) * sp * Math.cos(e) * (.5 + Math.random()), sp * Math.sin(e) * (.7 + Math.random() * .6) + 1.5, Math.sin(a) * sp * .5 * Math.cos(e));
+      p.w.set(Math.random() * 12, Math.random() * 12, Math.random() * 12); p.m.visible = true; if (++k >= n) break; } };
+    const cam = new THREE.PerspectiveCamera(30, 400 / 320, .1, 80); cam.position.set(0, 2.0, 8.6); cam.lookAt(0, 1.9, 0);
+    const ctx = $('gPhone').getContext('2d'), PER = 9, TT = 3.2, cl = (x, a, b) => Math.max(a, Math.min(b, x)), sm = x => x * x * (3 - 2 * x), lerp = (a, b, k) => a + (b - a) * k;
+    let lastT = -1, lastCyc = -1, b1 = false, b2 = false;
     return { draw(t) {
-      const jt = t % 5, jump = jt < .6 ? Math.sin(jt / .6 * Math.PI) * .5 : 0;
-      ch.model.position.y = jump + Math.abs(Math.sin(t * 2.2)) * .05; root.rotation.y = Math.sin(t * .7) * .25;
-      ph.position.set(0, 2.35 + Math.sin(t * 2.6) * .03, 1.3); ph.rotation.set(-.15 + Math.sin(t * 1.7) * .1, Math.sin(t * .8) * .15, Math.sin(t * 1.1) * .08);
-      gl.scale.setScalar(1 + Math.sin(t * 4) * .1);
-      ch.head.rotation.x = .2 + Math.sin(t * 3.1) * .08; ch.head.rotation.y = Math.sin(t * 1.1) * .3;
-      const s = (t * 1.3) % 1, k = s < .55 ? s / .55 : 1 - (s - .55) / .45;   // dedão deslizando a tela
-      ch.handL.position.set(-.62, 1.95 + Math.sin(t * 3) * .02, 1.2);
-      ch.handR.position.set(.62 - .45 * k, 1.95 + .6 * k, 1.28 + .05 * k);
-      R3.render(sc, cam); ctx.clearRect(0, 0, 360, 280); ctx.drawImage(R3.domElement, 0, 0);
+      const dt = lastT < 0 ? .016 : Math.min(.05, t - lastT); lastT = t; const cyc = Math.floor(t / PER), t0 = t - cyc * PER;
+      if (cyc !== lastCyc) { lastCyc = cyc; b1 = b2 = false; P.forEach(p => { p.life = 0; p.m.visible = false; }); }
+      const post = t0 >= TT, tp = t0 - TT, w = post ? sm(cl(tp / .5, 0, 1)) : 0;
+      if (st !== (post ? 1 : 0)) drawScr(post ? 1 : 0);
+      if (ch.kit.on !== (post && tp > .1)) ch.kit.set(post && tp > .1);
+      // celular: vibra antes de aprovar e some depois
+      const sh = (!post && t0 > TT - .6) ? Math.sin(t * 70) * .025 : 0;
+      ph.visible = !post || tp < .3; ph.scale.setScalar(.6 * (post ? 1 - cl(tp / .3, 0, 1) : 1));
+      ph.position.set(sh, 1.95 + Math.sin(t * 2.6) * .02, 1.55); ph.rotation.set(-.15 + Math.sin(t * 1.7) * .1, Math.sin(t * .8) * .15, Math.sin(t * 1.1) * .08 + sh * 3);
+      // mão direita: cutuca a tela, e no fim aperta o botão "Entrar"
+      const pk = (t0 * 1.7) % 1, kk = pk < .2 ? pk / .2 : pk < .4 ? 1 - (pk - .2) / .2 : 0;
+      const ix = .18 * Math.sin(t0 * 3), iy = 1.78 + .1 * Math.sin(t0 * 4.3), iz = 1.88 - .16 * kk;
+      const a = sm(cl((t0 - (TT - .55)) / .3, 0, 1)), press = sm(cl((t0 - (TT - .2)) / .2, 0, 1)) * (1 - sm(cl(tp / .15, 0, 1)));
+      const ax = lerp(ix, 0, a), ay = lerp(iy, 1.66, a), az = lerp(iz, 1.9, a) - .2 * press;
+      ch.handL.position.set(lerp(-.42, -1.55, w), lerp(1.8, 3.0 + Math.sin(tp * 9) * .15, w), lerp(1.5, .1, w));
+      ch.handR.position.set(lerp(ax, 1.55, w), lerp(ay, 3.0 + Math.sin(tp * 9 + 1.5) * .15, w), lerp(az, .1, w));
+      // cabeça, pulos e chutes na comemoração
+      const jmp = post && tp > .2 ? Math.abs(Math.sin((tp - .2) * 3.6)) * .5 : 0; ch.model.position.y = jmp + Math.abs(Math.sin(t * 2.2)) * .04 * (1 - w);
+      ch.head.rotation.x = lerp(.2 + Math.sin(t * 3.1) * .08, -.05 + Math.sin(tp * 7) * .05, w); ch.head.rotation.y = lerp(Math.sin(t * 1.1) * .3, Math.sin(t * 3) * .25, w);
+      ch.footL.position.y = FOOT_Y + Math.max(0, Math.sin(tp * 7)) * .3 * w; ch.footR.position.y = FOOT_Y + Math.max(0, -Math.sin(tp * 7)) * .3 * w;
+      root.rotation.y = post ? Math.sin(tp * 1.2) * .4 : Math.sin(t * .7) * .2;
+      // boné aparece com "pop", bola cai no cantinho
+      const x = cl(tp / .45, 0, 1), eb = 1 + 2.70158 * Math.pow(x - 1, 3) + 1.70158 * Math.pow(x - 1, 2); hat.scale.setScalar(post ? Math.max(.001, eb) : .001);
+      const tb = tp - .15; ball.g.visible = post && tb > 0;
+      if (ball.g.visible) { ball.g.position.set(1.85, .68 + 3 * Math.exp(-tb * 1.6) * Math.abs(Math.cos(tb * 4.2)), .9); ball.g.rotation.y = tb * 2; ball.spin.rotation.x = tb * 3; }
+      // confete
+      if (post && !b1) { b1 = true; burst(80, 0, 2.5, 1.1, 4.4); }
+      if (post && tp > 1.3 && !b2) { b2 = true; burst(40, -1.7, 3.2, .6, 3.4); burst(40, 1.7, 3.2, .6, 3.4); }
+      if (post && tp < 4.5 && Math.random() < .25) burst(1, (Math.random() - .5) * 3.6, 4.2, .5, .2);
+      for (const p of P) { if (p.life <= 0) continue; p.life -= dt; if (p.life <= 0) { p.m.visible = false; continue; }
+        p.v.x *= 1 - .7 * dt; p.v.z *= 1 - .7 * dt; p.v.y -= 7 * dt; p.m.position.addScaledVector(p.v, dt);
+        p.m.rotation.x += p.w.x * dt; p.m.rotation.y += p.w.y * dt; p.m.rotation.z += p.w.z * dt; if (p.life < .4) p.m.scale.setScalar(p.life / .4); }
+      R3.render(sc, cam); ctx.clearRect(0, 0, 400, 320); ctx.drawImage(R3.domElement, 0, 0);
     } };
   }
 
@@ -7234,7 +7298,7 @@ addEventListener('resize', () => {
     if (!R1) R1 = mkRend(220, 220);
     const ok = unlocked(), e = equipped(), grid = $('wrGrid'); grid.innerHTML = ''; drawables = [];
     ITEMS[tabK].forEach(it => {
-      const lk = it.lock && !ok, on = (tabK === 'ball' ? e.ball : e.hat) === it.id;
+      const lk = it.lock && !ok, on = e[tabK] === it.id;
       const d = document.createElement('div'); d.className = 'wrI' + (lk ? ' lk' : '') + (on ? ' on' : '') + (it.lock ? ' epic' : '');
       const cv = document.createElement('canvas'); cv.width = cv.height = 220; d.appendChild(cv);
       if (it.lock) d.insertAdjacentHTML('beforeend', '<span class="bd">GOOGLE</span>');
@@ -7243,7 +7307,7 @@ addEventListener('resize', () => {
       grid.appendChild(d); drawables.push(card3d(tabK, it.id, cv));
     });
     drawables.push(stage3d($('wrBig')));
-    $('wrCap').textContent = 'Equipado: ' + NAMES[e.ball] + ' • ' + (e.hat === 'google' ? 'Boné Google' : 'Sem acessório');
+    $('wrCap').textContent = NAMES[e.ball] + ' • ' + (e.hat ? 'Boné Google' : 'Sem acessório') + ' • ' + (e.cleat ? 'Chuteira Google' : 'Chuteira clássica');
     document.querySelectorAll('.wrTabs button').forEach(b => b.classList.toggle('on', b.dataset.t === tabK));
   }
   function loop(ms) {
@@ -7260,7 +7324,7 @@ addEventListener('resize', () => {
   $('wgOk').onclick = () => $('wrGift').classList.remove('on');
   new MutationObserver(() => { if ($('gLogin').classList.contains('on')) { try { if (!phoneD) phoneD = phoneCard(); } catch (err) { console.error(err); } start(); } }).observe($('gLogin'), { attributes: true, attributeFilter: ['class'] });
   window.__wr = { gift() { applyAll(); if (!R1) R1 = mkRend(220, 220);
-    drawables = [card3d('ball', 'google', $('wgB')), card3d('hat', 'google', $('wgH'))]; $('wrGift').classList.add('on'); start(); } };
+    drawables = [card3d('ball', 'google', $('wgB')), card3d('hat', 'google', $('wgH')), card3d('cleat', 'google', $('wgC'))]; $('wrGift').classList.add('on'); start(); } };
   applyAll();
 })();
 </script>
