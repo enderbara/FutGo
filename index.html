@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#000000">
-<title>Personagem 3D – Estádio Toon</title>
+<title>Kick.io</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <script>addEventListener("error", function (e) { var d = document.getElementById("err"); if (!d) return; d.style.display = "block"; d.textContent = "Erro: " + e.message + " (linha " + e.lineno + ")"; });</script>
 <style>
@@ -480,7 +480,7 @@ body[data-m="mode"] #modePop{display:grid}
 <div id="fade"></div>
 <div id="err"></div>
 <div id="menu" class="ui">
-  <div class="logo">Fut<span>.io</span></div>
+  <div class="logo">Kick<span>.io</span></div>
   <div class="tcard">
     <div class="crest" id="mCrest"><i class="fa-solid fa-shield-halved"></i></div>
     <div><b id="mTeamName">SEM TIME</b><small id="mTeamSub">Entre num time para poder jogar</small><div class="mrb"><i id="mRb"></i></div></div>
@@ -735,7 +735,7 @@ body.replay #penHint,body.intro #penHint{display:none!important}
   <div class="inCard" id="inHome"><div class="crest" id="inHC"></div><canvas id="inHF" width="96" height="64"></canvas><div><b id="inHN"></b><small id="inHS"></small></div></div>
   <div class="inCard" id="inAway"><div class="crest" id="inAC"></div><canvas id="inAF" width="96" height="64"></canvas><div><b id="inAN"></b><small id="inAS"></small></div></div>
   <div id="inAnthem"><i class="fa-solid fa-music"></i><canvas id="inKF" width="144" height="96"></canvas><div><small id="inKK"></small><b id="inKN"></b></div></div>
-  <div id="inSplash"><small>FUT.IO • ESTÁDIO TOON</small><div class="spRow"><div class="spTeam"><div class="crest" id="inSC1"></div><b id="inSN1"></b></div><div class="spVs">VS</div><div class="spTeam"><div class="crest" id="inSC2"></div><b id="inSN2"></b></div></div><em>PARTIDA AMISTOSA • 2 TEMPOS</em></div>
+  <div id="inSplash"><small>KICK.IO • ESTÁDIO TOON</small><div class="spRow"><div class="spTeam"><div class="crest" id="inSC1"></div><b id="inSN1"></b></div><div class="spVs">VS</div><div class="spTeam"><div class="crest" id="inSC2"></div><b id="inSN2"></b></div></div><em>PARTIDA AMISTOSA • 2 TEMPOS</em></div>
   <div class="inLine" id="inHL"></div><div class="inLine" id="inAL"></div>
   <div id="inCount"></div>
   <div id="inSkip">Enter: pular apresentação</div>
@@ -1115,8 +1115,8 @@ const bc = document.createElement('canvas'); bc.width = 384; bc.height = 64;
   const g = bc.getContext('2d');
   g.fillStyle = '#1e88e5'; g.fillRect(0, 0, 384, 64);
   g.font = 'bold 40px system-ui,sans-serif'; g.textAlign = 'left'; g.textBaseline = 'middle';
-  const w1 = g.measureText('fut').width, w2 = g.measureText('.io').width, x0 = 192 - (w1 + w2) / 2;
-  g.fillStyle = '#ffffff'; g.fillText('fut', x0, 35);
+  const w1 = g.measureText('kick').width, w2 = g.measureText('.io').width, x0 = 192 - (w1 + w2) / 2;
+  g.fillStyle = '#ffffff'; g.fillText('kick', x0, 35);
   g.fillStyle = '#ff914d'; g.fillText('.io', x0 + w1, 35);
 }
 const BOARD_TILE = 5.4;            // largura de 1 repetição do texto, em unidades do estádio
