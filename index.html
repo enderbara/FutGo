@@ -7008,42 +7008,36 @@ addEventListener('resize', () => {
     clearTimeout(timer); try { if (tok && window.google) google.accounts.oauth2.revoke(tok.v, () => {}); } catch (_) {}
     tok = null; sess = null; fileId = null; pending = false; rawRm.call(LS, K_SESS); setStatus('off');
   }
-  /* ---------- personagem 3D (three.js do próprio jogo) mexendo no celular ---------- */
+  /* ---------- personagem 3D: o MESMO boneco do jogo (mesmas peças, contorno e camisa) mexendo no celular ---------- */
   function makeHero() {
-    const cv = $('gHero'); if (!cv || !window.THREE) return null;
+    const cv = $('gHero'); if (!cv || !window.THREE || typeof part !== 'function' || typeof SPEC === 'undefined') return null;
     const T = THREE; let R;
-    try { R = new T.WebGLRenderer({ canvas: cv, alpha: true, antialias: true }); } catch (_) { return null; }
+    try { R = new T.WebGLRenderer({ canvas: cv, alpha: true, antialias: true, stencil: true }); } catch (_) { return null; }
     R.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    const scene = new T.Scene(), cam = new T.PerspectiveCamera(32, 1, .1, 50);
-    cam.position.set(0, .15, 5.6); cam.lookAt(0, -.3, 0);
-    scene.add(new T.AmbientLight(0xffffff, .9)); const dl = new T.DirectionalLight(0xffffff, .65); dl.position.set(2, 4, 5); scene.add(dl);
-    const BLACK = new T.MeshBasicMaterial({ color: 0x000000, side: T.BackSide }), lam = c => new T.MeshLambertMaterial({ color: c });
-    const SPH = new T.SphereGeometry(1, 32, 24);
-    function mk(geo, mat, x, y, z, sx, sy, sz, ol) {                  // malha + contorno preto (casco invertido), igual ao estilo do jogo
-      const m = new T.Mesh(geo, mat); m.position.set(x, y, z); m.scale.set(sx, sy, sz);
-      if (ol) { const o = new T.Mesh(geo, BLACK); o.scale.setScalar(ol); m.add(o); } return m;
-    }
-    // camisa listrada
-    const tc = document.createElement('canvas'); tc.width = 256; tc.height = 8; const tx = tc.getContext('2d');
-    for (let i = 0; i < 8; i++) { tx.fillStyle = i % 2 ? '#d32f2f' : '#ffffff'; tx.fillRect(i * 32, 0, 32, 8); }
-    const stripe = new T.CanvasTexture(tc);
+    const scene = new T.Scene(), cam = new T.PerspectiveCamera(30, 1, .1, 100);
+    cam.position.set(0, 2.5, 10.2); cam.lookAt(0, 1.95, 0);
+    scene.add(new T.HemisphereLight(0xffffff, 0x556677, .85)); const dl = new T.DirectionalLight(0xffffff, .5); dl.position.set(6, 16, 8); scene.add(dl);
     const root = new T.Group(), ch = new T.Group(); root.add(ch); scene.add(root);
-    ch.add(mk(SPH, new T.MeshLambertMaterial({ map: stripe }), 0, -.62, 0, .62, .66, .56, 1.08));
-    ch.add(mk(SPH, lam(0x4a4a52), -.3, -1.22, .12, .27, .15, .36, 1.1), mk(SPH, lam(0x4a4a52), .3, -1.22, .12, .27, .15, .36, 1.1));
-    const head = new T.Group(); ch.add(head);
-    head.add(mk(SPH, lam(0xf3f0c6), 0, .6, 0, .78, .78, .78, 1.06));
-    const eyeM = lam(0x111111), eL = mk(SPH, eyeM, -.27, .64, .72, .12, .2, .08, 0), eR = mk(SPH, eyeM, .27, .64, .72, .12, .2, .08, 0); head.add(eL, eR);
-    // celular
-    const w = .58, h = .92, r = .1, sh = new T.Shape();
+    const sk = (typeof members !== 'undefined' && typeof USER_SLOT !== 'undefined' && members[USER_SLOT] && members[USER_SLOT].skin) || null;   // tom de pele escolhido por você
+    const P = (k, id, col) => part(col == null ? SPEC[k][0] : col, SPEC[k][1], SPEC[k][2], SPEC[k][3], SPEC[k][4], SPEC[k][5], SPEC[k][6], id);
+    const body = P('body', 1), head = P('head', 1, sk), hl = P('handL', 4, sk), hr = P('handR', 5, sk), fl = P('footL', 1), fr2 = P('footR', 1);
+    if (typeof shirtTex !== 'undefined') { const m = body.children[0].material; m.color.set(0xffffff); m.map = shirtTex; m.needsUpdate = true; }   // o seu uniforme
+    const eyes = [];
+    for (const [cx, cy] of EYES) { const m = new T.Mesh(eyeGeometry(4), stencilize(new T.MeshBasicMaterial({ color: 0x232323 }), 1)), pl = eyePlacement(cx, cy);
+      m.position.copy(pl.pos); m.quaternion.copy(pl.quat); m.renderOrder = 1; head.add(m); eyes.push(m); }
+    const hp = new T.Group(); hp.position.set(0, 2.1, .2); head.position.set(SPEC.head[4], SPEC.head[5] - 2.1, SPEC.head[6] - .2); hp.add(head);   // pescoço = pivô da cabeça
+    ch.add(body, hp, hl, hr, fl, fr2);
+    // celular (mesmo contorno escuro #232323 do jogo)
+    const w = 1.02, h = 1.62, r = .17, sh = new T.Shape();
     sh.moveTo(-w / 2 + r, -h / 2); sh.lineTo(w / 2 - r, -h / 2); sh.quadraticCurveTo(w / 2, -h / 2, w / 2, -h / 2 + r); sh.lineTo(w / 2, h / 2 - r);
     sh.quadraticCurveTo(w / 2, h / 2, w / 2 - r, h / 2); sh.lineTo(-w / 2 + r, h / 2); sh.quadraticCurveTo(-w / 2, h / 2, -w / 2, h / 2 - r);
     sh.lineTo(-w / 2, -h / 2 + r); sh.quadraticCurveTo(-w / 2, -h / 2, -w / 2 + r, -h / 2);
-    const pg = new T.ExtrudeGeometry(sh, { depth: .07, bevelEnabled: true, bevelSize: .02, bevelThickness: .02, bevelSegments: 2, curveSegments: 8 }); pg.translate(0, 0, -.035);
-    const ph = new T.Group(); ch.add(ph); ph.add(mk(pg, lam(0x1d2230), 0, 0, 0, 1, 1, 1, 1.07));
+    const pg = new T.ExtrudeGeometry(sh, { depth: .1, bevelEnabled: false, curveSegments: 10 }); pg.translate(0, 0, -.05);
+    const ph = new T.Group(); ch.add(ph);
+    const pf = new T.Mesh(pg, stencilize(new T.MeshLambertMaterial({ color: 0x2b3142 }), 6)), pl2 = new T.Mesh(pg, charHull(6));
+    pf.renderOrder = 1; pl2.renderOrder = 2; pl2.scale.set(1.15, 1.09, 1.9); ph.add(pf, pl2);
     const sc = document.createElement('canvas'); sc.width = 256; sc.height = 432; const g = sc.getContext('2d'), tex = new T.CanvasTexture(sc);
-    const scr = new T.Mesh(new T.PlaneGeometry(.5, .84), new T.MeshBasicMaterial({ map: tex })); scr.position.z = .06; ph.add(scr);
-    // mãos redondas (soltas, como no jogo)
-    const handM = lam(0xf3f0c6), hl = mk(SPH, handM, -.42, -.7, .9, .17, .17, .17, 1.12), hr = mk(SPH, handM, .42, -.7, .9, .17, .17, .17, 1.12); ch.add(hl, hr);
+    const scr = new T.Mesh(new T.PlaneGeometry(.86, 1.44), new T.MeshBasicMaterial({ map: tex })); scr.position.z = .056; scr.renderOrder = 3; ph.add(scr);
     // tela do celular
     const gimg = new Image(); gimg.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(GLOGO.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" '));
     const COLS = ['#ea4335', '#4285f4', '#fbbc05', '#34a853'];
@@ -7068,40 +7062,40 @@ addEventListener('resize', () => {
       g.fillText(kind === 'wow' ? '!?!?' : 'KKKKKK', 128, 350 + (kind === 'wow' ? 0 : Math.sin(t * 30) * 4)); g.textAlign = 'left';
     }
     // animação: navega -> toma um susto -> ri muito -> volta a digitar
-    const S = { pitch: .28, eyeY: 1, eyeS: 1, shake: 0, up: 0 }, tgtH = new T.Vector3(), P = (o, k) => o[k];
+    const S = { pitch: .3, eyeY: 1, eyeS: 1, shake: 0, up: 0 }, tgtH = new T.Vector3();
     let run = false, t0 = 0, last = 0, yawDrag = 0, drag = null, raf = 0;
-    const fr = x => x - Math.floor(x), ease = (a, b, k) => a + (b - a) * Math.min(1, k);
+    const fract = x => x - Math.floor(x), ease = (a, b, k) => a + (b - a) * Math.min(1, k);
     function frame(now) {
       if (!run) return; raf = requestAnimationFrame(frame);
       const t = (now - t0) / 1000, dt = Math.min(.05, (now - last) / 1000); last = now; const c = t % 9;
-      let mode = 'feed', tg = { pitch: .3, eyeY: 1, eyeS: 1, shake: 0, up: 0 };
-      if (c >= 3 && c < 3.9) { mode = 'wow'; tg = { pitch: -.12, eyeY: 1.05, eyeS: 1.6, shake: 0, up: .14 }; }
-      else if (c >= 3.9 && c < 6.4) { mode = 'laugh'; tg = { pitch: -.38, eyeY: .2, eyeS: 1, shake: 1, up: .06 }; }
+      let mode = 'feed', tg = { pitch: .32, eyeY: 1, eyeS: 1, shake: 0, up: 0 };
+      if (c >= 3 && c < 3.9) { mode = 'wow'; tg = { pitch: -.12, eyeY: 1.05, eyeS: 1.5, shake: 0, up: .22 }; }
+      else if (c >= 3.9 && c < 6.4) { mode = 'laugh'; tg = { pitch: -.4, eyeY: .2, eyeS: 1, shake: 1, up: .1 }; }
       for (const k in tg) S[k] = ease(S[k], tg[k], dt * 10);
       // pulo + esticar/amassar no susto
       const jt = c - 3, jump = jt >= 0 && jt < .6 ? Math.sin(Math.PI * jt / .6) : 0, land = jt >= .6 && jt < .95 ? Math.sin(Math.PI * (jt - .6) / .35) : 0;
-      ch.position.y = jump * .3; ch.scale.set(1 - .06 * jump + .1 * land, 1 + .1 * jump - .12 * land, 1 - .06 * jump + .1 * land);
-      ch.position.x = Math.sin(t * 55) * .035 * S.shake; ch.rotation.z = Math.sin(t * 1.6) * .03 + Math.sin(t * 40) * .05 * S.shake;
-      head.rotation.x = S.pitch; head.rotation.z = Math.sin(t * 2.3) * .1 * (1 - S.shake) + Math.sin(t * 34) * .07 * S.shake; head.rotation.y = Math.sin(t * 1.3) * .12 * (1 - S.shake);
-      const blink = (t % 3.3) > 3.2 ? .1 : 1, ey = .2 * S.eyeS * S.eyeY * blink, ex = .12 * S.eyeS;
-      eL.scale.set(ex, ey, .08); eR.scale.set(ex, ey, .08);
-      ph.position.set(Math.sin(t * 50) * .02 * S.shake, -.62 + S.up + Math.sin(t * 3) * .015 + Math.sin(t * 44) * .025 * S.shake, .8);
-      ph.rotation.set(-.2 + Math.sin(t * 36) * .06 * S.shake, 0, Math.sin(t * 31) * .09 * S.shake);
+      ch.position.y = jump * .8; ch.scale.set(1 - .06 * jump + .1 * land, 1 + .1 * jump - .12 * land, 1 - .06 * jump + .1 * land);
+      ch.position.x = Math.sin(t * 55) * .09 * S.shake; ch.rotation.z = Math.sin(t * 1.6) * .03 + Math.sin(t * 40) * .05 * S.shake;
+      hp.rotation.x = S.pitch; hp.rotation.z = Math.sin(t * 2.3) * .1 * (1 - S.shake) + Math.sin(t * 34) * .07 * S.shake; hp.rotation.y = Math.sin(t * 1.3) * .12 * (1 - S.shake);
+      const blink = (t % 3.3) > 3.2 ? .1 : 1, ey = S.eyeS * S.eyeY * blink, ex = S.eyeS;
+      for (const e of eyes) e.scale.set(ex, ey, 1);
+      ph.position.set(Math.sin(t * 50) * .05 * S.shake, 1.3 + S.up + Math.sin(t * 3) * .04 + Math.sin(t * 44) * .06 * S.shake, .95);
+      ph.rotation.set(-.18 + Math.sin(t * 36) * .06 * S.shake, 0, Math.sin(t * 31) * .09 * S.shake);
       // mão direita dá "scroll" na tela; ao rir, segura a barriga. mão esquerda segura e dá toquinhos
-      const p = fr(t * 1.6), up = S.up;
-      if (mode === 'laugh') tgtH.set(.58 + Math.sin(t * 40) * .03, -1.0 + Math.sin(t * 33) * .05, .72);
-      else tgtH.set(.1 + Math.sin(t * 3) * .1, (p < .7 ? -.98 + (p / .7) * .62 : -.36 - ((p - .7) / .3) * .62) + up, p < .7 ? 1.0 : 1.0 + .22 * Math.sin(Math.PI * (p - .7) / .3));
+      const p = fract(t * 1.6), up = S.up;
+      if (mode === 'laugh') tgtH.set(.78 + Math.sin(t * 40) * .06, 1.1 + Math.sin(t * 33) * .1, .62);
+      else tgtH.set(.2 + Math.sin(t * 3) * .2, (p < .7 ? .75 + (p / .7) * .9 : 1.65 - ((p - .7) / .3) * .9) + up, p < .7 ? 1.18 : 1.18 + .5 * Math.sin(Math.PI * (p - .7) / .3));
       hr.position.lerp(tgtH, Math.min(1, dt * 16));
-      const tap = mode === 'feed' && c > 6.4 ? Math.max(0, Math.sin(t * 14)) * .08 : 0;
-      hl.position.set(-.43 + Math.sin(t * 40) * .02 * S.shake, -.7 + up + Math.sin(t * 44) * .03 * S.shake, .9 + tap);
+      const tap = mode === 'feed' && c > 6.4 ? Math.max(0, Math.sin(t * 14)) * .2 : 0;
+      hl.position.set(-.66 + Math.sin(t * 40) * .05 * S.shake, 1.2 + up + Math.sin(t * 44) * .08 * S.shake, 1.12 + tap);
       // tela
       if (mode === 'feed') feed(t * (c > 6.4 ? 340 : 230)); else face(mode, t); tex.needsUpdate = true;
-      if (!drag) yawDrag *= 1 - Math.min(1, dt * 3); root.rotation.y = Math.sin(t * .7) * .35 + yawDrag;
+      if (!drag) yawDrag *= 1 - Math.min(1, dt * 3); root.rotation.y = .24 + Math.sin(t * .7) * .35 + yawDrag;   // .24 = o mesmo ângulo do menu (olhos de frente)
       R.render(scene, cam);
     }
     cv.addEventListener('pointerdown', e => { drag = { x: e.clientX, y0: yawDrag }; try { cv.setPointerCapture(e.pointerId); } catch (_) {} cv.style.cursor = 'grabbing'; });
     cv.addEventListener('pointermove', e => { if (drag) yawDrag = drag.y0 + (e.clientX - drag.x) * .012; });
-    const up = () => { drag = null; cv.style.cursor = 'grab'; }; cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+    const rel = () => { drag = null; cv.style.cursor = 'grab'; }; cv.addEventListener('pointerup', rel); cv.addEventListener('pointercancel', rel);
     return {
       start() { const W = cv.clientWidth || 200, H = cv.clientHeight || 210; R.setSize(W, H, false); cam.aspect = W / H; cam.updateProjectionMatrix();
         if (run) return; run = true; t0 = last = performance.now(); raf = requestAnimationFrame(frame); },
