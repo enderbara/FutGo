@@ -536,6 +536,9 @@ html.mob #tcSkip{font-size:13px;padding:8px 14px}
   <button class="mbtn cta" id="bTeam">
     <span class="ic"><i class="fa-solid fa-shield-halved"></i></span><span><b id="bTeamT">ENTRAR NUM TIME</b><small id="bTeamS">Escolha o nome e o escudo</small></span>
   </button>
+  <button class="mbtn" id="bWr">
+    <span class="ic"><i class="fa-solid fa-shirt"></i></span><span><b>VESTIÁRIO</b><small>Skins de bola, chapéus e cabelos</small></span>
+  </button>
   <button class="mbtn" id="bCfg">
     <span class="ic"><i class="fa-solid fa-gear"></i></span><span><b>CONFIGURAÇÕES</b><small>Controles, sensibilidade da câmera e mais</small></span>
   </button>
@@ -6784,38 +6787,18 @@ addEventListener('resize', () => {
   #gAcc { position: fixed; bottom: calc(max(8px, env(safe-area-inset-bottom)) + 40px); right: max(12px, env(safe-area-inset-right)); z-index: 200002; display: none; flex-direction: column-reverse; align-items: flex-end; gap: 6px; font: 700 14px system-ui; color: #fff; }
   body[data-m="menu"] #gAcc, body[data-m="team"] #gAcc { display: flex; }
   #gAcc button { font: inherit; color: inherit; cursor: pointer; }
-  #gChip { position: relative; width: 48px; height: 48px; padding: 0; border-radius: 50%; display: grid; place-items: center; background: #fff; border: 4px solid #000; box-shadow: 0 4px 14px rgba(0,0,0,.5); transition: transform .15s; }
+  #gChip { position: relative; width: 48px; height: 48px; padding: 0; border-radius: 50%; display: grid; place-items: center; background: #fff; border: 3px solid rgba(255,255,255,.95); box-shadow: 0 4px 16px rgba(0,0,0,.55); transition: transform .15s; }
   #gChip:hover { transform: scale(1.08); } #gChip:active { transform: scale(.95); }
   #gChip img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; }
   #gChip .gl { width: 26px; height: 26px; display: grid; place-items: center; } #gChip .gl svg { width: 100%; height: 100%; }
-  #gChip .dot { position: absolute; right: -4px; bottom: -4px; width: 15px; height: 15px; border-radius: 50%; background: #9e9e9e; border: 3px solid #000; box-sizing: border-box; }
+  #gChip .dot { position: absolute; right: -4px; bottom: -4px; width: 15px; height: 15px; border-radius: 50%; background: #9e9e9e; border: 3px solid #0d1426; box-sizing: border-box; }
   #gAcc[data-s="ok"] .dot { background: #4caf50; } #gAcc[data-s="saving"] .dot, #gAcc[data-s="syncing"] .dot { background: #ffd54a; animation: gp 1s infinite; }
   #gAcc[data-s="pending"] .dot, #gAcc[data-s="auth"] .dot { background: #ff9800; } #gAcc[data-s="error"] .dot, #gAcc[data-s="offline"] .dot { background: #e53935; }
-  #ver, #gAcc { transition: opacity .6s; }
-  body:has(#splash:not(.out)) #ver, body:has(#splash:not(.out)) #gAcc { opacity: 0; pointer-events: none; }
   #ver { font: 800 13px system-ui; letter-spacing: .5px; color: #fff; background: rgba(8,12,24,.78); padding: 4px 10px; border-radius: 999px; text-shadow: none; }
   @keyframes gp { 50% { opacity: .3; } }
   #gMenu { display: none; flex-direction: column; min-width: 190px; padding: 6px; border-radius: 14px; background: rgba(8,12,24,.95); border: 2px solid rgba(255,255,255,.2); box-shadow: 0 10px 30px rgba(0,0,0,.5); }
-  #gMenu.on { display: flex; } #gMenu button i { width: 20px; text-align: center; margin-right: 4px; opacity: .85; }
-  #gMenu button { background: none; border: 0; text-align: left; padding: 10px 12px; border-radius: 9px; }
+  #gMenu.on { display: flex; } #gMenu button { background: none; border: 0; text-align: left; padding: 10px 12px; border-radius: 9px; }
   #gMenu button:hover { background: rgba(255,255,255,.14); } #gMenu .em { font: 600 11px system-ui; opacity: .6; padding: 6px 12px 4px; word-break: break-all; }
-  #gIntro { position: fixed; inset: 0; z-index: 200004; display: none; place-items: center; padding: 12px; box-sizing: border-box; background: rgba(0,0,0,.72); font-family: system-ui, sans-serif; color: #fff; }
-  #gIntro.on { display: grid; animation: gFade .2s; } @keyframes gFade { from { opacity: 0; } }
-  #gIntro .card { position: relative; width: min(390px, 100%); max-height: 100%; overflow: auto; box-sizing: border-box; padding: 22px 22px 18px; text-align: center; border-radius: 24px; background: linear-gradient(180deg, #17254a, #0b1226); border: 4px solid #000; box-shadow: 0 0 0 2px rgba(255,255,255,.18), 0 20px 50px rgba(0,0,0,.6); animation: gPop .35s cubic-bezier(.2,1.3,.4,1); }
-  @keyframes gPop { from { transform: scale(.85) translateY(20px); opacity: 0; } }
-  #gIntro .hero { width: 230px; margin: -6px auto 0; position: relative; } #gIntro .hero::before { content: ''; position: absolute; inset: 10% 6% 4%; border-radius: 50%; background: radial-gradient(circle, rgba(66,133,244,.35), transparent 68%); }
-  #gHero { position: relative; }
-  #gHero { width: 100%; aspect-ratio: 20 / 21; display: block; cursor: grab; touch-action: pan-y; } #gHeroFb { display: none; place-items: center; height: 150px; font-size: 90px; color: #ffd54a; }
-  #gIntro h3 { margin: 6px 0 6px; font: 900 26px system-ui; letter-spacing: .5px; color: #ffd54a; text-shadow: 0 2px 0 #000; }
-  #gIntro p { margin: 0 0 12px; font-size: 14px; line-height: 1.45; opacity: .88; }
-  #gIntro ul { list-style: none; margin: 0 0 16px; padding: 0; text-align: left; display: flex; flex-direction: column; gap: 8px; }
-  #gIntro li { display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; line-height: 1.35; padding: 9px 11px; border-radius: 12px; background: rgba(255,255,255,.08); }
-  #gIntro li b { display: block; font-size: 14px; } #gIntro li .ic { font-size: 19px; line-height: 1.1; flex: none; width: 24px; text-align: center; }
-  #gGo { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 12px 16px; border-radius: 14px; border: 3px solid #000; background: #fff; color: #1f1f1f; font: 800 16px system-ui; cursor: pointer; box-shadow: 0 4px 0 #000; }
-  #gGo:hover { background: #f1f3f4; } #gGo:active { transform: translateY(3px); box-shadow: 0 1px 0 #000; } #gGo svg { width: 22px; height: 22px; }
-  #gNo { margin-top: 10px; background: none; border: 0; color: #fff; opacity: .65; font: 700 13px system-ui; cursor: pointer; padding: 6px 10px; } #gNo:hover { opacity: 1; }
-  @media (max-height: 520px) and (min-width: 560px) { #gIntro .card { width: min(660px, 100%); display: grid; grid-template-columns: 200px 1fr; column-gap: 20px; align-items: center; text-align: left; padding: 16px 22px; }
-    #gIntro .hero { grid-row: 1 / 6; width: 200px; margin: 0; } #gIntro ul { margin-bottom: 12px; } #gIntro h3 { margin-top: 0; } }
   #gToast { display: none; max-width: min(340px, 86vw); padding: 11px 14px; border-radius: 12px; background: #b71c1c; border: 2px solid #ef9a9a; font: 700 13px/1.4 system-ui; box-shadow: 0 8px 24px rgba(0,0,0,.5); }
   #gToast.on { display: block; }
   #gModal { position: fixed; inset: 0; z-index: 200003; display: none; place-items: center; background: rgba(0,0,0,.7); font-family: system-ui; color: #fff; }
@@ -6829,24 +6812,12 @@ addEventListener('resize', () => {
   <button id="gChip" type="button" title="Salvar o jogo na sua conta Google"></button>
   <div id="gMenu">
     <div class="em" id="gEmail"></div>
-    <button type="button" id="gNow"><i class="fa-solid fa-cloud-arrow-up"></i> Salvar agora</button>
-    <button type="button" id="gLoad"><i class="fa-solid fa-cloud-arrow-down"></i> Carregar da nuvem</button>
-    <button type="button" id="gOut"><i class="fa-solid fa-right-from-bracket"></i> Sair da conta</button>
+    <button type="button" id="gNow">☁ Salvar agora</button>
+    <button type="button" id="gLoad">⬇ Carregar da nuvem</button>
+    <button type="button" id="gOut">⎋ Sair da conta</button>
   </div>
   <div id="gToast" role="alert"></div>
 </div>
-<div id="gIntro" role="dialog" aria-modal="true" aria-labelledby="gIntroT"><div class="card">
-  <div class="hero"><canvas id="gHero"></canvas><div id="gHeroFb"><i class="fa-solid fa-mobile-screen-button"></i></div></div>
-  <h3 id="gIntroT">Entre com o Google!</h3>
-  <p>Conecte sua conta para o seu time nunca se perder.</p>
-  <ul>
-    <li><span class="ic" style="color:#8ab4f8"><i class="fa-solid fa-cloud-arrow-up"></i></span><span><b>Progresso salvo sozinho</b>Time, uniforme, escudo, estatísticas e XP são guardados na sua conta automaticamente.</span></li>
-    <li><span class="ic" style="color:#81c995"><i class="fa-solid fa-mobile-screen-button"></i></span><span><b>Jogue em qualquer lugar</b>Troque de celular ou computador e continue de onde parou.</span></li>
-    <li><span class="ic" style="color:#fdd663"><i class="fa-solid fa-lock"></i></span><span><b>Seguro e privado</b>O jogo usa só uma pasta escondida no seu Drive. Seus outros arquivos nunca são acessados.</span></li>
-  </ul>
-  <button id="gGo" type="button"></button>
-  <button id="gNo" type="button"><i class="fa-solid fa-xmark"></i> Agora não</button>
-</div></div>
 <div id="gModal"><div>
   <h3>Qual jogo você quer usar?</h3>
   <p id="gModalTxt">Encontramos um jogo salvo na sua conta e outro neste aparelho.</p>
@@ -6868,7 +6839,7 @@ addEventListener('resize', () => {
   function toast(e) {
     const c = (e && (e.code || e.message)) || 'erro';
     const M = { file: 'Abra o jogo por um endereço http(s) (seu site ou localhost). Abrindo o arquivo direto, o login do Google não funciona.',
-      gis: 'Não consegui carregar o login do Google (accounts.google.com/gsi/client). ' + (top !== self ? 'O jogo está dentro de uma pré-visualização (iframe), que costuma bloquear o Google: abra o jogo direto no seu site ou em localhost. ' : 'Se você abriu o jogo numa pré-visualização (Claude, CodePen, etc.) ou o site tem uma política de segurança (CSP) restrita, o Google é bloqueado. ') + 'Endereço atual: ' + location.origin,
+      gis: 'Não consegui carregar o login do Google. Verifique a internet ou desative bloqueadores de anúncios para este site.',
       popup_failed_to_open: 'O navegador bloqueou a janela de login. Permita pop-ups para este site e tente de novo.',
       popup_closed: 'A janela de login foi fechada antes de terminar.', access_denied: 'Acesso negado. Se o app está em modo Teste no Google Cloud, adicione seu e-mail em "Usuários de teste".' };
     let m = M[c];
@@ -6893,8 +6864,7 @@ addEventListener('resize', () => {
 
   /* ---------- autenticação (Google Identity Services) ---------- */
   function initGIS() {
-    if (tc) return true;
-    if (!window.google || !google.accounts || !google.accounts.oauth2) return false;
+    if (tc || !window.google || !google.accounts || !google.accounts.oauth2) return false;
     tc = google.accounts.oauth2.initTokenClient({
       client_id: CID, scope: SCOPE,
       callback: r => { const w = waiter; waiter = null; if (!w) return;
@@ -7000,132 +6970,18 @@ addEventListener('resize', () => {
       await getToken();
       const u = await (await api('https://www.googleapis.com/oauth2/v3/userinfo')).json();
       sess = { sub: u.sub, name: u.name || u.given_name || 'Jogador', picture: u.picture || '' };
-      rawSet.call(LS, K_SESS, JSON.stringify(sess)); fileId = null; busy = false; await reconcile();
+      rawSet.call(LS, K_SESS, JSON.stringify(sess)); fileId = null; busy = false; await reconcile(); if (!LS.getItem('futio_gift')) { LS.setItem('futio_gift', '1'); LS.setItem('futio_wr', JSON.stringify({ ball: 'google', hat: 'google' })); if (window.__wr) window.__wr.gift(); }
     } catch (e) { toast(e); setStatus(sess ? (e.auth ? 'auth' : 'error') : 'off'); }
     finally { busy = false; }
   }
   function logout() {
     clearTimeout(timer); try { if (tok && window.google) google.accounts.oauth2.revoke(tok.v, () => {}); } catch (_) {}
-    tok = null; sess = null; fileId = null; pending = false; rawRm.call(LS, K_SESS); setStatus('off');
+    tok = null; sess = null; fileId = null; pending = false;
+    try { const del = []; for (let i = 0; i < LS.length; i++) { const k = LS.key(i); if (isSave(k) || k.startsWith('gsave_')) del.push(k); } del.forEach(k => rawRm.call(LS, k)); } catch (_) {}
+    location.reload();   // volta do zero
   }
-  /* ---------- personagem 3D: o MESMO boneco do jogo, com um celular numa das mãos ---------- */
-  function makeHero() {
-    const cv = $('gHero'); if (!cv || !window.THREE || typeof part !== 'function' || typeof SPEC === 'undefined') return null;
-    const T = THREE; let R;
-    try { R = new T.WebGLRenderer({ canvas: cv, alpha: true, antialias: true, stencil: true }); } catch (_) { return null; }
-    R.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    const scene = new T.Scene(), cam = new T.PerspectiveCamera(30, 1, .1, 100);
-    cam.position.set(0, 2.5, 11.2); cam.lookAt(0, 1.95, 0);
-    scene.add(new T.HemisphereLight(0xffffff, 0x556677, .85)); const dl = new T.DirectionalLight(0xffffff, .5); dl.position.set(6, 16, 8); scene.add(dl);
-    const root = new T.Group(), ch = new T.Group(); root.add(ch); scene.add(root);
-    const sk = (typeof members !== 'undefined' && typeof USER_SLOT !== 'undefined' && members[USER_SLOT] && members[USER_SLOT].skin) || null;   // tom de pele escolhido por você
-    const P = (k, id, col) => part(col == null ? SPEC[k][0] : col, SPEC[k][1], SPEC[k][2], SPEC[k][3], SPEC[k][4], SPEC[k][5], SPEC[k][6], id);
-    const body = P('body', 1), head = P('head', 1, sk), hl = P('handL', 4, sk), hr = P('handR', 5, sk), fl = P('footL', 1), fr2 = P('footR', 1);
-    if (typeof shirtTex !== 'undefined') { const m = body.children[0].material; m.color.set(0xffffff); m.map = shirtTex; m.needsUpdate = true; }   // o seu uniforme
-    const eyes = [];
-    for (const [cx, cy] of EYES) { const m = new T.Mesh(eyeGeometry(4), stencilize(new T.MeshBasicMaterial({ color: 0x232323 }), 1)), pl = eyePlacement(cx, cy);
-      m.position.copy(pl.pos); m.quaternion.copy(pl.quat); m.renderOrder = 1; head.add(m); eyes.push(m); }
-    const hp = new T.Group(); hp.position.set(0, 2.1, .2); head.position.set(SPEC.head[4], SPEC.head[5] - 2.1, SPEC.head[6] - .2); hp.add(head);   // pescoço = pivô da cabeça
-    ch.add(body, hp, hl, hr, fl, fr2);
-    // ----- celular: moldura escura (#232323, igual ao contorno do jogo) + corpo + tela; sem stencil, então não "borra" -----
-    const rrShape = (w, h, r) => { const s = new T.Shape();
-      s.moveTo(-w / 2 + r, -h / 2); s.lineTo(w / 2 - r, -h / 2); s.quadraticCurveTo(w / 2, -h / 2, w / 2, -h / 2 + r); s.lineTo(w / 2, h / 2 - r);
-      s.quadraticCurveTo(w / 2, h / 2, w / 2 - r, h / 2); s.lineTo(-w / 2 + r, h / 2); s.quadraticCurveTo(-w / 2, h / 2, -w / 2, h / 2 - r);
-      s.lineTo(-w / 2, -h / 2 + r); s.quadraticCurveTo(-w / 2, -h / 2, -w / 2 + r, -h / 2); return s; };
-    const slab = (w, h, r, d, z, mat) => { const gm = new T.ExtrudeGeometry(rrShape(w, h, r), { depth: d, bevelEnabled: false, curveSegments: 10 }); gm.translate(0, 0, z - d / 2); return new T.Mesh(gm, mat); };
-    const PW = .62, PH = 1.0, ph = new T.Group(); ch.add(ph);
-    ph.add(slab(PW + .11, PH + .11, .17, .08, -.025, new T.MeshBasicMaterial({ color: 0x232323 })), slab(PW, PH, .12, .08, 0, new T.MeshLambertMaterial({ color: 0x3b4254 })));
-    const sc = document.createElement('canvas'); sc.width = 256; sc.height = 424; const g = sc.getContext('2d'), tex = new T.CanvasTexture(sc);
-    const scr = new T.Mesh(new T.PlaneGeometry(PW - .09, PH - .13), new T.MeshBasicMaterial({ map: tex })); scr.position.z = .044; ph.add(scr);
-    // ----- presente -----
-    const HULL = new T.MeshBasicMaterial({ color: 0x232323, side: T.BackSide }), SPH = new T.SphereGeometry(1, 16, 12);
-    const box = (w, h, d, col, x, y, z, ol) => { const gm = new T.BoxGeometry(w, h, d), m = new T.Mesh(gm, new T.MeshLambertMaterial({ color: col })); m.position.set(x, y, z);
-      if (ol) { const o = new T.Mesh(gm, HULL); o.scale.set(1 + ol / w, 1 + ol / h, 1 + ol / d); m.add(o); } return m; };
-    const gift = new T.Group(); gift.visible = false;
-    gift.add(box(.95, .7, .95, 0xe53935, 0, .35, 0, .14), box(1.05, .26, 1.05, 0xc62828, 0, .83, 0, .14), box(.2, .72, .97, 0xffd54a, 0, .35, 0, 0), box(.97, .72, .2, 0xffd54a, 0, .35, 0, 0),
-      box(.22, .28, 1.07, 0xffd54a, 0, .83, 0, 0), box(1.07, .28, .22, 0xffd54a, 0, .83, 0, 0));
-    for (const [bx, rz, sx] of [[-.22, .55, .3], [.22, -.55, .3], [0, 0, .13]]) {
-      const m = new T.Mesh(SPH, new T.MeshLambertMaterial({ color: 0xffd54a })); m.position.set(bx, 1.1, 0); m.rotation.z = rz; m.scale.set(sx, sx * .68, sx * .55);
-      const o = new T.Mesh(SPH, HULL); o.scale.setScalar(1.22); m.add(o); gift.add(m); }
-    gift.position.set(2.0, .2, .5); root.add(gift);
-    const GP = new T.Vector3(2.0, .8, .5), pcs = [], PCOL = [0xffd54a, 0xffffff, 0xff8ab3, 0x7ad7ff];
-    for (let i = 0; i < 12; i++) { const m = new T.Mesh(SPH, new T.MeshBasicMaterial({ color: PCOL[i % 4] })); m.visible = false; root.add(m);
-      const a = i / 12 * 6.283, e = (i % 3 - 1) * .5; pcs.push({ m, d: new T.Vector3(Math.cos(a), Math.sin(a) * .8 + .3 + e * .4, Math.sin(a * 2) * .6) }); }
-    function burst(u, rad) { for (const p of pcs) { if (u <= 0 || u >= 1) { p.m.visible = false; continue; } p.m.visible = true;
-      p.m.position.set(GP.x + p.d.x * rad * (1 - (1 - u) * (1 - u)), GP.y + p.d.y * rad * (1 - (1 - u) * (1 - u)), GP.z + p.d.z * rad * (1 - (1 - u) * (1 - u))); p.m.scale.setScalar(.14 * (1 - u) + .01); } }
-    // ----- tela do celular: fundo branco + logo do Google  ->  fundo verde + ícone de aprovado -----
-    const gimg = new Image(); gimg.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(GLOGO.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" '));
-    function screenLogo(t) {
-      g.fillStyle = '#fff'; g.fillRect(0, 0, 256, 424); const z = 1 + .05 * Math.sin(t * 5), s = 130 * z;
-      if (gimg.complete && gimg.naturalWidth) g.drawImage(gimg, 128 - s / 2, 212 - s / 2, s, s);
-      else { g.fillStyle = '#4285f4'; g.font = '900 120px system-ui'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('G', 128, 217); g.textAlign = 'left'; }
-    }
-    function screenOk(p) {
-      const gr = g.createLinearGradient(0, 0, 0, 424); gr.addColorStop(0, '#43c15f'); gr.addColorStop(1, '#1e8e3e'); g.fillStyle = gr; g.fillRect(0, 0, 256, 424);
-      const k = 1 + .12 * Math.sin(Math.min(1, p * 1.4) * 3.14); g.save(); g.translate(128, 185); g.scale(k, k);
-      g.fillStyle = '#fff'; g.beginPath(); g.arc(0, 0, 76, 0, 7); g.fill();
-      g.strokeStyle = '#2e9d46'; g.lineWidth = 22; g.lineCap = 'round'; g.lineJoin = 'round'; g.beginPath(); g.moveTo(-38, 2);
-      const q = Math.min(1, p * 1.6); if (q < .4) g.lineTo(-38 + 22 * q / .4, 2 + 22 * q / .4); else { g.lineTo(-16, 24); const w = (q - .4) / .6; g.lineTo(-16 + 52 * w, 24 - 54 * w); } g.stroke(); g.restore();
-      g.fillStyle = '#fff'; g.font = '900 40px system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.globalAlpha = Math.min(1, p * 1.5); g.fillText('Aprovado!', 128, 335); g.globalAlpha = 1; g.textAlign = 'left';
-    }
-    // ----- animação (ciclo de 8 s): olha o celular -> toca na tela -> aprovado + presente -> susto -> presente some -> recomeça -----
-    const S = { pitch: .36, yaw: 0, eyeS: 1, eyeY: 1, hup: 0 }, tgtH = new T.Vector3(), R0 = new T.Vector3(.95, .75, .95), TT = new T.Vector3();
-    let run = false, t0 = 0, last = 0, yawDrag = 0, drag = null, raf = 0;
-    const cl = x => Math.min(1, Math.max(0, x)), sm = x => x * x * (3 - 2 * x), ease = (a, b, k) => a + (b - a) * Math.min(1, k), backOut = x => { const c1 = 2.2; return 1 + (c1 + 1) * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
-    function frame(now) {
-      if (!run) return; raf = requestAnimationFrame(frame);
-      const t = (now - t0) / 1000, dt = Math.min(.05, (now - last) / 1000); last = now; const c = t % 8;
-      let tg = { pitch: .36, yaw: 0, eyeS: 1, eyeY: 1, hup: 0 };
-      if (c >= 2.45 && c < 3.5) tg = { pitch: -.12, yaw: .3, eyeS: 1.5, eyeY: 1.05, hup: 1 };           // susto
-      else if (c >= 3.5 && c < 6.1) tg = { pitch: .1, yaw: .5, eyeS: c > 5.4 ? 1.35 : 1, eyeY: 1, hup: 0 };   // olha o presente
-      for (const k in tg) S[k] = ease(S[k], tg[k], dt * 9);
-      const sj = c - 2.45, jump = sj >= 0 && sj < .55 ? Math.sin(Math.PI * sj / .55) : 0, land = sj >= .55 && sj < .9 ? Math.sin(Math.PI * (sj - .55) / .35) : 0, tremor = c >= 2.45 && c < 3.5 ? 1 : 0;
-      ch.position.y = jump * .8; ch.position.x = Math.sin(t * 50) * .05 * tremor;
-      ch.scale.set(1 - .06 * jump + .1 * land, 1 + .1 * jump - .12 * land, 1 - .06 * jump + .1 * land); ch.rotation.z = Math.sin(t * 1.6) * .02;
-      hp.rotation.x = S.pitch + Math.sin(t * 2.2) * .02; hp.rotation.y = S.yaw; hp.rotation.z = Math.sin(t * 1.7) * .04 + Math.sin(t * 40) * .05 * tremor;
-      const bl = (t % 3.3) > 3.2 ? .1 : 1; for (const e of eyes) e.scale.set(S.eyeS, S.eyeS * S.eyeY * bl, 1);
-      // celular na mão esquerda (a mão fica agarrada no canto de baixo)
-      const px = -.1 + Math.sin(t * 44) * .04 * tremor, py = 1.5 + .2 * S.hup + Math.sin(t * 2.5) * .02 + Math.sin(t * 40) * .04 * tremor;
-      ph.position.set(px, py, 1.0 + .1 * S.hup); ph.rotation.set(-.2 - .1 * S.hup, .12, 0);
-      hl.position.set(px - .26, py - .4, 1.12);
-      // mão direita: aproxima da tela, toca uma vez, volta; no susto sobe de braço aberto
-      if (c < 1.3) tgtH.copy(R0).y += Math.sin(t * 3) * .03;
-      else if (c < 1.9) tgtH.lerpVectors(R0, TT.set(px + .05, py, 1.4), sm((c - 1.3) / .6));
-      else if (c < 2.05) tgtH.set(px + .05, py, 1.17);
-      else if (c < 2.6) tgtH.lerpVectors(TT.set(px + .05, py, 1.17), R0, sm((c - 2.05) / .55));
-      else tgtH.copy(R0);
-      if (S.hup > .01) tgtH.lerp(TT.set(1.45, 2.6, .5), S.hup);
-      hr.position.lerp(tgtH, Math.min(1, dt * 18));
-      // tela
-      if (c >= 1.95 && c < 6.3) screenOk(cl((c - 1.95) / .5)); else screenLogo(t); tex.needsUpdate = true;
-      // presente: pula pra fora com elástico, balança, gira e some em fumacinha de brilho
-      const pop = cl((c - 2.4) / .5), gone = cl((c - 5.4) / .7);
-      if (c >= 2.4 && c < 6.1) { gift.visible = true; const sc2 = backOut(pop) * Math.pow(1 - gone, 1.4);
-        gift.scale.setScalar(Math.max(.001, sc2)); gift.rotation.y = gone * gone * 12 + Math.sin(t * 2) * .1; gift.rotation.z = pop >= 1 && gone <= 0 ? Math.sin(t * 9) * .07 : 0;
-        gift.position.y = .2 + Math.sin(t * 4) * .04 * (1 - gone) + gone * .5; } else gift.visible = false;
-      burst(c >= 2.4 && c < 3.1 ? (c - 2.4) / .7 : c >= 5.4 && c < 6.2 ? (c - 5.4) / .8 : 0, c >= 5.4 ? 1.5 : .9);
-      if (!drag) yawDrag *= 1 - Math.min(1, dt * 3); root.rotation.y = .24 + Math.sin(t * .6) * .22 + yawDrag;   // .24 = o mesmo ângulo do menu (olhos de frente)
-      R.render(scene, cam);
-    }
-    cv.addEventListener('pointerdown', e => { drag = { x: e.clientX, y0: yawDrag }; try { cv.setPointerCapture(e.pointerId); } catch (_) {} cv.style.cursor = 'grabbing'; });
-    cv.addEventListener('pointermove', e => { if (drag) yawDrag = drag.y0 + (e.clientX - drag.x) * .012; });
-    const rel = () => { drag = null; cv.style.cursor = 'grab'; }; cv.addEventListener('pointerup', rel); cv.addEventListener('pointercancel', rel);
-    return {
-      start() { const W = cv.clientWidth || 200, H = cv.clientHeight || 210; R.setSize(W, H, false); cam.aspect = W / H; cam.updateProjectionMatrix();
-        if (run) return; run = true; t0 = last = performance.now(); raf = requestAnimationFrame(frame); },
-      stop() { run = false; cancelAnimationFrame(raf); }
-    };
-  }
-  let hero; const heroOn = () => { if (hero === undefined) { hero = makeHero(); if (!hero) { $('gHero').style.display = 'none'; $('gHeroFb').style.display = 'grid'; } } if (hero) hero.start(); };
-  const intro = $('gIntro');
-  const openIntro = () => { $('gGo').innerHTML = GLOGO + '<span>Entrar com o Google</span>'; intro.classList.add('on'); heroOn(); $('gGo').focus(); };
-  const closeIntro = () => { intro.classList.remove('on'); if (hero) hero.stop(); };
-  $('gGo').onclick = () => { closeIntro(); connect(); };
-  $('gNo').onclick = closeIntro;
-  intro.addEventListener('pointerdown', e => { if (e.target === intro) closeIntro(); });
-  addEventListener('keydown', e => { if (intro.classList.contains('on')) { if (e.code === 'Escape') closeIntro(); e.stopPropagation(); } }, true);
   $('gChip').onclick = () => {
-    if (!sess) return openIntro();
+    if (!sess) return connect();
     if (status === 'auth' || !tokOk()) return connect();
     $('gMenu').classList.toggle('on');
   };
@@ -7148,6 +7004,126 @@ addEventListener('resize', () => {
   render(); if (sess) setStatus('auth');
   const s = document.createElement('script'); s.src = 'https://accounts.google.com/gsi/client'; s.async = true;
   const gisP = new Promise((ok, no) => { s.onload = () => { initGIS(); ok(); }; s.onerror = no; }); gisP.catch(() => {}); document.head.appendChild(s);
+})();
+</script>
+
+<!-- ===== Vestiário + telas mais largas ===== -->
+<style>
+  *{scrollbar-width:none}*::-webkit-scrollbar{display:none}
+  #teamPop>div,#joinPop>div{width:min(900px,96vw)!important}
+  #cfgPop>div{width:min(1000px,97vw)!important;max-height:96vh}
+  .kgrid{grid-template-columns:1fr 1fr 1fr!important}
+  @media(max-width:760px){.kgrid{grid-template-columns:1fr 1fr!important}}
+  #modePop{overflow:hidden!important}
+  #wrPop{position:fixed;inset:0;z-index:200004;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.65);font-family:system-ui;color:#fff}
+  #wrPop.on{display:flex}
+  #wrPop>div{width:min(900px,96vw);max-height:94vh;overflow:auto;background:#1b1f27;border-radius:18px;padding:22px;box-sizing:border-box;box-shadow:0 20px 60px #000a}
+  #wrPop h2{margin:0 0 4px;font-size:24px;letter-spacing:2px}#wrPop h4{margin:16px 0 8px;font:800 12px system-ui;letter-spacing:3px;opacity:.6}
+  .wrG{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+  .wrI{position:relative;padding:10px 8px;border-radius:14px;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.15);cursor:pointer;text-align:center;font:700 13px system-ui;color:#fff}
+  .wrI canvas{width:84px;height:84px;display:block;margin:0 auto 6px}
+  .wrI.on{border-color:#ffd54a;box-shadow:0 0 0 3px rgba(255,213,74,.35)}
+  .wrI.lk{opacity:.55;cursor:not-allowed}.wrI small{display:block;font-weight:600;opacity:.75;margin-top:2px;font-size:11px}
+  #wrClose{margin-top:18px;padding:11px 22px;border:0;border-radius:12px;background:#4caf50;color:#fff;font:800 15px system-ui;cursor:pointer}
+  #wrGift{position:fixed;inset:0;z-index:200005;display:none;place-items:center;background:rgba(0,0,0,.75);font-family:system-ui;color:#fff;text-align:center}
+  #wrGift.on{display:grid}#wrGift>div{width:min(380px,92vw);padding:26px;border-radius:20px;background:#0d1426;border:2px solid #ffd54a;animation:wrP .5s cubic-bezier(.2,.9,.3,1.4)}
+  @keyframes wrP{from{transform:scale(.5);opacity:0}}
+  #wrGift canvas{width:90px;height:90px;margin:4px 6px}
+</style>
+<div id="wrPop"><div>
+  <h2><i class="fa-solid fa-shirt"></i> VESTIÁRIO</h2>
+  <h4>BOLAS</h4><div class="wrG" id="wrBalls"></div>
+  <h4>ACESSÓRIOS • CHAPÉUS E CABELOS</h4><div class="wrG" id="wrHats"></div>
+  <button id="wrClose" type="button">Voltar</button>
+</div></div>
+<div id="wrGift"><div>
+  <div style="font-size:42px">🎁</div><h3 style="margin:6px 0">Presente da conta Google!</h3>
+  <div><canvas id="wgB" width="180" height="180"></canvas><canvas id="wgH" width="180" height="180"></canvas></div>
+  <p style="opacity:.85;font-size:14px;line-height:1.4;margin:6px 0 16px">Você ganhou a <b>Bola Google</b> e o <b>Chapéu Google</b>. Já estão equipados! Veja tudo no Vestiário.</p>
+  <button id="wgOk" type="button" style="padding:11px 26px;border:0;border-radius:12px;background:#ffd54a;color:#111;font:800 15px system-ui;cursor:pointer">Legal!</button>
+</div></div>
+<script>
+(() => {
+  const LS = localStorage, $ = id => document.getElementById(id), GC = ['#4285F4', '#EA4335', '#FBBC05', '#34A853'];
+  const unlocked = () => LS.getItem('futio_gift') === '1' && !!LS.getItem('gsave_sess');
+  const getW = () => { try { return JSON.parse(LS.getItem('futio_wr')) || {}; } catch (_) { return {}; } };
+  const setW = w => LS.setItem('futio_wr', JSON.stringify(w));
+  const BALLS = [{ id: 'classic', n: 'Clássica' }, { id: 'google', n: 'Bola Google', lock: 1 }];
+  const HATS = [{ id: null, n: 'Nenhum' }, { id: 'google', n: 'Chapéu Google', lock: 1 }];
+
+  function gLogo(c, x, y, r) {   // "G" colorido desenhado em canvas
+    c.save(); c.lineWidth = r * .32; c.lineCap = 'butt';
+    const arcs = [[-.25, .25, 3], [.25, .85, 0], [.85, 1.25, 1], [1.25, 1.75, 2]];   // em múltiplos de PI
+    c.strokeStyle = GC[0]; c.beginPath(); c.arc(x, y, r * .72, -.25 * Math.PI, .02 * Math.PI); c.stroke();
+    c.strokeStyle = GC[3]; c.beginPath(); c.arc(x, y, r * .72, .02 * Math.PI, .6 * Math.PI); c.stroke();
+    c.strokeStyle = GC[2]; c.beginPath(); c.arc(x, y, r * .72, .6 * Math.PI, 1.0 * Math.PI); c.stroke();
+    c.strokeStyle = GC[1]; c.beginPath(); c.arc(x, y, r * .72, 1.0 * Math.PI, 1.75 * Math.PI); c.stroke();
+    c.fillStyle = GC[0]; c.fillRect(x, y - r * .16, r * .74, r * .32); c.restore();
+  }
+  const texG = () => { const cv = document.createElement('canvas'); cv.width = cv.height = 128; const c = cv.getContext('2d');
+    c.fillStyle = '#fff'; c.beginPath(); c.arc(64, 64, 62, 0, 7); c.fill(); gLogo(c, 64, 64, 50); const t = new THREE.CanvasTexture(cv); return t; };
+
+  /* ---------- aplicar no jogo 3D ---------- */
+  let gDecals = [], origPatch = null, hat = null;
+  function applyBall(id) {
+    if (!origPatch) origPatch = ballSpin.children.map(p => p.material);
+    gDecals.forEach(d => ballSpin.remove(d)); gDecals = [];
+    ballSpin.children.forEach((p, i) => { if (!p.userData.wr) p.material = origPatch[i]; });
+    if (id !== 'google') return;
+    const tex = texG();
+    ballSpin.children.slice().forEach((p, i) => {
+      if (p.userData.wr) return;
+      p.material = new THREE.MeshBasicMaterial({ color: GC[i % 4] });
+      const d = new THREE.Mesh(new THREE.CircleGeometry(.2, 20), new THREE.MeshBasicMaterial({ map: tex, transparent: true }));
+      d.position.copy(p.position).multiplyScalar(1.02); d.quaternion.copy(p.quaternion); d.userData.wr = 1; d.renderOrder = 2;
+      d.position.add(p.position.clone().normalize().multiplyScalar(.012)); ballSpin.add(d); gDecals.push(d);
+    });
+  }
+  function applyHat(id) {
+    if (hat) { head.remove(hat); hat = null; }
+    if (id !== 'google') return;
+    const g = new THREE.Group(), tex = texG();
+    const col = i => new THREE.MeshBasicMaterial({ color: GC[i] });
+    const top = new THREE.Mesh(new THREE.CylinderGeometry(.62, .7, .62, 20), col(0)); top.position.y = .62;
+    const lid = new THREE.Mesh(new THREE.CylinderGeometry(.62, .62, .04, 20), new THREE.MeshBasicMaterial({ color: 0xffffff })); lid.position.y = .94;
+    const brim = new THREE.Mesh(new THREE.CylinderGeometry(1.15, 1.15, .1, 24), col(1)); brim.position.y = .3;
+    const band = new THREE.Mesh(new THREE.CylinderGeometry(.705, .715, .12, 20), col(2)); band.position.y = .42;
+    const dec = new THREE.Mesh(new THREE.CircleGeometry(.3, 20), new THREE.MeshBasicMaterial({ map: tex, transparent: true }));
+    dec.position.set(0, .66, .72); dec.rotation.y = 0;
+    g.add(brim, top, lid, band, dec); g.position.set(0, 3.12 + .78, .28); g.scale.setScalar(.95); g.rotation.x = -.05;
+    head.add(g); hat = g;
+  }
+  function applyAll() { const w = unlocked() ? getW() : {}; try { applyBall(w.ball); applyHat(w.hat); } catch (e) { console.error(e); } }
+
+  /* ---------- UI do vestiário ---------- */
+  function prevBall(id) { const cv = document.createElement('canvas'); cv.width = cv.height = 168; const c = cv.getContext('2d');
+    c.fillStyle = id === 'google' ? '#fff' : '#f8f9fa'; c.beginPath(); c.arc(84, 84, 70, 0, 7); c.fill(); c.strokeStyle = '#999'; c.lineWidth = 3; c.stroke();
+    if (id === 'google') { [[84, 18, 0], [150, 84, 1], [84, 150, 2], [18, 84, 3]].forEach(([x, y, i]) => { c.fillStyle = GC[i]; c.beginPath(); c.arc(x, y, 22, 0, 7); c.fill(); }); gLogo(c, 84, 84, 36); }
+    else { c.fillStyle = '#232323'; c.beginPath(); c.arc(84, 84, 20, 0, 7); c.fill(); [[84, 20], [148, 84], [84, 148], [20, 84]].forEach(([x, y]) => { c.beginPath(); c.arc(x, y, 12, 0, 7); c.fill(); }); }
+    return cv; }
+  function prevHat(id) { const cv = document.createElement('canvas'); cv.width = cv.height = 168; const c = cv.getContext('2d');
+    if (id === 'google') { c.fillStyle = GC[1]; c.fillRect(14, 112, 140, 18); c.fillStyle = GC[0]; c.fillRect(42, 40, 84, 74); c.fillStyle = GC[2]; c.fillRect(42, 96, 84, 14); c.fillStyle = '#fff'; c.fillRect(42, 36, 84, 6); gLogo(c, 84, 74, 22); }
+    else { c.strokeStyle = '#888'; c.lineWidth = 6; c.beginPath(); c.moveTo(40, 40); c.lineTo(128, 128); c.moveTo(128, 40); c.lineTo(40, 128); c.stroke(); }
+    return cv; }
+  function build() {
+    const ok = unlocked(), w = getW();
+    for (const [box, list, kind, pv] of [[$('wrBalls'), BALLS, 'ball', prevBall], [$('wrHats'), HATS, 'hat', prevHat]]) {
+      box.innerHTML = '';
+      list.forEach(it => {
+        const lk = it.lock && !ok, on = (w[kind] || (kind === 'ball' ? 'classic' : null)) === it.id;
+        const d = document.createElement('div'); d.className = 'wrI' + (lk ? ' lk' : '') + (on ? ' on' : '');
+        d.appendChild(pv(it.id)); d.insertAdjacentHTML('beforeend', it.n + (lk ? '<small>🔒 Entre com Google</small>' : on ? '<small>Equipado</small>' : ''));
+        d.onclick = () => { if (lk) return; const n = getW(); n[kind] = it.id === 'classic' ? null : it.id; setW(n); applyAll(); build(); };
+        box.appendChild(d);
+      });
+    }
+  }
+  $('bWr').onclick = () => { build(); $('wrPop').classList.add('on'); };
+  $('wrClose').onclick = () => $('wrPop').classList.remove('on');
+  $('wrPop').addEventListener('click', e => { if (e.target.id === 'wrPop') $('wrPop').classList.remove('on'); });
+  $('wgOk').onclick = () => $('wrGift').classList.remove('on');
+  window.__wr = { gift() { applyAll(); [['wgB', prevBall], ['wgH', prevHat]].forEach(([id, f]) => { const c = $(id).getContext('2d'); c.clearRect(0, 0, 180, 180); c.drawImage(f('google'), 6, 6, 168, 168); }); $('wrGift').classList.add('on'); } };
+  applyAll();
 })();
 </script>
 </body>
