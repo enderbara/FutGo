@@ -7033,10 +7033,10 @@ addEventListener('resize', () => {
       s.quadraticCurveTo(w / 2, h / 2, w / 2 - r, h / 2); s.lineTo(-w / 2 + r, h / 2); s.quadraticCurveTo(-w / 2, h / 2, -w / 2, h / 2 - r);
       s.lineTo(-w / 2, -h / 2 + r); s.quadraticCurveTo(-w / 2, -h / 2, -w / 2 + r, -h / 2); return s; };
     const slab = (w, h, r, d, z, mat) => { const gm = new T.ExtrudeGeometry(rrShape(w, h, r), { depth: d, bevelEnabled: false, curveSegments: 10 }); gm.translate(0, 0, z - d / 2); return new T.Mesh(gm, mat); };
-    const PW = .96, PH = 1.5, ph = new T.Group(); ch.add(ph);
-    ph.add(slab(PW + .16, PH + .16, .24, .1, -.03, new T.MeshBasicMaterial({ color: 0x232323 })), slab(PW, PH, .17, .1, 0, new T.MeshLambertMaterial({ color: 0x3b4254 })));
-    const sc = document.createElement('canvas'); sc.width = 256; sc.height = 400; const g = sc.getContext('2d'), tex = new T.CanvasTexture(sc);
-    const scr = new T.Mesh(new T.PlaneGeometry(PW - .14, PH - .2), new T.MeshBasicMaterial({ map: tex })); scr.position.z = .054; ph.add(scr);
+    const PW = .62, PH = 1.0, ph = new T.Group(); ch.add(ph);
+    ph.add(slab(PW + .11, PH + .11, .17, .08, -.025, new T.MeshBasicMaterial({ color: 0x232323 })), slab(PW, PH, .12, .08, 0, new T.MeshLambertMaterial({ color: 0x3b4254 })));
+    const sc = document.createElement('canvas'); sc.width = 256; sc.height = 424; const g = sc.getContext('2d'), tex = new T.CanvasTexture(sc);
+    const scr = new T.Mesh(new T.PlaneGeometry(PW - .09, PH - .13), new T.MeshBasicMaterial({ map: tex })); scr.position.z = .044; ph.add(scr);
     // ----- presente -----
     const HULL = new T.MeshBasicMaterial({ color: 0x232323, side: T.BackSide }), SPH = new T.SphereGeometry(1, 16, 12);
     const box = (w, h, d, col, x, y, z, ol) => { const gm = new T.BoxGeometry(w, h, d), m = new T.Mesh(gm, new T.MeshLambertMaterial({ color: col })); m.position.set(x, y, z);
@@ -7056,17 +7056,17 @@ addEventListener('resize', () => {
     // ----- tela do celular: fundo branco + logo do Google  ->  fundo verde + ícone de aprovado -----
     const gimg = new Image(); gimg.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(GLOGO.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" '));
     function screenLogo(t) {
-      g.fillStyle = '#fff'; g.fillRect(0, 0, 256, 400); const z = 1 + .05 * Math.sin(t * 5), s = 130 * z;
-      if (gimg.complete && gimg.naturalWidth) g.drawImage(gimg, 128 - s / 2, 200 - s / 2, s, s);
-      else { g.fillStyle = '#4285f4'; g.font = '900 120px system-ui'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('G', 128, 205); g.textAlign = 'left'; }
+      g.fillStyle = '#fff'; g.fillRect(0, 0, 256, 424); const z = 1 + .05 * Math.sin(t * 5), s = 130 * z;
+      if (gimg.complete && gimg.naturalWidth) g.drawImage(gimg, 128 - s / 2, 212 - s / 2, s, s);
+      else { g.fillStyle = '#4285f4'; g.font = '900 120px system-ui'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('G', 128, 217); g.textAlign = 'left'; }
     }
     function screenOk(p) {
-      const gr = g.createLinearGradient(0, 0, 0, 400); gr.addColorStop(0, '#43c15f'); gr.addColorStop(1, '#1e8e3e'); g.fillStyle = gr; g.fillRect(0, 0, 256, 400);
-      const k = 1 + .12 * Math.sin(Math.min(1, p * 1.4) * 3.14); g.save(); g.translate(128, 175); g.scale(k, k);
+      const gr = g.createLinearGradient(0, 0, 0, 424); gr.addColorStop(0, '#43c15f'); gr.addColorStop(1, '#1e8e3e'); g.fillStyle = gr; g.fillRect(0, 0, 256, 424);
+      const k = 1 + .12 * Math.sin(Math.min(1, p * 1.4) * 3.14); g.save(); g.translate(128, 185); g.scale(k, k);
       g.fillStyle = '#fff'; g.beginPath(); g.arc(0, 0, 76, 0, 7); g.fill();
       g.strokeStyle = '#2e9d46'; g.lineWidth = 22; g.lineCap = 'round'; g.lineJoin = 'round'; g.beginPath(); g.moveTo(-38, 2);
       const q = Math.min(1, p * 1.6); if (q < .4) g.lineTo(-38 + 22 * q / .4, 2 + 22 * q / .4); else { g.lineTo(-16, 24); const w = (q - .4) / .6; g.lineTo(-16 + 52 * w, 24 - 54 * w); } g.stroke(); g.restore();
-      g.fillStyle = '#fff'; g.font = '900 40px system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.globalAlpha = Math.min(1, p * 1.5); g.fillText('Aprovado!', 128, 320); g.globalAlpha = 1; g.textAlign = 'left';
+      g.fillStyle = '#fff'; g.font = '900 40px system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.globalAlpha = Math.min(1, p * 1.5); g.fillText('Aprovado!', 128, 335); g.globalAlpha = 1; g.textAlign = 'left';
     }
     // ----- animação (ciclo de 8 s): olha o celular -> toca na tela -> aprovado + presente -> susto -> presente some -> recomeça -----
     const S = { pitch: .36, yaw: 0, eyeS: 1, eyeY: 1, hup: 0 }, tgtH = new T.Vector3(), R0 = new T.Vector3(.95, .75, .95), TT = new T.Vector3();
@@ -7085,14 +7085,14 @@ addEventListener('resize', () => {
       hp.rotation.x = S.pitch + Math.sin(t * 2.2) * .02; hp.rotation.y = S.yaw; hp.rotation.z = Math.sin(t * 1.7) * .04 + Math.sin(t * 40) * .05 * tremor;
       const bl = (t % 3.3) > 3.2 ? .1 : 1; for (const e of eyes) e.scale.set(S.eyeS, S.eyeS * S.eyeY * bl, 1);
       // celular na mão esquerda (a mão fica agarrada no canto de baixo)
-      const px = -.1 + Math.sin(t * 44) * .04 * tremor, py = 1.6 + .25 * S.hup + Math.sin(t * 2.5) * .02 + Math.sin(t * 40) * .04 * tremor;
+      const px = -.1 + Math.sin(t * 44) * .04 * tremor, py = 1.5 + .2 * S.hup + Math.sin(t * 2.5) * .02 + Math.sin(t * 40) * .04 * tremor;
       ph.position.set(px, py, 1.0 + .1 * S.hup); ph.rotation.set(-.2 - .1 * S.hup, .12, 0);
-      hl.position.set(px - .42, py - .62, 1.2);
+      hl.position.set(px - .26, py - .4, 1.12);
       // mão direita: aproxima da tela, toca uma vez, volta; no susto sobe de braço aberto
       if (c < 1.3) tgtH.copy(R0).y += Math.sin(t * 3) * .03;
-      else if (c < 1.9) tgtH.lerpVectors(R0, TT.set(px + .1, py - .05, 1.42), sm((c - 1.3) / .6));
-      else if (c < 2.05) tgtH.set(px + .1, py - .05, 1.2);
-      else if (c < 2.6) tgtH.lerpVectors(TT.set(px + .1, py - .05, 1.2), R0, sm((c - 2.05) / .55));
+      else if (c < 1.9) tgtH.lerpVectors(R0, TT.set(px + .05, py, 1.4), sm((c - 1.3) / .6));
+      else if (c < 2.05) tgtH.set(px + .05, py, 1.17);
+      else if (c < 2.6) tgtH.lerpVectors(TT.set(px + .05, py, 1.17), R0, sm((c - 2.05) / .55));
       else tgtH.copy(R0);
       if (S.hup > .01) tgtH.lerp(TT.set(1.45, 2.6, .5), S.hup);
       hr.position.lerp(tgtH, Math.min(1, dt * 18));
