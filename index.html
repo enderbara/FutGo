@@ -6784,18 +6784,36 @@ addEventListener('resize', () => {
   #gAcc { position: fixed; bottom: calc(max(8px, env(safe-area-inset-bottom)) + 40px); right: max(12px, env(safe-area-inset-right)); z-index: 200002; display: none; flex-direction: column-reverse; align-items: flex-end; gap: 6px; font: 700 14px system-ui; color: #fff; }
   body[data-m="menu"] #gAcc, body[data-m="team"] #gAcc { display: flex; }
   #gAcc button { font: inherit; color: inherit; cursor: pointer; }
-  #gChip { position: relative; width: 48px; height: 48px; padding: 0; border-radius: 50%; display: grid; place-items: center; background: #fff; border: 3px solid rgba(255,255,255,.95); box-shadow: 0 4px 16px rgba(0,0,0,.55); transition: transform .15s; }
+  #gChip { position: relative; width: 48px; height: 48px; padding: 0; border-radius: 50%; display: grid; place-items: center; background: #fff; border: 4px solid #000; box-shadow: 0 4px 14px rgba(0,0,0,.5); transition: transform .15s; }
   #gChip:hover { transform: scale(1.08); } #gChip:active { transform: scale(.95); }
   #gChip img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; }
   #gChip .gl { width: 26px; height: 26px; display: grid; place-items: center; } #gChip .gl svg { width: 100%; height: 100%; }
-  #gChip .dot { position: absolute; right: -4px; bottom: -4px; width: 15px; height: 15px; border-radius: 50%; background: #9e9e9e; border: 3px solid #0d1426; box-sizing: border-box; }
+  #gChip .dot { position: absolute; right: -4px; bottom: -4px; width: 15px; height: 15px; border-radius: 50%; background: #9e9e9e; border: 3px solid #000; box-sizing: border-box; }
   #gAcc[data-s="ok"] .dot { background: #4caf50; } #gAcc[data-s="saving"] .dot, #gAcc[data-s="syncing"] .dot { background: #ffd54a; animation: gp 1s infinite; }
   #gAcc[data-s="pending"] .dot, #gAcc[data-s="auth"] .dot { background: #ff9800; } #gAcc[data-s="error"] .dot, #gAcc[data-s="offline"] .dot { background: #e53935; }
+  #ver, #gAcc { transition: opacity .6s; }
+  body:has(#splash:not(.out)) #ver, body:has(#splash:not(.out)) #gAcc { opacity: 0; pointer-events: none; }
   #ver { font: 800 13px system-ui; letter-spacing: .5px; color: #fff; background: rgba(8,12,24,.78); padding: 4px 10px; border-radius: 999px; text-shadow: none; }
   @keyframes gp { 50% { opacity: .3; } }
   #gMenu { display: none; flex-direction: column; min-width: 190px; padding: 6px; border-radius: 14px; background: rgba(8,12,24,.95); border: 2px solid rgba(255,255,255,.2); box-shadow: 0 10px 30px rgba(0,0,0,.5); }
   #gMenu.on { display: flex; } #gMenu button { background: none; border: 0; text-align: left; padding: 10px 12px; border-radius: 9px; }
   #gMenu button:hover { background: rgba(255,255,255,.14); } #gMenu .em { font: 600 11px system-ui; opacity: .6; padding: 6px 12px 4px; word-break: break-all; }
+  #gIntro { position: fixed; inset: 0; z-index: 200004; display: none; place-items: center; padding: 12px; box-sizing: border-box; background: rgba(0,0,0,.72); font-family: system-ui, sans-serif; color: #fff; }
+  #gIntro.on { display: grid; animation: gFade .2s; } @keyframes gFade { from { opacity: 0; } }
+  #gIntro .card { position: relative; width: min(390px, 100%); max-height: 100%; overflow: auto; box-sizing: border-box; padding: 22px 22px 18px; text-align: center; border-radius: 24px; background: linear-gradient(180deg, #17254a, #0b1226); border: 4px solid #000; box-shadow: 0 0 0 2px rgba(255,255,255,.18), 0 20px 50px rgba(0,0,0,.6); animation: gPop .35s cubic-bezier(.2,1.3,.4,1); }
+  @keyframes gPop { from { transform: scale(.85) translateY(20px); opacity: 0; } }
+  #gIntro .hero { width: 190px; margin: -4px auto 4px; filter: drop-shadow(0 10px 14px rgba(0,0,0,.45)); animation: gBob 3s ease-in-out infinite; }
+  #gIntro .hero svg { width: 100%; display: block; } @keyframes gBob { 50% { transform: translateY(-6px); } }
+  #gIntro h3 { margin: 6px 0 6px; font: 900 26px system-ui; letter-spacing: .5px; color: #ffd54a; text-shadow: 0 2px 0 #000; }
+  #gIntro p { margin: 0 0 12px; font-size: 14px; line-height: 1.45; opacity: .88; }
+  #gIntro ul { list-style: none; margin: 0 0 16px; padding: 0; text-align: left; display: flex; flex-direction: column; gap: 8px; }
+  #gIntro li { display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; line-height: 1.35; padding: 9px 11px; border-radius: 12px; background: rgba(255,255,255,.08); }
+  #gIntro li b { display: block; font-size: 14px; } #gIntro li .ic { font-size: 19px; line-height: 1.1; flex: none; }
+  #gGo { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 12px 16px; border-radius: 14px; border: 3px solid #000; background: #fff; color: #1f1f1f; font: 800 16px system-ui; cursor: pointer; box-shadow: 0 4px 0 #000; }
+  #gGo:hover { background: #f1f3f4; } #gGo:active { transform: translateY(3px); box-shadow: 0 1px 0 #000; } #gGo svg { width: 22px; height: 22px; }
+  #gNo { margin-top: 10px; background: none; border: 0; color: #fff; opacity: .65; font: 700 13px system-ui; cursor: pointer; padding: 6px 10px; } #gNo:hover { opacity: 1; }
+  @media (max-height: 520px) and (min-width: 560px) { #gIntro .card { width: min(660px, 100%); display: grid; grid-template-columns: 190px 1fr; column-gap: 20px; align-items: center; text-align: left; padding: 16px 22px; }
+    #gIntro .hero { grid-row: 1 / 6; width: 180px; margin: 0; } #gIntro ul { margin-bottom: 12px; } #gIntro h3 { margin-top: 0; } }
   #gToast { display: none; max-width: min(340px, 86vw); padding: 11px 14px; border-radius: 12px; background: #b71c1c; border: 2px solid #ef9a9a; font: 700 13px/1.4 system-ui; box-shadow: 0 8px 24px rgba(0,0,0,.5); }
   #gToast.on { display: block; }
   #gModal { position: fixed; inset: 0; z-index: 200003; display: none; place-items: center; background: rgba(0,0,0,.7); font-family: system-ui; color: #fff; }
@@ -6815,6 +6833,35 @@ addEventListener('resize', () => {
   </div>
   <div id="gToast" role="alert"></div>
 </div>
+<div id="gIntro" role="dialog" aria-modal="true" aria-labelledby="gIntroT"><div class="card">
+  <div class="hero">
+    <svg viewBox="0 0 240 280" aria-hidden="true">
+      <defs><clipPath id="gBody"><ellipse cx="120" cy="196" rx="52" ry="56"/></clipPath></defs>
+      <ellipse cx="97" cy="258" rx="22" ry="13" fill="#4a4a52" stroke="#000" stroke-width="6"/><ellipse cx="143" cy="258" rx="22" ry="13" fill="#4a4a52" stroke="#000" stroke-width="6"/>
+      <g clip-path="url(#gBody)"><rect x="60" y="130" width="120" height="130" fill="#fff"/>
+        <rect x="75" y="130" width="17" height="130" fill="#d32f2f"/><rect x="109" y="130" width="22" height="130" fill="#d32f2f"/><rect x="148" y="130" width="17" height="130" fill="#d32f2f"/></g>
+      <ellipse cx="120" cy="196" rx="52" ry="56" fill="none" stroke="#000" stroke-width="6"/>
+      <circle cx="120" cy="86" r="62" fill="#f3f0c6" stroke="#000" stroke-width="7"/>
+      <path d="M72 62a62 62 0 0 1 60-34" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="7" stroke-linecap="round"/>
+      <rect x="86" y="68" width="24" height="38" rx="9" fill="#111"/><rect x="130" y="68" width="24" height="38" rx="9" fill="#111"/>
+      <g transform="rotate(-6 120 196)">
+        <rect x="82" y="148" width="76" height="116" rx="13" fill="#1d2230" stroke="#000" stroke-width="6"/>
+        <rect x="89" y="160" width="62" height="92" rx="6" fill="#fff"/><rect x="108" y="153" width="24" height="4" rx="2" fill="#000" opacity=".6"/>
+        <svg x="102" y="187" width="36" height="36" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z"/><path fill="#FBBC05" d="M10.5 28.7A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.7l-7.9-6.1A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.8l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.9 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>
+        <circle cx="80" cy="214" r="15" fill="#f3f0c6" stroke="#000" stroke-width="6"/><circle cx="160" cy="214" r="15" fill="#f3f0c6" stroke="#000" stroke-width="6"/>
+      </g>
+    </svg>
+  </div>
+  <h3 id="gIntroT">Entre com o Google!</h3>
+  <p>Conecte sua conta para o seu time nunca se perder.</p>
+  <ul>
+    <li><span class="ic">☁️</span><span><b>Progresso salvo sozinho</b>Time, uniforme, escudo, estatísticas e XP são guardados na sua conta automaticamente.</span></li>
+    <li><span class="ic">📱</span><span><b>Jogue em qualquer lugar</b>Troque de celular ou computador e continue de onde parou.</span></li>
+    <li><span class="ic">🔒</span><span><b>Seguro e privado</b>O jogo usa só uma pasta escondida no seu Drive. Seus outros arquivos nunca são acessados.</span></li>
+  </ul>
+  <button id="gGo" type="button"></button>
+  <button id="gNo" type="button">Agora não</button>
+</div></div>
 <div id="gModal"><div>
   <h3>Qual jogo você quer usar?</h3>
   <p id="gModalTxt">Encontramos um jogo salvo na sua conta e outro neste aparelho.</p>
@@ -6976,8 +7023,15 @@ addEventListener('resize', () => {
     clearTimeout(timer); try { if (tok && window.google) google.accounts.oauth2.revoke(tok.v, () => {}); } catch (_) {}
     tok = null; sess = null; fileId = null; pending = false; rawRm.call(LS, K_SESS); setStatus('off');
   }
+  const intro = $('gIntro');
+  const openIntro = () => { $('gGo').innerHTML = GLOGO + '<span>Entrar com o Google</span>'; intro.classList.add('on'); $('gGo').focus(); };
+  const closeIntro = () => intro.classList.remove('on');
+  $('gGo').onclick = () => { closeIntro(); connect(); };
+  $('gNo').onclick = closeIntro;
+  intro.addEventListener('pointerdown', e => { if (e.target === intro) closeIntro(); });
+  addEventListener('keydown', e => { if (intro.classList.contains('on')) { if (e.code === 'Escape') closeIntro(); e.stopPropagation(); } }, true);
   $('gChip').onclick = () => {
-    if (!sess) return connect();
+    if (!sess) return openIntro();
     if (status === 'auth' || !tokOk()) return connect();
     $('gMenu').classList.toggle('on');
   };
