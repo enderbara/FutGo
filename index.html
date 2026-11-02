@@ -472,8 +472,16 @@ body[data-m="mode"] #modePop{display:grid}
 #call{top:20%!important}
 @media(max-width:720px),(max-height:520px){#ballArrow{transform:scale(.62);top:calc(max(6px,env(safe-area-inset-top)) + 46px)!important}#note{top:calc(max(6px,env(safe-area-inset-top)) + 108px)!important}#coach{bottom:calc(max(10px,env(safe-area-inset-bottom)) + 58px)!important;max-width:50vw!important;font-size:11px!important;padding:6px 12px 6px 36px!important}#coach::before{left:11px!important;font-size:14px!important}}
 </style>
+<style>
+#menu .logo{display:inline-block;align-self:flex-start;padding:0 .25em .12em 0;overflow:visible}
+#menu .logo span{padding-right:.12em}
+#splash .sp-nm span{display:inline-block;padding:.05em .25em .12em .1em}
+#ver{position:fixed;right:max(10px,env(safe-area-inset-right));bottom:max(8px,env(safe-area-inset-bottom));z-index:200001;font:700 11px system-ui;letter-spacing:1px;color:rgba(255,255,255,.55);pointer-events:none;text-shadow:0 1px 3px #000}
+body[data-m="play"] #ver,body[data-m="train"] #ver{display:none}
+</style>
 </head>
 <body>
+<div id="ver">Kick.io v1.0.0</div>
 <div id="splash"><div class="sp-bar t"></div><div class="sp-bar b"></div><div class="sp-line"></div>
 <div class="sp-c"><div class="sp-by">UM JOGO DE</div><i class="fa-solid fa-gamepad sp-lg"></i><div class="sp-nm"><span>FunTudio</span></div></div>
 <div class="tp" id="spTap">CLIQUE PARA CONTINUAR</div><div class="sp-vig"></div></div></div>
