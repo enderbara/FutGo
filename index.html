@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
+<head><script>if(/access_token=/.test(location.hash)&&window.opener){try{var h=new URLSearchParams(location.hash.slice(1));window.opener.postMessage({gtok:h.get("access_token"),exp:h.get("expires_in")},location.origin)}catch(e){}window.stop();document.write("Login concluído. Pode fechar esta janela.");setTimeout(function(){close()},300)}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Bungee&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
@@ -6811,7 +6811,8 @@ addEventListener('resize', () => {
 <div id="gAcc" data-s="off">
   <button id="gChip" type="button" title="Salvar o jogo na sua conta Google"></button>
   <div id="gMenu">
-    <div class="em" id="gEmail"></div>
+    <div class="gH"><div class="av" id="gAv"></div><div><b id="gName"></b><small id="gSt"></small></div></div><div class="em" id="gEmail" style="display:none"></div>
+    <button type="button" id="gRe" style="display:none">🔄 Reconectar</button>
     <button type="button" id="gNow">☁ Salvar agora</button>
     <button type="button" id="gLoad">⬇ Carregar da nuvem</button>
     <button type="button" id="gOut">⎋ Sair da conta</button>
@@ -6841,13 +6842,21 @@ addEventListener('resize', () => {
     const M = { file: 'Abra o jogo por um endereço http(s) (seu site ou localhost). Abrindo o arquivo direto, o login do Google não funciona.',
       gis: 'Não consegui carregar o login do Google. Verifique a internet ou desative bloqueadores de anúncios para este site.',
       popup_failed_to_open: 'O navegador bloqueou a janela de login. Permita pop-ups para este site e tente de novo.',
-      popup_closed: 'A janela de login foi fechada antes de terminar.', access_denied: 'Acesso negado. Se o app está em modo Teste no Google Cloud, adicione seu e-mail em "Usuários de teste".' };
+      popup_blocked: 'Libere os pop-ups deste site e toque no círculo de novo.', popup_closed: 'A janela de login foi fechada antes de terminar.', access_denied: 'Acesso negado. Se o app está em modo Teste no Google Cloud, adicione seu e-mail em "Usuários de teste".' };
     let m = M[c];
     if (!m && /HTTP 403/.test(c)) m = 'O Google Drive recusou o acesso. Ative a "Google Drive API" no projeto e autorize o escopo drive.appdata.';
     if (!m) m = 'Falha no login (' + c + '). Confira se ' + location.origin + ' está em "Origens JavaScript autorizadas" do Client ID.';
     const t = $('gToast'); t.textContent = m; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 12000);
   }
   const tokOk = () => tok && tok.exp > Date.now();
+  let gisFailed = false;
+  function popupAuth(res, rej) {   // plano B: OAuth direto, funciona mesmo se o bloqueador barrar o script do Google
+    const u = 'https://accounts.google.com/o/oauth2/v2/auth?response_type=token&client_id=' + CID + '&redirect_uri=' + encodeURIComponent(location.origin + location.pathname) + '&scope=' + encodeURIComponent(SCOPE) + '&include_granted_scopes=true&prompt=select_account';
+    const w = window.open(u, 'gauth', 'width=480,height=680'); if (!w) return rej(mkErr('popup_blocked'));
+    waiter = { res, rej }; const t = setInterval(() => { if (w.closed) { clearInterval(t); if (waiter) { const x = waiter; waiter = null; x.rej(mkErr('popup_closed')); } } }, 600);
+  }
+  addEventListener('message', e => { if (e.origin !== location.origin || !e.data || !e.data.gtok || !waiter) return;
+    const w = waiter; waiter = null; tok = { v: e.data.gtok, exp: Date.now() + ((+e.data.exp || 3600) - 90) * 1000 }; w.res(tok.v); });
 
   /* ---------- interface ---------- */
   const GLOGO = '<svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z"/><path fill="#FBBC05" d="M10.5 28.7A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.7l-7.9-6.1A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.8l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.9 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>';
@@ -6859,6 +6868,7 @@ addEventListener('resize', () => {
     const im = chip.querySelector('img'); if (im) im.src = sess.picture;
     chip.title = (sess.name || 'Jogador') + ' — ' + (LABEL[status] || '');
     $('gEmail').textContent = (sess.name || '') + ' • ' + (LABEL[status] || '');
+    $('gName').textContent = sess.name || 'Jogador'; $('gSt').textContent = LABEL[status] || ''; $('gAv').innerHTML = sess.picture ? '<img referrerpolicy="no-referrer" src="' + sess.picture + '" alt="">' : '<span>' + GLOGO + '</span>'; $('gRe').style.display = tokOk() ? 'none' : 'block';
   }
   const setStatus = s => { status = s; render(); };
 
@@ -6877,9 +6887,10 @@ addEventListener('resize', () => {
   const getToken = () => new Promise((res, rej) => {
     if (tokOk()) return res(tok.v);
     if (location.protocol === 'file:') return rej(mkErr('file'));
-    const go = () => { if (!initGIS()) return rej(mkErr('gis')); waiter = { res, rej }; tc.requestAccessToken({ prompt: '' }); };
+    const go = () => { if (!initGIS()) return popupAuth(res, rej); waiter = { res, rej }; tc.requestAccessToken({ prompt: '' }); };
     if (initGIS()) return go();
-    gisP.then(go, () => rej(mkErr('gis')));
+    if (gisFailed) return popupAuth(res, rej);
+    gisP.then(go, () => popupAuth(res, rej));
   });
   async function api(url, opt = {}, retry = true) {
     const t = await getToken();
@@ -6982,9 +6993,9 @@ addEventListener('resize', () => {
   }
   $('gChip').onclick = () => {
     if (!sess) return connect();
-    if (status === 'auth' || !tokOk()) return connect();
-    $('gMenu').classList.toggle('on');
+    render(); $('gMenu').classList.toggle('on');
   };
+  $('gRe').onclick = () => { $('gMenu').classList.remove('on'); connect(); };
   $('gNow').onclick = () => { $('gMenu').classList.remove('on'); push(); };
   $('gOut').onclick = () => { $('gMenu').classList.remove('on'); logout(); };
   $('gLoad').onclick = async () => {
@@ -6996,18 +7007,17 @@ addEventListener('resize', () => {
   };
   document.addEventListener('click', e => { if (!e.target.closest('#gAcc')) $('gMenu').classList.remove('on'); });
   // Depois de recarregar a página, o Google exige um toque do jogador para renovar o acesso: fazemos isso no primeiro clique.
-  addEventListener('pointerdown', e => { if (sess && !tokOk() && !busy && !e.target.closest('#gAcc') && !$('gModal').classList.contains('on')) connect(); }, true);
   addEventListener('online', () => { if (pending && tokOk()) push(); });
   addEventListener('pagehide', () => { if (pending && sess && tokOk()) { try { const body = JSON.stringify(snapshot());
     if (fileId && body.length < 60000) fetch('https://www.googleapis.com/upload/drive/v3/files/' + fileId + '?uploadType=media', { method: 'PATCH', keepalive: true, headers: { Authorization: 'Bearer ' + tok.v, 'Content-Type': 'application/json' }, body }); } catch (_) {} } });
 
   render(); if (sess) setStatus('auth');
   const s = document.createElement('script'); s.src = 'https://accounts.google.com/gsi/client'; s.async = true;
-  const gisP = new Promise((ok, no) => { s.onload = () => { initGIS(); ok(); }; s.onerror = no; }); gisP.catch(() => {}); document.head.appendChild(s);
+  const gisP = new Promise((ok, no) => { s.onload = () => { initGIS(); ok(); }; s.onerror = no; }); gisP.catch(() => { gisFailed = true; }); document.head.appendChild(s);
 })();
 </script>
 
-<!-- ===== Vestiário + telas mais largas ===== -->
+<!-- ===== Vestiário 3D + telas mais largas ===== -->
 <style>
   *{scrollbar-width:none}*::-webkit-scrollbar{display:none}
   #teamPop>div,#joinPop>div{width:min(900px,96vw)!important}
@@ -7015,114 +7025,178 @@ addEventListener('resize', () => {
   .kgrid{grid-template-columns:1fr 1fr 1fr!important}
   @media(max-width:760px){.kgrid{grid-template-columns:1fr 1fr!important}}
   #modePop{overflow:hidden!important}
-  #wrPop{position:fixed;inset:0;z-index:200004;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.65);font-family:system-ui;color:#fff}
+  #gChip{width:54px!important;height:54px!important}
+  #gAcc[data-s="ok"] #gChip{border-color:#4caf50} #gAcc[data-s="error"] #gChip,#gAcc[data-s="offline"] #gChip{border-color:#e53935}
+  #gMenu{min-width:230px!important;padding:8px!important}
+  #gMenu .gH{display:flex;align-items:center;gap:10px;padding:8px 10px 10px;margin-bottom:4px;border-bottom:1px solid rgba(255,255,255,.15)}
+  #gMenu .av{width:40px;height:40px;border-radius:50%;overflow:hidden;background:#fff;display:grid;place-items:center;flex:none}
+  #gMenu .av img{width:100%;height:100%;object-fit:cover}#gMenu .av span{width:22px;height:22px}
+  #gMenu .gH b{display:block;font:800 14px system-ui}#gMenu .gH small{display:block;font:600 11px system-ui;opacity:.7}
+  #wrPop{position:fixed;inset:0;z-index:200004;display:none;align-items:center;justify-content:center;background:rgba(5,8,18,.78);backdrop-filter:blur(6px);font-family:system-ui;color:#fff}
   #wrPop.on{display:flex}
-  #wrPop>div{width:min(900px,96vw);max-height:94vh;overflow:auto;background:#1b1f27;border-radius:18px;padding:22px;box-sizing:border-box;box-shadow:0 20px 60px #000a}
-  #wrPop h2{margin:0 0 4px;font-size:24px;letter-spacing:2px}#wrPop h4{margin:16px 0 8px;font:800 12px system-ui;letter-spacing:3px;opacity:.6}
-  .wrG{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
-  .wrI{position:relative;padding:10px 8px;border-radius:14px;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.15);cursor:pointer;text-align:center;font:700 13px system-ui;color:#fff}
-  .wrI canvas{width:84px;height:84px;display:block;margin:0 auto 6px}
-  .wrI.on{border-color:#ffd54a;box-shadow:0 0 0 3px rgba(255,213,74,.35)}
-  .wrI.lk{opacity:.55;cursor:not-allowed}.wrI small{display:block;font-weight:600;opacity:.75;margin-top:2px;font-size:11px}
-  #wrClose{margin-top:18px;padding:11px 22px;border:0;border-radius:12px;background:#4caf50;color:#fff;font:800 15px system-ui;cursor:pointer}
-  #wrGift{position:fixed;inset:0;z-index:200005;display:none;place-items:center;background:rgba(0,0,0,.75);font-family:system-ui;color:#fff;text-align:center}
-  #wrGift.on{display:grid}#wrGift>div{width:min(380px,92vw);padding:26px;border-radius:20px;background:#0d1426;border:2px solid #ffd54a;animation:wrP .5s cubic-bezier(.2,.9,.3,1.4)}
+  .wrBox{display:grid;grid-template-columns:minmax(260px,1fr) minmax(300px,1.1fr);width:min(960px,96vw);max-height:94vh;border-radius:22px;overflow:hidden;background:linear-gradient(135deg,#1b2238,#10141f);box-shadow:0 24px 80px #000c;border:1px solid rgba(255,255,255,.12)}
+  .wrStage{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:18px;background:radial-gradient(circle at 50% 45%,#3b5bdb55,transparent 65%),linear-gradient(180deg,#26335c,#141a2e)}
+  .wrTitle{align-self:flex-start;font:900 22px system-ui;letter-spacing:3px}.wrTitle small{display:block;font:600 11px system-ui;letter-spacing:1px;opacity:.6;margin-top:2px}
+  #wrBig{width:100%;flex:1;min-height:220px;display:grid;place-items:center}#wrBig canvas{width:100%;max-width:420px;height:auto}
+  #wrCap{font:700 13px system-ui;text-align:center;background:rgba(0,0,0,.35);padding:8px 14px;border-radius:999px}
+  .wrSide{padding:18px;display:flex;flex-direction:column;min-height:0}
+  .wrTabs{display:flex;gap:8px;margin-bottom:14px}.wrTabs button{flex:1;padding:10px;border:0;border-radius:12px;background:rgba(255,255,255,.08);color:#fff;font:800 14px system-ui;cursor:pointer}
+  .wrTabs button.on{background:#ffd54a;color:#111}
+  .wrG{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:12px;overflow:auto;padding:4px;flex:1;align-content:start}
+  .wrI{position:relative;padding:10px 8px 12px;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.04));border:2px solid rgba(255,255,255,.14);cursor:pointer;text-align:center;font:800 13px system-ui;color:#fff;transition:transform .15s}
+  .wrI:hover{transform:translateY(-3px)}.wrI canvas{width:110px;height:110px;display:block;margin:0 auto 4px}
+  .wrI.epic{border-color:#fbbc05aa;background:linear-gradient(180deg,#fbbc0533,rgba(255,255,255,.04))}
+  .wrI.on{border-color:#ffd54a;box-shadow:0 0 0 3px #ffd54a55,0 8px 24px #0008}
+  .wrI.lk canvas{filter:grayscale(.8) brightness(.6)}.wrI.lk{cursor:not-allowed}
+  .wrI small{display:block;font-weight:600;opacity:.75;margin-top:2px;font-size:11px}
+  .wrI .bd{position:absolute;top:8px;left:8px;font:900 9px system-ui;letter-spacing:1px;padding:3px 7px;border-radius:999px;background:linear-gradient(90deg,#4285F4,#EA4335,#FBBC05,#34A853);color:#fff}
+  .wrNote{font:600 12px system-ui;opacity:.55;margin:12px 0 0}
+  #wrClose{margin-top:12px;padding:12px;border:0;border-radius:12px;background:#4caf50;color:#fff;font:800 15px system-ui;cursor:pointer}
+  @media(max-width:720px){.wrBox{grid-template-columns:1fr;overflow:auto}.wrStage{min-height:240px}}
+  #wrGift{position:fixed;inset:0;z-index:200005;display:none;place-items:center;background:rgba(0,0,0,.78);font-family:system-ui;color:#fff;text-align:center}
+  #wrGift.on{display:grid}#wrGift>div{width:min(400px,92vw);padding:26px;border-radius:22px;background:radial-gradient(circle at 50% 0,#3b5bdb55,transparent 60%),#0d1426;border:2px solid #ffd54a;animation:wrP .5s cubic-bezier(.2,.9,.3,1.4)}
   @keyframes wrP{from{transform:scale(.5);opacity:0}}
-  #wrGift canvas{width:90px;height:90px;margin:4px 6px}
+  #wrGift canvas{width:130px;height:130px}
 </style>
-<div id="wrPop"><div>
-  <h2><i class="fa-solid fa-shirt"></i> VESTIÁRIO</h2>
-  <h4>BOLAS</h4><div class="wrG" id="wrBalls"></div>
-  <h4>ACESSÓRIOS • CHAPÉUS E CABELOS</h4><div class="wrG" id="wrHats"></div>
-  <button id="wrClose" type="button">Voltar</button>
+<div id="wrPop"><div class="wrBox">
+  <div class="wrStage"><div class="wrTitle">VESTIÁRIO<small>Arraste nada: gira sozinho</small></div><div id="wrBig"></div><div id="wrCap"></div></div>
+  <div class="wrSide">
+    <div class="wrTabs"><button type="button" data-t="ball" class="on">⚽ Bolas</button><button type="button" data-t="hat">🧢 Chapéus e cabelos</button></div>
+    <div class="wrG" id="wrGrid"></div>
+    <p class="wrNote">Itens com 🔒 são liberados ao entrar com a conta Google. Cabelos chegam em breve.</p>
+    <button id="wrClose" type="button">Voltar</button>
+  </div>
 </div></div>
 <div id="wrGift"><div>
   <div style="font-size:42px">🎁</div><h3 style="margin:6px 0">Presente da conta Google!</h3>
-  <div><canvas id="wgB" width="180" height="180"></canvas><canvas id="wgH" width="180" height="180"></canvas></div>
-  <p style="opacity:.85;font-size:14px;line-height:1.4;margin:6px 0 16px">Você ganhou a <b>Bola Google</b> e o <b>Chapéu Google</b>. Já estão equipados! Veja tudo no Vestiário.</p>
+  <div><canvas id="wgB" width="220" height="220"></canvas><canvas id="wgH" width="220" height="220"></canvas></div>
+  <p style="opacity:.85;font-size:14px;line-height:1.4;margin:6px 0 16px">Você ganhou a <b>Bola Google</b> e o <b>Boné Google</b>. Já estão equipados! Veja tudo no Vestiário.</p>
   <button id="wgOk" type="button" style="padding:11px 26px;border:0;border-radius:12px;background:#ffd54a;color:#111;font:800 15px system-ui;cursor:pointer">Legal!</button>
 </div></div>
 <script>
 (() => {
-  const LS = localStorage, $ = id => document.getElementById(id), GC = ['#4285F4', '#EA4335', '#FBBC05', '#34A853'];
+  const LS = localStorage, $ = id => document.getElementById(id), GC = [0x4285F4, 0xEA4335, 0xFBBC05, 0x34A853], GH = ['#4285F4', '#EA4335', '#FBBC05', '#34A853'];
   const unlocked = () => LS.getItem('futio_gift') === '1' && !!LS.getItem('gsave_sess');
   const getW = () => { try { return JSON.parse(LS.getItem('futio_wr')) || {}; } catch (_) { return {}; } };
   const setW = w => LS.setItem('futio_wr', JSON.stringify(w));
-  const BALLS = [{ id: 'classic', n: 'Clássica' }, { id: 'google', n: 'Bola Google', lock: 1 }];
-  const HATS = [{ id: null, n: 'Nenhum' }, { id: 'google', n: 'Chapéu Google', lock: 1 }];
+  const ITEMS = { ball: [{ id: 'classic', n: 'Bola Clássica' }, { id: 'google', n: 'Bola Google', lock: 1 }],
+                  hat: [{ id: null, n: 'Sem acessório' }, { id: 'google', n: 'Boné Google', lock: 1 }] };
 
-  function gLogo(c, x, y, r) {   // "G" colorido desenhado em canvas
+  function gLogo(c, x, y, r) {
     c.save(); c.lineWidth = r * .32; c.lineCap = 'butt';
-    const arcs = [[-.25, .25, 3], [.25, .85, 0], [.85, 1.25, 1], [1.25, 1.75, 2]];   // em múltiplos de PI
-    c.strokeStyle = GC[0]; c.beginPath(); c.arc(x, y, r * .72, -.25 * Math.PI, .02 * Math.PI); c.stroke();
-    c.strokeStyle = GC[3]; c.beginPath(); c.arc(x, y, r * .72, .02 * Math.PI, .6 * Math.PI); c.stroke();
-    c.strokeStyle = GC[2]; c.beginPath(); c.arc(x, y, r * .72, .6 * Math.PI, 1.0 * Math.PI); c.stroke();
-    c.strokeStyle = GC[1]; c.beginPath(); c.arc(x, y, r * .72, 1.0 * Math.PI, 1.75 * Math.PI); c.stroke();
-    c.fillStyle = GC[0]; c.fillRect(x, y - r * .16, r * .74, r * .32); c.restore();
+    [[-.25, .02, 0], [.02, .6, 3], [.6, 1, 2], [1, 1.75, 1]].forEach(([a, b, i]) => { c.strokeStyle = GH[i]; c.beginPath(); c.arc(x, y, r * .72, a * Math.PI, b * Math.PI); c.stroke(); });
+    c.fillStyle = GH[0]; c.fillRect(x, y - r * .16, r * .74, r * .32); c.restore();
   }
-  const texG = () => { const cv = document.createElement('canvas'); cv.width = cv.height = 128; const c = cv.getContext('2d');
-    c.fillStyle = '#fff'; c.beginPath(); c.arc(64, 64, 62, 0, 7); c.fill(); gLogo(c, 64, 64, 50); const t = new THREE.CanvasTexture(cv); return t; };
+  let _tex = null;
+  const gTex = () => _tex || (_tex = (() => { const cv = document.createElement('canvas'); cv.width = cv.height = 128; const c = cv.getContext('2d');
+    c.fillStyle = '#fff'; c.beginPath(); c.arc(64, 64, 62, 0, 7); c.fill(); gLogo(c, 64, 64, 50); return new THREE.CanvasTexture(cv); })());
+  const MT = (lit, o) => lit ? new THREE.MeshStandardMaterial(Object.assign({ roughness: .35, metalness: .08 }, o)) : new THREE.MeshLambertMaterial(o);
 
-  /* ---------- aplicar no jogo 3D ---------- */
+  /* ---------- modelos 3D ---------- */
+  function buildBall(kind, lit, R) {
+    R = R || 1; const g = new THREE.Group(), gg = kind === 'google';
+    g.add(new THREE.Mesh(new THREE.SphereGeometry(R, 36, 28), MT(lit, { color: 0xf8f9fa })));
+    [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]].forEach((d, i) => {
+      const n = new THREE.Vector3(...d), q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), n);
+      const p = new THREE.Mesh(new THREE.SphereGeometry(1, 18, 12), MT(lit, { color: gg ? GC[i % 4] : 0x232323 }));
+      p.scale.set(.42 * R, .42 * R, .13 * R); p.position.copy(n).multiplyScalar(R * .97); p.quaternion.copy(q); g.add(p);
+      if (gg) { const d2 = new THREE.Mesh(new THREE.CircleGeometry(.36 * R, 24), new THREE.MeshBasicMaterial({ map: gTex(), transparent: true }));
+        d2.position.copy(n).multiplyScalar(R * 1.012); d2.quaternion.copy(q); g.add(d2); }
+    });
+    return g;
+  }
+  function buildHat(lit) {   // boné com 4 gomos nas cores do Google, aba vermelha e botão branco
+    const g = new THREE.Group(), R = 1.1, ord = [1, 0, 2, 3];
+    for (let i = 0; i < 4; i++) g.add(new THREE.Mesh(new THREE.SphereGeometry(R, 20, 14, -Math.PI / 4 + i * Math.PI / 2, Math.PI / 2, 0, Math.PI / 2), MT(lit, { color: GC[ord[i]], side: THREE.DoubleSide })));
+    const btn = new THREE.Mesh(new THREE.SphereGeometry(.14, 12, 10), MT(lit, { color: 0xffffff })); btn.position.y = R; g.add(btn);
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(R, .05, 8, 36), MT(lit, { color: 0xffffff })); rim.rotation.x = Math.PI / 2; g.add(rim);
+    const vis = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 8, 0, Math.PI * 2, 0, Math.PI / 2), MT(lit, { color: GC[1], side: THREE.DoubleSide }));
+    vis.scale.set(.85, .16, 1.05); vis.position.set(0, .02, R * .85); vis.rotation.x = .1; g.add(vis);
+    const dec = new THREE.Mesh(new THREE.CircleGeometry(.3, 24), new THREE.MeshBasicMaterial({ map: gTex(), transparent: true }));
+    const th = .9, y = R * Math.cos(th) * 1.01, z = R * Math.sin(th) * 1.01; dec.position.set(0, y, z); dec.lookAt(0, y * 2, z * 2); g.add(dec);
+    return g;
+  }
+  function buildHead(lit) {
+    const g = new THREE.Group(); g.add(new THREE.Mesh(new THREE.SphereGeometry(1, 32, 24), MT(lit, { color: 0xf8ffc4 })));
+    [-1, 1].forEach(sx => { const e = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 10), new THREE.MeshBasicMaterial({ color: 0x232323 })); e.scale.set(.1, .17, .06); e.position.set(sx * .3, .12, .95); e.lookAt(sx * .6, .12, 1.9); g.add(e); });
+    return g;
+  }
+  const HAT_Y = .42, HAT_RX = -.12;
+
+  /* ---------- aplicar no jogo ---------- */
   let gDecals = [], origPatch = null, hat = null;
   function applyBall(id) {
     if (!origPatch) origPatch = ballSpin.children.map(p => p.material);
     gDecals.forEach(d => ballSpin.remove(d)); gDecals = [];
-    ballSpin.children.forEach((p, i) => { if (!p.userData.wr) p.material = origPatch[i]; });
+    ballSpin.children.forEach((p, i) => { if (origPatch[i]) p.material = origPatch[i]; });
     if (id !== 'google') return;
-    const tex = texG();
     ballSpin.children.slice().forEach((p, i) => {
-      if (p.userData.wr) return;
+      if (!origPatch[i]) return;
       p.material = new THREE.MeshBasicMaterial({ color: GC[i % 4] });
-      const d = new THREE.Mesh(new THREE.CircleGeometry(.2, 20), new THREE.MeshBasicMaterial({ map: tex, transparent: true }));
-      d.position.copy(p.position).multiplyScalar(1.02); d.quaternion.copy(p.quaternion); d.userData.wr = 1; d.renderOrder = 2;
-      d.position.add(p.position.clone().normalize().multiplyScalar(.012)); ballSpin.add(d); gDecals.push(d);
+      const d = new THREE.Mesh(new THREE.CircleGeometry(.2, 20), new THREE.MeshBasicMaterial({ map: gTex(), transparent: true }));
+      d.position.copy(p.position).normalize().multiplyScalar(.462); d.quaternion.copy(p.quaternion); d.renderOrder = 2; ballSpin.add(d); gDecals.push(d);
     });
   }
   function applyHat(id) {
     if (hat) { head.remove(hat); hat = null; }
     if (id !== 'google') return;
-    const g = new THREE.Group(), tex = texG();
-    const col = i => new THREE.MeshBasicMaterial({ color: GC[i] });
-    const top = new THREE.Mesh(new THREE.CylinderGeometry(.62, .7, .62, 20), col(0)); top.position.y = .62;
-    const lid = new THREE.Mesh(new THREE.CylinderGeometry(.62, .62, .04, 20), new THREE.MeshBasicMaterial({ color: 0xffffff })); lid.position.y = .94;
-    const brim = new THREE.Mesh(new THREE.CylinderGeometry(1.15, 1.15, .1, 24), col(1)); brim.position.y = .3;
-    const band = new THREE.Mesh(new THREE.CylinderGeometry(.705, .715, .12, 20), col(2)); band.position.y = .42;
-    const dec = new THREE.Mesh(new THREE.CircleGeometry(.3, 20), new THREE.MeshBasicMaterial({ map: tex, transparent: true }));
-    dec.position.set(0, .66, .72); dec.rotation.y = 0;
-    g.add(brim, top, lid, band, dec); g.position.set(0, 3.12 + .78, .28); g.scale.setScalar(.95); g.rotation.x = -.05;
-    head.add(g); hat = g;
+    hat = buildHat(false); hat.position.set(0, 3.12 + HAT_Y, .28); hat.rotation.x = HAT_RX; head.add(hat);
   }
-  function applyAll() { const w = unlocked() ? getW() : {}; try { applyBall(w.ball); applyHat(w.hat); } catch (e) { console.error(e); } }
+  const equipped = () => { const w = unlocked() ? getW() : {}; return { ball: w.ball || 'classic', hat: w.hat || null }; };
+  function applyAll() { const e = equipped(); try { applyBall(e.ball); applyHat(e.hat); } catch (err) { console.error(err); } }
 
-  /* ---------- UI do vestiário ---------- */
-  function prevBall(id) { const cv = document.createElement('canvas'); cv.width = cv.height = 168; const c = cv.getContext('2d');
-    c.fillStyle = id === 'google' ? '#fff' : '#f8f9fa'; c.beginPath(); c.arc(84, 84, 70, 0, 7); c.fill(); c.strokeStyle = '#999'; c.lineWidth = 3; c.stroke();
-    if (id === 'google') { [[84, 18, 0], [150, 84, 1], [84, 150, 2], [18, 84, 3]].forEach(([x, y, i]) => { c.fillStyle = GC[i]; c.beginPath(); c.arc(x, y, 22, 0, 7); c.fill(); }); gLogo(c, 84, 84, 36); }
-    else { c.fillStyle = '#232323'; c.beginPath(); c.arc(84, 84, 20, 0, 7); c.fill(); [[84, 20], [148, 84], [84, 148], [20, 84]].forEach(([x, y]) => { c.beginPath(); c.arc(x, y, 12, 0, 7); c.fill(); }); }
-    return cv; }
-  function prevHat(id) { const cv = document.createElement('canvas'); cv.width = cv.height = 168; const c = cv.getContext('2d');
-    if (id === 'google') { c.fillStyle = GC[1]; c.fillRect(14, 112, 140, 18); c.fillStyle = GC[0]; c.fillRect(42, 40, 84, 74); c.fillStyle = GC[2]; c.fillRect(42, 96, 84, 14); c.fillStyle = '#fff'; c.fillRect(42, 36, 84, 6); gLogo(c, 84, 74, 22); }
-    else { c.strokeStyle = '#888'; c.lineWidth = 6; c.beginPath(); c.moveTo(40, 40); c.lineTo(128, 128); c.moveTo(128, 40); c.lineTo(40, 128); c.stroke(); }
-    return cv; }
-  function build() {
-    const ok = unlocked(), w = getW();
-    for (const [box, list, kind, pv] of [[$('wrBalls'), BALLS, 'ball', prevBall], [$('wrHats'), HATS, 'hat', prevHat]]) {
-      box.innerHTML = '';
-      list.forEach(it => {
-        const lk = it.lock && !ok, on = (w[kind] || (kind === 'ball' ? 'classic' : null)) === it.id;
-        const d = document.createElement('div'); d.className = 'wrI' + (lk ? ' lk' : '') + (on ? ' on' : '');
-        d.appendChild(pv(it.id)); d.insertAdjacentHTML('beforeend', it.n + (lk ? '<small>🔒 Entre com Google</small>' : on ? '<small>Equipado</small>' : ''));
-        d.onclick = () => { if (lk) return; const n = getW(); n[kind] = it.id === 'classic' ? null : it.id; setW(n); applyAll(); build(); };
-        box.appendChild(d);
-      });
-    }
+  /* ---------- prévias 3D no painel ---------- */
+  let R1 = null, R2 = null, tabK = 'ball', drawables = [], raf = 0, stage = null;
+  const lights = sc => { sc.add(new THREE.HemisphereLight(0xffffff, 0x8899bb, .95)); const d = new THREE.DirectionalLight(0xffffff, .95); d.position.set(3, 5, 4); sc.add(d); };
+  function card3d(kind, id, canvas) {
+    const sc = new THREE.Scene(), root = new THREE.Group(); sc.add(root); lights(sc);
+    if (kind === 'ball') root.add(buildBall(id, true));
+    else { root.add(buildHead(true)); if (id === 'google') { const h = buildHat(true); h.position.y = HAT_Y; h.rotation.x = HAT_RX; root.add(h); } }
+    const cam = new THREE.PerspectiveCamera(30, 1, .1, 50), ball = kind === 'ball'; cam.position.set(0, ball ? 0 : .5, ball ? 5.2 : 7.6); cam.lookAt(0, ball ? 0 : .55, 0);
+    const ctx = canvas.getContext('2d');
+    return { draw(t) { root.rotation.y = ball ? t * 1.1 : Math.sin(t * 1.2) * .9; R1.render(sc, cam); ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.drawImage(R1.domElement, 0, 0, canvas.width, canvas.height); } };
   }
-  $('bWr').onclick = () => { build(); $('wrPop').classList.add('on'); };
+  function stage3d(host) {
+    if (!R2) { R2 = new THREE.WebGLRenderer({ alpha: true, antialias: true }); R2.setSize(420, 340, false); R2.setPixelRatio(Math.min(devicePixelRatio || 1, 2)); }
+    host.innerHTML = ''; host.appendChild(R2.domElement);
+    const e = equipped(), sc = new THREE.Scene(); lights(sc);
+    const hr = new THREE.Group(), hd = buildHead(true); hr.add(hd);
+    if (e.hat === 'google') { const h = buildHat(true); h.position.y = HAT_Y; h.rotation.x = HAT_RX; hr.add(h); }
+    hr.position.set(-1.5, .2, 0); sc.add(hr);
+    const br = new THREE.Group(); br.add(buildBall(e.ball, true)); br.scale.setScalar(.85); br.position.set(1.7, -.35, 0); sc.add(br);
+    const fl = new THREE.Mesh(new THREE.CircleGeometry(3.4, 40), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: .28 })); fl.rotation.x = -Math.PI / 2; fl.position.y = -1.3; sc.add(fl);
+    const cam = new THREE.PerspectiveCamera(32, 420 / 340, .1, 60); cam.position.set(0, .9, 9.5); cam.lookAt(.1, .1, 0);
+    return { draw(t) { hr.rotation.y = Math.sin(t * .9) * .8; br.rotation.y = t * 1.2; br.rotation.x = t * .4; R2.render(sc, cam); } };
+  }
+  const NAMES = { classic: 'Bola Clássica', google: 'Bola Google' };
+  function build() {
+    if (!R1) { R1 = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true }); R1.setSize(220, 220, false); R1.setPixelRatio(1); }
+    const ok = unlocked(), e = equipped(), grid = $('wrGrid'); grid.innerHTML = ''; drawables = [];
+    ITEMS[tabK].forEach(it => {
+      const lk = it.lock && !ok, on = (tabK === 'ball' ? e.ball : e.hat) === it.id;
+      const d = document.createElement('div'); d.className = 'wrI' + (lk ? ' lk' : '') + (on ? ' on' : '') + (it.lock ? ' epic' : '');
+      const cv = document.createElement('canvas'); cv.width = cv.height = 220; d.appendChild(cv);
+      if (it.lock) d.insertAdjacentHTML('beforeend', '<span class="bd">GOOGLE</span>');
+      d.insertAdjacentHTML('beforeend', it.n + (lk ? '<small>🔒 Entre com Google</small>' : on ? '<small>✔ Equipado</small>' : '<small>Toque para equipar</small>'));
+      d.onclick = () => { if (lk) return; const w = getW(); w[tabK] = (it.id === 'classic') ? null : it.id; setW(w); applyAll(); build(); };
+      grid.appendChild(d); drawables.push(card3d(tabK, it.id, cv));
+    });
+    stage = stage3d($('wrBig')); drawables.push(stage);
+    $('wrCap').textContent = 'Equipado: ' + NAMES[e.ball] + ' • ' + (e.hat === 'google' ? 'Boné Google' : 'Sem acessório');
+    document.querySelectorAll('.wrTabs button').forEach(b => b.classList.toggle('on', b.dataset.t === tabK));
+  }
+  function loop(ms) {
+    if (!$('wrPop').classList.contains('on') && !$('wrGift').classList.contains('on')) { raf = 0; return; }
+    const t = ms / 1000; drawables.forEach(d => d.draw(t)); raf = requestAnimationFrame(loop);
+  }
+  const start = () => { if (!raf) raf = requestAnimationFrame(loop); };
+  document.querySelectorAll('.wrTabs button').forEach(b => b.onclick = () => { tabK = b.dataset.t; build(); });
+  $('bWr').onclick = () => { build(); $('wrPop').classList.add('on'); start(); };
   $('wrClose').onclick = () => $('wrPop').classList.remove('on');
   $('wrPop').addEventListener('click', e => { if (e.target.id === 'wrPop') $('wrPop').classList.remove('on'); });
   $('wgOk').onclick = () => $('wrGift').classList.remove('on');
-  window.__wr = { gift() { applyAll(); [['wgB', prevBall], ['wgH', prevHat]].forEach(([id, f]) => { const c = $(id).getContext('2d'); c.clearRect(0, 0, 180, 180); c.drawImage(f('google'), 6, 6, 168, 168); }); $('wrGift').classList.add('on'); } };
+  window.__wr = { gift() { applyAll(); if (!R1) { R1 = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true }); R1.setSize(220, 220, false); R1.setPixelRatio(1); }
+    drawables = [card3d('ball', 'google', $('wgB')), card3d('hat', 'google', $('wgH'))]; $('wrGift').classList.add('on'); start(); } };
   applyAll();
 })();
 </script>
