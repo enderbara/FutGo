@@ -6781,7 +6781,7 @@ addEventListener('resize', () => {
 </script>
 <!-- ===== Salvar na conta Google (Drive appDataFolder, sem servidor) ===== -->
 <style>
-  #gAcc { position: fixed; top: 14px; right: 14px; z-index: 60; display: none; flex-direction: column; align-items: flex-end; gap: 6px; font: 700 14px system-ui; color: #fff; }
+  #gAcc { position: fixed; bottom: 40px; right: 14px; z-index: 200002; display: none; flex-direction: column-reverse; align-items: flex-end; gap: 6px; font: 700 14px system-ui; color: #fff; }
   body[data-m="menu"] #gAcc, body[data-m="team"] #gAcc { display: flex; }
   #gAcc button { font: inherit; color: inherit; cursor: pointer; }
   #gChip { display: flex; align-items: center; gap: 9px; padding: 7px 14px 7px 8px; border-radius: 999px; background: rgba(8,12,24,.85); border: 2px solid rgba(255,255,255,.25); max-width: 260px; }
@@ -6798,12 +6798,14 @@ addEventListener('resize', () => {
   #gMenu { display: none; flex-direction: column; min-width: 190px; padding: 6px; border-radius: 14px; background: rgba(8,12,24,.95); border: 2px solid rgba(255,255,255,.2); box-shadow: 0 10px 30px rgba(0,0,0,.5); }
   #gMenu.on { display: flex; } #gMenu button { background: none; border: 0; text-align: left; padding: 10px 12px; border-radius: 9px; }
   #gMenu button:hover { background: rgba(255,255,255,.14); } #gMenu .em { font: 600 11px system-ui; opacity: .6; padding: 6px 12px 4px; word-break: break-all; }
-  #gModal { position: fixed; inset: 0; z-index: 200; display: none; place-items: center; background: rgba(0,0,0,.7); font-family: system-ui; color: #fff; }
+  #gToast { display: none; max-width: min(340px, 86vw); padding: 11px 14px; border-radius: 12px; background: #b71c1c; border: 2px solid #ef9a9a; font: 700 13px/1.4 system-ui; box-shadow: 0 8px 24px rgba(0,0,0,.5); }
+  #gToast.on { display: block; }
+  #gModal { position: fixed; inset: 0; z-index: 200003; display: none; place-items: center; background: rgba(0,0,0,.7); font-family: system-ui; color: #fff; }
   #gModal.on { display: grid; } #gModal > div { width: min(440px, 92vw); padding: 22px; border-radius: 18px; background: #0d1426; border: 2px solid rgba(255,255,255,.2); }
   #gModal h3 { margin: 0 0 6px; font-size: 20px; } #gModal p { margin: 0 0 14px; opacity: .8; font-size: 14px; line-height: 1.4; }
   #gModal .opt { display: block; width: 100%; text-align: left; margin-bottom: 10px; padding: 12px 14px; border-radius: 12px; cursor: pointer; font: 800 15px system-ui; color: #fff; background: rgba(255,255,255,.1); border: 2px solid rgba(255,255,255,.3); }
   #gModal .opt:hover { background: rgba(255,255,255,.2); } #gModal .opt small { display: block; font-weight: 600; opacity: .75; margin-top: 3px; }
-  @media (max-width: 560px) { #gAcc { top: 8px; right: 8px; } #gChip .tx b { max-width: 90px; } }
+  @media (max-width: 560px) { #gAcc { bottom: 34px; right: 8px; } #gChip .tx b { max-width: 90px; } }
 </style>
 <div id="gAcc" data-s="off">
   <button id="gChip" type="button" title="Salvar o jogo na sua conta Google"></button>
@@ -6813,6 +6815,7 @@ addEventListener('resize', () => {
     <button type="button" id="gLoad">⬇ Carregar da nuvem</button>
     <button type="button" id="gOut">⎋ Sair da conta</button>
   </div>
+  <div id="gToast" role="alert"></div>
 </div>
 <div id="gModal"><div>
   <h3>Qual jogo você quer usar?</h3>
@@ -6830,6 +6833,19 @@ addEventListener('resize', () => {
   const isSave = k => typeof k === 'string' && k.startsWith('futio_');     // tudo que o jogo grava começa com futio_
   let sess = null, tok = null, tc = null, waiter = null, fileId = null, pending = false, busy = false, mute = false, timer = 0, status = 'off';
   try { sess = JSON.parse(LS.getItem(K_SESS) || 'null'); } catch (_) {}
+  const mkErr = code => Object.assign(new Error(code), { auth: true, code });
+  let toastT = 0;
+  function toast(e) {
+    const c = (e && (e.code || e.message)) || 'erro';
+    const M = { file: 'Abra o jogo por um endereço http(s) (seu site ou localhost). Abrindo o arquivo direto, o login do Google não funciona.',
+      gis: 'Não consegui carregar o login do Google. Verifique a internet ou desative bloqueadores de anúncios para este site.',
+      popup_failed_to_open: 'O navegador bloqueou a janela de login. Permita pop-ups para este site e tente de novo.',
+      popup_closed: 'A janela de login foi fechada antes de terminar.', access_denied: 'Acesso negado. Se o app está em modo Teste no Google Cloud, adicione seu e-mail em "Usuários de teste".' };
+    let m = M[c];
+    if (!m && /HTTP 403/.test(c)) m = 'O Google Drive recusou o acesso. Ative a "Google Drive API" no projeto e autorize o escopo drive.appdata.';
+    if (!m) m = 'Falha no login (' + c + '). Confira se ' + location.origin + ' está em "Origens JavaScript autorizadas" do Client ID.';
+    const t = $('gToast'); t.textContent = m; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 12000);
+  }
   const tokOk = () => tok && tok.exp > Date.now();
 
   /* ---------- interface ---------- */
@@ -6851,16 +6867,18 @@ addEventListener('resize', () => {
     tc = google.accounts.oauth2.initTokenClient({
       client_id: CID, scope: SCOPE,
       callback: r => { const w = waiter; waiter = null; if (!w) return;
-        if (r.error || !r.access_token) w.rej(Object.assign(new Error(r.error || 'auth'), { auth: true }));
+        if (r.error || !r.access_token) w.rej(mkErr(r.error || 'auth'));
         else { tok = { v: r.access_token, exp: Date.now() + (r.expires_in - 90) * 1000 }; w.res(tok.v); } },
-      error_callback: e => { const w = waiter; waiter = null; if (w) w.rej(Object.assign(new Error(e && e.type || 'auth'), { auth: true })); }
+      error_callback: e => { const w = waiter; waiter = null; if (w) w.rej(mkErr(e && e.type || 'auth')); }
     });
     return true;
   }
   const getToken = () => new Promise((res, rej) => {
     if (tokOk()) return res(tok.v);
-    if (!initGIS()) return rej(Object.assign(new Error('gis'), { auth: true }));
-    waiter = { res, rej }; tc.requestAccessToken({ prompt: '' });
+    if (location.protocol === 'file:') return rej(mkErr('file'));
+    const go = () => { if (!initGIS()) return rej(mkErr('gis')); waiter = { res, rej }; tc.requestAccessToken({ prompt: '' }); };
+    if (initGIS()) return go();
+    gisP.then(go, () => rej(mkErr('gis')));
   });
   async function api(url, opt = {}, retry = true) {
     const t = await getToken();
@@ -6952,7 +6970,7 @@ addEventListener('resize', () => {
       const u = await (await api('https://www.googleapis.com/oauth2/v3/userinfo')).json();
       sess = { sub: u.sub, name: u.name || u.given_name || 'Jogador', picture: u.picture || '' };
       rawSet.call(LS, K_SESS, JSON.stringify(sess)); fileId = null; busy = false; await reconcile();
-    } catch (e) { setStatus(sess ? (e.auth ? 'auth' : 'error') : 'off'); }
+    } catch (e) { toast(e); setStatus(sess ? (e.auth ? 'auth' : 'error') : 'off'); }
     finally { busy = false; }
   }
   function logout() {
@@ -6971,7 +6989,7 @@ addEventListener('resize', () => {
     try { setStatus('syncing'); const c = await pull();
       if (!c) { setStatus('ok'); alert('Nenhum jogo salvo na nuvem ainda.'); return; }
       if (confirm('Substituir o jogo deste aparelho pelo salvo na nuvem?\n\n' + describe(c.data))) applyCloud(c); else setStatus('ok');
-    } catch (e) { setStatus(e.auth ? 'auth' : 'error'); }
+    } catch (e) { toast(e); setStatus(e.auth ? 'auth' : 'error'); }
   };
   document.addEventListener('click', e => { if (!e.target.closest('#gAcc')) $('gMenu').classList.remove('on'); });
   // Depois de recarregar a página, o Google exige um toque do jogador para renovar o acesso: fazemos isso no primeiro clique.
@@ -6981,7 +6999,8 @@ addEventListener('resize', () => {
     if (fileId && body.length < 60000) fetch('https://www.googleapis.com/upload/drive/v3/files/' + fileId + '?uploadType=media', { method: 'PATCH', keepalive: true, headers: { Authorization: 'Bearer ' + tok.v, 'Content-Type': 'application/json' }, body }); } catch (_) {} } });
 
   render(); if (sess) setStatus('auth');
-  const s = document.createElement('script'); s.src = 'https://accounts.google.com/gsi/client'; s.async = true; s.onload = initGIS; document.head.appendChild(s);
+  const s = document.createElement('script'); s.src = 'https://accounts.google.com/gsi/client'; s.async = true;
+  const gisP = new Promise((ok, no) => { s.onload = () => { initGIS(); ok(); }; s.onerror = no; }); gisP.catch(() => {}); document.head.appendChild(s);
 })();
 </script>
 </body>
