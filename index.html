@@ -487,6 +487,11 @@ body[data-m="play"] #ver,body[data-m="train"] #ver{display:none}
 #splash .sp-nm span{background:none!important;-webkit-background-clip:border-box!important;background-clip:border-box!important;color:#fff!important;animation:none!important;padding:0!important;text-shadow:0 0 28px rgba(255,213,74,.55),0 0 2px rgba(255,255,255,.6)}
 #menu{max-width:100vw}
 </style>
+<style>
+html,body{touch-action:manipulation;overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea,select{-webkit-user-select:text;user-select:text}
+img,canvas{-webkit-user-drag:none;user-drag:none}
+</style>
 </head>
 <body>
 <div id="ver">Kick.io v1.0.0</div>
@@ -6718,6 +6723,20 @@ addEventListener('resize', () => {
     if (cam === camera && a < REF) { const f0 = camera.fov; camera.fov = Math.min(105, 2 * Math.atan(Math.tan(f0 * Math.PI / 360) * REF / a) * 180 / Math.PI); camera.updateProjectionMatrix(); R(sc, cam); camera.fov = f0; camera.updateProjectionMatrix(); }
     else R(sc, cam);
   }; })();
+</script>
+<script>
+// bloqueia o zoom do navegador (Ctrl+scroll, Ctrl +/-/0, pinça, toque duplo) e arrastar/selecionar
+(() => {
+  const o = { passive: false };
+  addEventListener('wheel', e => { if (e.ctrlKey || e.metaKey) e.preventDefault(); }, o);
+  addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && ['+', '-', '=', '_', '0', 'Add', 'Subtract'].includes(e.key)) e.preventDefault(); }, true);
+  for (const t of ['gesturestart', 'gesturechange', 'gestureend']) addEventListener(t, e => e.preventDefault(), o);
+  addEventListener('touchmove', e => { if (e.touches.length > 1 || (e.scale && e.scale !== 1)) e.preventDefault(); }, o);
+  let lt = 0; addEventListener('touchend', e => { const n = Date.now(); if (n - lt < 320 && !(e.target.closest && e.target.closest('input,textarea,select'))) e.preventDefault(); lt = n; }, o);
+  addEventListener('dragstart', e => e.preventDefault());
+  addEventListener('selectstart', e => { if (!(e.target.closest && e.target.closest('input,textarea,select'))) e.preventDefault(); });
+  const vp = document.querySelector('meta[name=viewport]'); if (vp) vp.content = 'width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover';
+})();
 </script>
 </body>
 </html>
