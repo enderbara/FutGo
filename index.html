@@ -7222,52 +7222,28 @@ addEventListener('resize', () => {
     c.font = '108px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif'; c.fillText('\u2764\uFE0F', x0 + w1, 6); c.restore();
     _bt = new THREE.CanvasTexture(cv); _bt.anisotropy = 4; return _bt; };
   const BAND = new THREE.SphereGeometry(1, 64, 24);
-  // contorno "de borda" dentro do próprio material: nunca some, em qualquer ângulo de câmera
-  const rimize = mt => mt; const _rimOld = mt => { mt.onBeforeCompile = sh => {
-    sh.vertexShader = 'varying float vRim;\n' + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n{ vec3 rn = normalize(normalMatrix * normal); vRim = 1.0 - abs(dot(rn, normalize(-mvPosition.xyz))); }');
-    sh.fragmentShader = 'varying float vRim;\n' + sh.fragmentShader.replace('#include <dithering_fragment>', 'gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(0.07, 0.07, 0.1), smoothstep(0.5, 0.62, vRim));\n#include <dithering_fragment>');
-  }; mt.customProgramCacheKey = () => 'rim'; return mt; };
-  // contorno PRÓPRIO da bandana: mais grosso, azul-escuro e puxado para a câmera (a cabeça nunca o esconde)
-  const bandHull = id => pxOut(new THREE.MeshBasicMaterial({ color: 0x232323, side: THREE.BackSide, stencilWrite: true, stencilFunc: THREE.NotEqualStencilFunc, stencilRef: id,
-    polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }), 1.6);
-  const SPH2 = new THREE.SphereGeometry(1, 32, 20);
-  const pieceR = (color, rx, ry, rz, x, y, z, t) => {
-    const id = nextPid(), g = new THREE.Group(), fill = new THREE.Mesh(SPH2, stencilize(rimize(LM({ color })), id)), line = new THREE.Mesh(SPH2, bandHull(id));
-    fill.scale.set(rx, ry, rz); fill.renderOrder = 1; line.scale.set(rx + t, ry + t, rz + t); line.renderOrder = 2; g.add(fill, line); g.position.set(x, y, z); return g; };
-  // física das pontas da bandana (corrente de verlet em espaço de mundo: gravidade, inércia, colisão com a cabeça)
-  const BANDS = [], _V3 = () => new THREE.Vector3(), _a = _V3(), _v = _V3(), _r = _V3(), _c = _V3(), _d = _V3(), _gv = _V3(), _Y = new THREE.Vector3(0, 1, 0), _M = new THREE.Matrix4();
-  function placeTail(t, loc) { for (let i = 0; i < t.n; i++) { const a = loc[i], b = loc[i + 1], m = t.meshes[i];
-    m.position.copy(a).add(b).multiplyScalar(.5); _d.copy(b).sub(a); if (_d.lengthSq() > 1e-8) m.quaternion.setFromUnitVectors(_Y, _d.normalize()); } }
-  function bandPhys(b, dt) {
-    const g = b.g; if (!g.parent) return; g.updateWorldMatrix(true, false);
-    const M = g.matrixWorld, ws = M.getMaxScaleOnAxis(); if (ws < .05) { b.tails.forEach(t => t.init = false); return; }
-    _M.copy(M).invert(); _c.setFromMatrixPosition(M); _gv.set(0, -70 * ws, 0); const dt2 = dt * dt;
-    b.tails.forEach(t => {
-      _a.copy(t.anchor).applyMatrix4(M);
-      if (t.init && _a.distanceTo(t.pts[0]) > 5 * ws) t.init = false;
-      if (!t.init) { t.pts = [_a.clone()]; t.prev = [_a.clone()]; for (let i = 0; i < t.n; i++) { const p = t.rest[i].clone().applyMatrix4(M); t.pts.push(p); t.prev.push(p.clone()); } t.init = true; }
-      t.pts[0].copy(_a);
-      for (let i = 1; i <= t.n; i++) { const p = t.pts[i], pr = t.prev[i]; _v.copy(p).sub(pr).multiplyScalar(.82); if (_v.length() > .22 * ws) _v.setLength(.22 * ws); pr.copy(p); p.add(_v).addScaledVector(_gv, dt2);
-        _r.copy(t.rest[i - 1]).applyMatrix4(M); p.lerp(_r, .07); }
-      for (let it = 0; it < 5; it++) { for (let i = 1; i <= t.n; i++) { const A = t.pts[i - 1], B = t.pts[i]; _d.copy(B).sub(A); const l = _d.length() || 1e-6, df = (l - t.L * ws) / l;
-          if (i === 1) B.addScaledVector(_d, -df); else { A.addScaledVector(_d, df * .5); B.addScaledVector(_d, -df * .5); } }
-        t.pts[0].copy(_a);
-        for (let i = 1; i <= t.n; i++) { _d.copy(t.pts[i]).sub(_c); const l = _d.length(), R = 1.14 * ws; if (l < R && l > 1e-6) t.pts[i].copy(_c).addScaledVector(_d, R / l); } }
-      placeTail(t, t.pts.map(p => p.clone().applyMatrix4(_M)));
-    }); }
+  const BANDS = [], BOX = new THREE.BoxGeometry(1, 1, 1), _bp = new THREE.Vector3();
+  // peça retangular com contorno igual ao do player (charHull); pv=true -> pivô no topo
+  const pieceB = (color, w, h, d, x, y, z, t, pv) => { const id = nextPid(), g = new THREE.Group(), fill = new THREE.Mesh(BOX, stencilize(LM({ color }), id)), line = new THREE.Mesh(BOX, charHull(id));
+    fill.scale.set(w, h, d); line.scale.set(w + t, h + t, d + t); fill.renderOrder = 1; line.renderOrder = 2;
+    if (pv) fill.position.y = line.position.y = -h / 2; g.add(fill, line); g.position.set(x, y, z); return g; };
+  // animação "de desenho": as pontas balançam em seno e esticam para trás conforme a velocidade
+  function bandAnim(b, now, dt) { const g = b.g; if (!g.parent) return; g.getWorldPosition(_bp);
+    const sp = b.last ? _bp.distanceTo(b.last) / dt : 0; b.last = (b.last || new THREE.Vector3()).copy(_bp);
+    b.lean += (Math.min(sp * .04, .7) - b.lean) * Math.min(1, dt * 8); const T = now / 1000;
+    b.tails.forEach(t => { t.p.rotation.z = t.side * (.2 + .07 * Math.sin(T * 3 + t.ph)); t.p.rotation.x = .08 + b.lean + .09 * Math.sin(T * 2.4 + t.ph * 1.7); });
+    b.knot.rotation.z = .04 * Math.sin(T * 3.2); }
   let _bl = performance.now();
-  (function bandTick(now) { const dt = Math.min(.033, Math.max(.001, (now - _bl) / 1000)); _bl = now; for (let i = BANDS.length - 1; i >= 0; i--) { if (!BANDS[i].g.parent && BANDS[i].age++ > 600) BANDS.splice(i, 1); else bandPhys(BANDS[i], dt); } requestAnimationFrame(bandTick); })(performance.now());
-  function buildHat() {   // bandana branca "100% JESUS" com nó e pontas com física
+  (function bandTick(now) { const dt = Math.min(.033, Math.max(.001, (now - _bl) / 1000)); _bl = now; for (let i = BANDS.length - 1; i >= 0; i--) { if (!BANDS[i].g.parent && BANDS[i].age++ > 600) BANDS.splice(i, 1); else bandAnim(BANDS[i], now, dt); } requestAnimationFrame(bandTick); })(performance.now());
+  function buildHat() {   // bandana branca "100% JESUS" com nó de 2 retângulos e pontas animadas
     const g = new THREE.Group(), id = nextPid(), Y = .52, W = 0xfafbff;
-    const fill = new THREE.Mesh(BAND, stencilize(rimize(LM({ map: bandTex() })), id)), line = new THREE.Mesh(SPHERE, bandHull(id));
-    fill.scale.set(1.1, .36, 1.1); line.scale.set(1.12, .38, 1.12); fill.position.y = line.position.y = Y; fill.renderOrder = 1; line.renderOrder = 2; g.add(fill, line);
-    const add = (c, rx, ry, rz, x, y, z, t, ex = 0, ey = 0, ez = 0) => { const p = pieceR(c, rx, ry, rz, x, y, z, t); p.rotation.set(ex, ey, ez); g.add(p); return p; };
-    add(W, .24, .2, .18, 0, Y, -1.12, .07);                                  // nó
-    add(0xe9ecf4, .13, .1, .1, -.14, Y + .06, -1.24, .05, 0, 0, .5); add(0xe9ecf4, .13, .1, .1, .14, Y + .06, -1.24, .05, 0, 0, -.5);   // dobras do nó
-    const b = { g, age: 0, tails: [] }, RX = [.17, .15, .12], RZ = [.06, .055, .05];
-    [-1, 1].forEach(sd => { const t = { n: 3, L: .4, anchor: new THREE.Vector3(sd * .14, Y - .02, -1.22), meshes: [], rest: [], init: false };
-      for (let i = 0; i < 3; i++) { t.rest.push(new THREE.Vector3(sd * (.14 + .06 * (i + 1)), Y - .02 - .4 * (i + 1), -1.22 - .1 * (i + 1))); t.meshes.push(add(W, RX[i], .27, RZ[i], 0, 0, 0, .05)); }
-      placeTail(t, [t.anchor, ...t.rest]); b.tails.push(t); });
+    const fill = new THREE.Mesh(BAND, stencilize(LM({ map: bandTex() }), id)), line = new THREE.Mesh(SPHERE, charHull(id));
+    fill.scale.set(1.1, .36, 1.1); line.scale.set(1.17, .43, 1.17); fill.position.y = line.position.y = Y; fill.renderOrder = 1; line.renderOrder = 2; g.add(fill, line);
+    const knot = new THREE.Group(); knot.position.set(0, Y, -1.15); g.add(knot);
+    [.55, -.55].forEach(r => { const p = pieceB(W, .56, .17, .1, 0, 0, 0, .05); p.rotation.z = r; knot.add(p); });   // nó = dois retângulos cruzados
+    const b = { g, knot, age: 0, tails: [], lean: 0, last: null };
+    [-1, 1].forEach(sd => { const p = pieceB(0xe9ecf4, .17, .62, .05, 0, 0, 0, .05, true), pv = new THREE.Group(); pv.position.set(sd * .08, Y - .06, -1.22); pv.add(p); g.add(pv);
+      b.tails.push({ p: pv, side: sd, ph: sd > 0 ? 0 : 1.9 }); });
     BANDS.push(b); if (BANDS.length > 80) BANDS.shift(); return g;
   }
   let _bi = null;
