@@ -7238,14 +7238,14 @@ addEventListener('resize', () => {
   function bandPhys(b, dt) {
     const g = b.g; if (!g.parent) return; g.updateWorldMatrix(true, false);
     const M = g.matrixWorld, ws = M.getMaxScaleOnAxis(); if (ws < .05) { b.tails.forEach(t => t.init = false); return; }
-    _M.copy(M).invert(); _c.setFromMatrixPosition(M); _gv.set(0, -30 * ws, 0); const dt2 = dt * dt;
+    _M.copy(M).invert(); _c.setFromMatrixPosition(M); _gv.set(0, -70 * ws, 0); const dt2 = dt * dt;
     b.tails.forEach(t => {
       _a.copy(t.anchor).applyMatrix4(M);
       if (t.init && _a.distanceTo(t.pts[0]) > 5 * ws) t.init = false;
       if (!t.init) { t.pts = [_a.clone()]; t.prev = [_a.clone()]; for (let i = 0; i < t.n; i++) { const p = t.rest[i].clone().applyMatrix4(M); t.pts.push(p); t.prev.push(p.clone()); } t.init = true; }
       t.pts[0].copy(_a);
-      for (let i = 1; i <= t.n; i++) { const p = t.pts[i], pr = t.prev[i]; _v.copy(p).sub(pr).multiplyScalar(.955); pr.copy(p); p.add(_v).addScaledVector(_gv, dt2);
-        _r.copy(t.rest[i - 1]).applyMatrix4(M); p.lerp(_r, .03); }
+      for (let i = 1; i <= t.n; i++) { const p = t.pts[i], pr = t.prev[i]; _v.copy(p).sub(pr).multiplyScalar(.82); if (_v.length() > .22 * ws) _v.setLength(.22 * ws); pr.copy(p); p.add(_v).addScaledVector(_gv, dt2);
+        _r.copy(t.rest[i - 1]).applyMatrix4(M); p.lerp(_r, .07); }
       for (let it = 0; it < 5; it++) { for (let i = 1; i <= t.n; i++) { const A = t.pts[i - 1], B = t.pts[i]; _d.copy(B).sub(A); const l = _d.length() || 1e-6, df = (l - t.L * ws) / l;
           if (i === 1) B.addScaledVector(_d, -df); else { A.addScaledVector(_d, df * .5); B.addScaledVector(_d, -df * .5); } }
         t.pts[0].copy(_a);
