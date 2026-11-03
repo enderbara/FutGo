@@ -6893,7 +6893,7 @@ addEventListener('resize', () => {
   <div class="gl-ph"><canvas id="gPhone" width="400" height="320"></canvas></div>
   <h3>Entre com sua conta Google</h3><p class="s">Grátis, em um toque. Veja o que você ganha:</p>
   <ul>
-    <li class="gift"><i>🎁</i><span>Presente de boas-vindas<small>Bola, Boné e Chuteira Nuvem exclusivos</small></span></li>
+    <li class="gift"><i>🎁</i><span>Presente de boas-vindas<small>Bola, Bandana e Chuteira Nuvem exclusivos</small></span></li>
     <li><i>☁️</i><span>Progresso salvo na nuvem<small>Time, escudo, nomes e configurações</small></span></li>
     <li><i>📱</i><span>Jogue em qualquer aparelho<small>Celular, tablet ou computador com o mesmo jogo</small></span></li>
     <li><i>👕</i><span>Vestiário com itens extras<small>Skins de bola, chapéus e cabelos</small></span></li>
@@ -7175,7 +7175,7 @@ addEventListener('resize', () => {
 <div id="wrGift"><div>
   <div style="font-size:42px">🎁</div><h3 style="margin:6px 0">Presente da sua conta!</h3>
   <div><canvas id="wgB" width="220" height="220"></canvas><canvas id="wgH" width="220" height="220"></canvas><canvas id="wgC" width="220" height="220"></canvas></div>
-  <p style="opacity:.85;font-size:14px;line-height:1.4;margin:6px 0 16px">Você ganhou a <b>Bola Nuvem</b>, o <b>Boné Nuvem</b> e a <b>Chuteira Nuvem</b>. Já estão equipados! Veja tudo no Vestiário.</p>
+  <p style="opacity:.85;font-size:14px;line-height:1.4;margin:6px 0 16px">Você ganhou a <b>Bola Nuvem</b>, o <b>Bandana Nuvem</b> e a <b>Chuteira Nuvem</b>. Já estão equipados! Veja tudo no Vestiário.</p>
   <button id="wgOk" type="button" style="padding:11px 26px;border:0;border-radius:12px;background:#ffd54a;color:#111;font:800 15px system-ui;cursor:pointer">Legal!</button>
 </div></div>
 <script>
@@ -7185,7 +7185,7 @@ addEventListener('resize', () => {
   const getW = () => { try { const o = JSON.parse(LS.getItem('futio_wr')) || {}; for (const k in o) if (o[k] === 'google') o[k] = 'nimbus'; return o; } catch (_) { return {}; } };
   const setW = w => LS.setItem('futio_wr', JSON.stringify(w));
   const ITEMS = { ball: [{ id: 'classic', n: 'Bola Clássica' }, { id: 'nimbus', n: 'Bola Nuvem', lock: 1 }],
-                  hat: [{ id: null, n: 'Sem acessório' }, { id: 'nimbus', n: 'Boné Nuvem', lock: 1 }],
+                  hat: [{ id: null, n: 'Sem acessório' }, { id: 'nimbus', n: 'Bandana Nuvem', lock: 1 }],
                   cleat: [{ id: null, n: 'Chuteira Clássica' }, { id: 'nimbus', n: 'Chuteira Nuvem', lock: 1 }] };
   function emblem(c, cx, cy, r) {   // emblema próprio: estrela de 4 pontas + faísca
     const k = r / 92, star = (x, y, ro) => { c.beginPath(); c.moveTo(x, y - ro); c.quadraticCurveTo(x, y, x + ro, y); c.quadraticCurveTo(x, y, x, y + ro); c.quadraticCurveTo(x, y, x - ro, y); c.quadraticCurveTo(x, y, x, y - ro); c.fill(); };
@@ -7205,17 +7205,28 @@ addEventListener('resize', () => {
     id = nextPid();   // cada peca do bone/chuteira tem contorno proprio
     const g = new THREE.Group(), fill = new THREE.Mesh(SPHERE, stencilize(LM({ color }), id)), line = new THREE.Mesh(SPHERE, charHull(id));
     fill.scale.set(rx, ry, rz); fill.renderOrder = 1; line.scale.set(rx + t, ry + t, rz + t); line.renderOrder = 2; g.add(fill, line); g.position.set(x, y, z); return g; };
-  function buildHat() {   // boné Nuvem: copa violeta, aba ciano, botão rosa, faixa branca e emblema
-    const g = new THREE.Group(), ID = 200;
-    g.add(pieceT(GC[0], 1.2, .84, 1.2, 0, .5, 0, ID, .12));
-    g.add(pieceT(0xffffff, 1.13, .08, 1.13, 0, .2, 0, ID, .055));
-    const sm = new THREE.MeshBasicMaterial({ color: 0x1c1450 });
-    [60, 120, 180].forEach(a => { const sl = new THREE.Mesh(new THREE.TorusGeometry(1, .024, 6, 48, Math.PI), sm); sl.scale.set(1.205, .845, 1.205); sl.position.y = .5; sl.rotation.y = a * Math.PI / 180; sl.renderOrder = 1; g.add(sl); });
-    const vis = pieceT(GC[1], .8, .12, .64, 0, .2, 1.14, ID, .07); vis.rotation.x = .18; g.add(vis);
-    g.add(pieceT(GC[2], .16, .16, .16, 0, 1.31, 0, ID, .06));
-    const a = .62, cy = .5 + .84 * Math.sin(a), cz = 1.2 * Math.cos(a), ny = Math.sin(a) / .84, nz = Math.cos(a) / 1.2, nl = Math.hypot(ny, nz);
-    const dec = new THREE.Mesh(new THREE.CircleGeometry(.33, 28), new THREE.MeshBasicMaterial({ map: gTex(), transparent: true, polygonOffset: true, polygonOffsetFactor: -2 }));
-    dec.position.set(0, cy + ny / nl * .06, cz + nz / nl * .06); dec.lookAt(0, dec.position.y + ny / nl, dec.position.z + nz / nl); dec.renderOrder = 3; g.add(dec);
+  const CONE = new THREE.ConeGeometry(1, 1, 12, 1); CONE.translate(0, .5, 0);
+  const spike = (col, r, h, x, y, z, dx, dy, dz, t) => {   // mecha pontuda com contorno próprio
+    const id = nextPid(), g = new THREE.Group(), fill = new THREE.Mesh(CONE, stencilize(LM({ color: col }), id)), line = new THREE.Mesh(CONE, charHull(id));
+    fill.scale.set(r, h, r); line.scale.set(r + t, h + t * 1.6, r + t); line.position.y = -t * .6; fill.renderOrder = 1; line.renderOrder = 2; g.add(fill, line);
+    g.position.set(x, y, z); g.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(dx, dy, dz).normalize()); return g; };
+  let _bt = null;
+  const bandTex = () => { if (_bt) return _bt;   // textura da bandana: branca com "100% JESUS ❤️" na frente
+    const W = 2048, H = 512, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const c = cv.getContext('2d');
+    c.fillStyle = '#ffffff'; c.fillRect(0, 0, W, H);
+    c.save(); c.translate(W * .25, H * .5); c.scale(.55, 1); c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.font = '900 104px "Arial Black", Impact, "Segoe UI Black", sans-serif'; c.fillStyle = '#16161a';
+    const lab = '100% JESUS ', w1 = c.measureText(lab).width; c.textAlign = 'left'; c.fillText(lab, -(w1 + 110) / 2, 4);
+    c.font = '96px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif'; c.fillStyle = '#e53935'; c.fillText('\u2764\uFE0F', -(w1 + 110) / 2 + w1, 4); c.restore();
+    _bt = new THREE.CanvasTexture(cv); _bt.anisotropy = 4; return _bt; };
+  const BAND = new THREE.SphereGeometry(1, 64, 24);
+  function buildHat() {   // bandana branca "100% JESUS" com nó e pontas atrás
+    const g = new THREE.Group(), ID = 200, id = nextPid(), Y = .5;
+    const fill = new THREE.Mesh(BAND, stencilize(LM({ map: bandTex() }), id)), line = new THREE.Mesh(SPHERE, charHull(id));
+    fill.scale.set(1.09, .3, 1.09); line.scale.set(1.16, .38, 1.16); fill.position.y = line.position.y = Y; fill.renderOrder = 1; line.renderOrder = 2; g.add(fill, line);
+    const add = (rx, ry, rz, x, y, z, t, ex, ey, ez) => { const p = pieceT(0xfafafa, rx, ry, rz, x, y, z, ID, t); p.rotation.set(ex, ey, ez); g.add(p); };
+    add(.2, .17, .15, 0, Y, -1.1, .06, 0, 0, 0);                       // nó
+    [-1, 1].forEach(sd => add(.16, .46, .06, sd * .17, Y - .42, -1.16, .05, .12, sd * .15, sd * -.28));   // pontas
     return g;
   }
   function cleatKit(fl, fr) {   // chuteira Nuvem: pé violeta, bico ciano, calcanhar rosa, placa branca, travas e emblema
@@ -7396,7 +7407,7 @@ addEventListener('resize', () => {
       grid.appendChild(d); drawables.push(card3d(tabK, it.id, cv));
     });
     drawables.push(stage3d($('wrBig')));
-    $('wrCap').textContent = NAMES[e.ball] + ' • ' + (e.hat ? 'Boné Nuvem' : 'Sem acessório') + ' • ' + (e.cleat ? 'Chuteira Nuvem' : 'Chuteira clássica');
+    $('wrCap').textContent = NAMES[e.ball] + ' • ' + (e.hat ? 'Bandana Nuvem' : 'Sem acessório') + ' • ' + (e.cleat ? 'Chuteira Nuvem' : 'Chuteira clássica');
     document.querySelectorAll('.wrTabs button').forEach(b => b.classList.toggle('on', b.dataset.t === tabK));
   }
   function loop(ms) {
