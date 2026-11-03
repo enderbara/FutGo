@@ -7175,7 +7175,7 @@ addEventListener('resize', () => {
 <div id="wrGift"><div>
   <div style="font-size:42px">🎁</div><h3 style="margin:6px 0">Presente da sua conta!</h3>
   <div><canvas id="wgB" width="220" height="220"></canvas><canvas id="wgH" width="220" height="220"></canvas><canvas id="wgC" width="220" height="220"></canvas></div>
-  <p style="opacity:.85;font-size:14px;line-height:1.4;margin:6px 0 16px">Você ganhou a <b>Bola Nuvem</b>, o <b>Bandana</b> e a <b>Chuteira Nuvem</b>. Já estão equipados! Veja tudo no Vestiário.</p>
+  <p style="opacity:.85;font-size:14px;line-height:1.4;margin:6px 0 16px">Você ganhou a <b>Bola de Login</b>, o <b>Bandana</b> e a <b>Chuteira Nuvem</b>. Já estão equipados! Veja tudo no Vestiário.</p>
   <button id="wgOk" type="button" style="padding:11px 26px;border:0;border-radius:12px;background:#ffd54a;color:#111;font:800 15px system-ui;cursor:pointer">Legal!</button>
 </div></div>
 <script>
@@ -7184,7 +7184,7 @@ addEventListener('resize', () => {
   const unlocked = () => LS.getItem('futio_gift') === '1' && !!LS.getItem('gsave_sess');
   const getW = () => { try { const o = JSON.parse(LS.getItem('futio_wr')) || {}; for (const k in o) if (o[k] === 'google') o[k] = 'nimbus'; return o; } catch (_) { return {}; } };
   const setW = w => LS.setItem('futio_wr', JSON.stringify(w));
-  const ITEMS = { ball: [{ id: 'classic', n: 'Bola Clássica' }, { id: 'nimbus', n: 'Bola Nuvem', lock: 1 }],
+  const ITEMS = { ball: [{ id: 'classic', n: 'Bola Clássica' }, { id: 'nimbus', n: 'Bola de Login', lock: 1 }],
                   hat: [{ id: null, n: 'Sem acessório' }, { id: 'nimbus', n: 'Bandana', lock: 1 }],
                   cleat: [{ id: null, n: 'Chuteira Clássica' }, { id: 'nimbus', n: 'Chuteira Nuvem', lock: 1 }] };
   function emblem(c, cx, cy, r) {   // emblema próprio: estrela de 4 pontas + faísca
@@ -7223,13 +7223,13 @@ addEventListener('resize', () => {
     _bt = new THREE.CanvasTexture(cv); _bt.anisotropy = 4; return _bt; };
   const BAND = new THREE.SphereGeometry(1, 64, 24);
   // contorno "de borda" dentro do próprio material: nunca some, em qualquer ângulo de câmera
-  const rimize = mt => { mt.onBeforeCompile = sh => {
+  const rimize = mt => mt; const _rimOld = mt => { mt.onBeforeCompile = sh => {
     sh.vertexShader = 'varying float vRim;\n' + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n{ vec3 rn = normalize(normalMatrix * normal); vRim = 1.0 - abs(dot(rn, normalize(-mvPosition.xyz))); }');
     sh.fragmentShader = 'varying float vRim;\n' + sh.fragmentShader.replace('#include <dithering_fragment>', 'gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(0.07, 0.07, 0.1), smoothstep(0.5, 0.62, vRim));\n#include <dithering_fragment>');
   }; mt.customProgramCacheKey = () => 'rim'; return mt; };
   // contorno PRÓPRIO da bandana: mais grosso, azul-escuro e puxado para a câmera (a cabeça nunca o esconde)
-  const bandHull = id => pxOut(new THREE.MeshBasicMaterial({ color: 0x0b0d1a, side: THREE.BackSide, stencilWrite: true, stencilFunc: THREE.NotEqualStencilFunc, stencilRef: id,
-    polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 }), 2.6);
+  const bandHull = id => pxOut(new THREE.MeshBasicMaterial({ color: 0x232323, side: THREE.BackSide, stencilWrite: true, stencilFunc: THREE.NotEqualStencilFunc, stencilRef: id,
+    polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }), 1.6);
   const SPH2 = new THREE.SphereGeometry(1, 32, 20);
   const pieceR = (color, rx, ry, rz, x, y, z, t) => {
     const id = nextPid(), g = new THREE.Group(), fill = new THREE.Mesh(SPH2, stencilize(rimize(LM({ color })), id)), line = new THREE.Mesh(SPH2, bandHull(id));
@@ -7260,10 +7260,7 @@ addEventListener('resize', () => {
   function buildHat() {   // bandana branca "100% JESUS" com nó e pontas com física
     const g = new THREE.Group(), id = nextPid(), Y = .52, W = 0xfafbff;
     const fill = new THREE.Mesh(BAND, stencilize(rimize(LM({ map: bandTex() })), id)), line = new THREE.Mesh(SPHERE, bandHull(id));
-    fill.scale.set(1.1, .36, 1.1); line.scale.set(1.18, .44, 1.18); fill.position.y = line.position.y = Y; fill.renderOrder = 1; line.renderOrder = 2; g.add(fill, line);
-    // linhas de borda fixas onde a faixa encontra a cabeça (em cima e embaixo): sempre visíveis, em qualquer ângulo
-    [[.33, .95], [.83, .568]].forEach(([y, R]) => { const m = new THREE.Mesh(new THREE.TorusGeometry(R, .03, 8, 72), new THREE.MeshBasicMaterial({ color: 0x0b0d1a, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 }));
-      m.rotation.x = Math.PI / 2; m.position.y = y; m.renderOrder = 3; g.add(m); });
+    fill.scale.set(1.1, .36, 1.1); line.scale.set(1.12, .38, 1.12); fill.position.y = line.position.y = Y; fill.renderOrder = 1; line.renderOrder = 2; g.add(fill, line);
     const add = (c, rx, ry, rz, x, y, z, t, ex = 0, ey = 0, ez = 0) => { const p = pieceR(c, rx, ry, rz, x, y, z, t); p.rotation.set(ex, ey, ez); g.add(p); return p; };
     add(W, .24, .2, .18, 0, Y, -1.12, .07);                                  // nó
     add(0xe9ecf4, .13, .1, .1, -.14, Y + .06, -1.24, .05, 0, 0, .5); add(0xe9ecf4, .13, .1, .1, .14, Y + .06, -1.24, .05, 0, 0, -.5);   // dobras do nó
@@ -7446,7 +7443,7 @@ addEventListener('resize', () => {
   }
 
   /* ---------- UI ---------- */
-  const NAMES = { classic: 'Bola Clássica', google: 'Bola Nuvem' };
+  const NAMES = { classic: 'Bola Clássica', google: 'Bola de Login' };
   function build() {
     if (!R1) R1 = mkRend(220, 220);
     const ok = unlocked(), e = equipped(), grid = $('wrGrid'); grid.innerHTML = ''; drawables = [];
