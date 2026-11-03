@@ -7175,7 +7175,7 @@ addEventListener('resize', () => {
 <div id="wrGift"><div>
   <div style="font-size:42px">🎁</div><h3 style="margin:6px 0">Presente da sua conta!</h3>
   <div><canvas id="wgB" width="220" height="220"></canvas><canvas id="wgH" width="220" height="220"></canvas><canvas id="wgC" width="220" height="220"></canvas></div>
-  <p style="opacity:.85;font-size:14px;line-height:1.4;margin:6px 0 16px">Você ganhou a <b>Bola Nuvem</b>, o <b>Bandana Nuvem</b> e a <b>Chuteira Nuvem</b>. Já estão equipados! Veja tudo no Vestiário.</p>
+  <p style="opacity:.85;font-size:14px;line-height:1.4;margin:6px 0 16px">Você ganhou a <b>Bola Nuvem</b>, o <b>Bandana</b> e a <b>Chuteira Nuvem</b>. Já estão equipados! Veja tudo no Vestiário.</p>
   <button id="wgOk" type="button" style="padding:11px 26px;border:0;border-radius:12px;background:#ffd54a;color:#111;font:800 15px system-ui;cursor:pointer">Legal!</button>
 </div></div>
 <script>
@@ -7185,7 +7185,7 @@ addEventListener('resize', () => {
   const getW = () => { try { const o = JSON.parse(LS.getItem('futio_wr')) || {}; for (const k in o) if (o[k] === 'google') o[k] = 'nimbus'; return o; } catch (_) { return {}; } };
   const setW = w => LS.setItem('futio_wr', JSON.stringify(w));
   const ITEMS = { ball: [{ id: 'classic', n: 'Bola Clássica' }, { id: 'nimbus', n: 'Bola Nuvem', lock: 1 }],
-                  hat: [{ id: null, n: 'Sem acessório' }, { id: 'nimbus', n: 'Bandana Nuvem', lock: 1 }],
+                  hat: [{ id: null, n: 'Sem acessório' }, { id: 'nimbus', n: 'Bandana', lock: 1 }],
                   cleat: [{ id: null, n: 'Chuteira Clássica' }, { id: 'nimbus', n: 'Chuteira Nuvem', lock: 1 }] };
   function emblem(c, cx, cy, r) {   // emblema próprio: estrela de 4 pontas + faísca
     const k = r / 92, star = (x, y, ro) => { c.beginPath(); c.moveTo(x, y - ro); c.quadraticCurveTo(x, y, x + ro, y); c.quadraticCurveTo(x, y, x, y + ro); c.quadraticCurveTo(x, y, x - ro, y); c.quadraticCurveTo(x, y, x, y - ro); c.fill(); };
@@ -7211,37 +7211,84 @@ addEventListener('resize', () => {
     fill.scale.set(r, h, r); line.scale.set(r + t, h + t * 1.6, r + t); line.position.y = -t * .6; fill.renderOrder = 1; line.renderOrder = 2; g.add(fill, line);
     g.position.set(x, y, z); g.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(dx, dy, dz).normalize()); return g; };
   let _bt = null;
-  const bandTex = () => { if (_bt) return _bt;   // textura da bandana: branca com "100% JESUS ❤️" na frente
+  const bandTex = () => { if (_bt) return _bt;   // textura da bandana: tecido branco, costuras e "100% JESUS ❤️"
     const W = 2048, H = 512, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const c = cv.getContext('2d');
-    c.fillStyle = '#ffffff'; c.fillRect(0, 0, W, H);
-    c.save(); c.translate(W * .25, H * .5); c.scale(.55, 1); c.textAlign = 'center'; c.textBaseline = 'middle';
-    c.font = '900 104px "Arial Black", Impact, "Segoe UI Black", sans-serif'; c.fillStyle = '#16161a';
-    const lab = '100% JESUS ', w1 = c.measureText(lab).width; c.textAlign = 'left'; c.fillText(lab, -(w1 + 110) / 2, 4);
-    c.font = '96px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif'; c.fillStyle = '#e53935'; c.fillText('\u2764\uFE0F', -(w1 + 110) / 2 + w1, 4); c.restore();
+    const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#e9ecf4'); g.addColorStop(.3, '#ffffff'); g.addColorStop(.7, '#ffffff'); g.addColorStop(1, '#e9ecf4'); c.fillStyle = g; c.fillRect(0, 0, W, H);
+    c.strokeStyle = '#b9bfd1'; c.lineWidth = 5; c.setLineDash([22, 14]);   // costuras tracejadas nas bordas
+    [H * .5 - 100, H * .5 + 100].forEach(y => { c.beginPath(); c.moveTo(0, y); c.lineTo(W, y); c.stroke(); }); c.setLineDash([]);
+    c.save(); c.translate(W * .25, H * .5); c.scale(.63, 1); c.textBaseline = 'middle'; c.textAlign = 'left';
+    c.font = '900 116px "Arial Black", Impact, "Segoe UI Black", sans-serif'; const lab = '100% JESUS ', w1 = c.measureText(lab).width, x0 = -(w1 + 120) / 2;
+    c.lineJoin = 'round'; c.lineWidth = 10; c.strokeStyle = '#ffffff'; c.strokeText(lab, x0, 6); c.fillStyle = '#14141c'; c.fillText(lab, x0, 6);
+    c.font = '108px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif'; c.fillText('\u2764\uFE0F', x0 + w1, 6); c.restore();
     _bt = new THREE.CanvasTexture(cv); _bt.anisotropy = 4; return _bt; };
   const BAND = new THREE.SphereGeometry(1, 64, 24);
-  function buildHat() {   // bandana branca "100% JESUS" com nó e pontas atrás
-    const g = new THREE.Group(), ID = 200, id = nextPid(), Y = .5;
-    const fill = new THREE.Mesh(BAND, stencilize(LM({ map: bandTex() }), id)), line = new THREE.Mesh(SPHERE, charHull(id));
-    fill.scale.set(1.09, .3, 1.09); line.scale.set(1.16, .38, 1.16); fill.position.y = line.position.y = Y; fill.renderOrder = 1; line.renderOrder = 2; g.add(fill, line);
-    const add = (rx, ry, rz, x, y, z, t, ex, ey, ez) => { const p = pieceT(0xfafafa, rx, ry, rz, x, y, z, ID, t); p.rotation.set(ex, ey, ez); g.add(p); };
-    add(.2, .17, .15, 0, Y, -1.1, .06, 0, 0, 0);                       // nó
-    [-1, 1].forEach(sd => add(.16, .46, .06, sd * .17, Y - .42, -1.16, .05, .12, sd * .15, sd * -.28));   // pontas
-    return g;
+  // contorno "de borda" dentro do próprio material: nunca some, em qualquer ângulo de câmera
+  const rimize = mt => { mt.onBeforeCompile = sh => {
+    sh.vertexShader = 'varying float vRim;\n' + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n{ vec3 rn = normalize(normalMatrix * normal); vRim = 1.0 - abs(dot(rn, normalize(-mvPosition.xyz))); }');
+    sh.fragmentShader = 'varying float vRim;\n' + sh.fragmentShader.replace('#include <dithering_fragment>', 'gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(0.07, 0.07, 0.1), smoothstep(0.56, 0.68, vRim));\n#include <dithering_fragment>');
+  }; mt.customProgramCacheKey = () => 'rim'; return mt; };
+  const SPH2 = new THREE.SphereGeometry(1, 32, 20);
+  const pieceR = (color, rx, ry, rz, x, y, z, t) => {
+    const id = nextPid(), g = new THREE.Group(), fill = new THREE.Mesh(SPH2, stencilize(rimize(LM({ color })), id)), line = new THREE.Mesh(SPH2, charHull(id));
+    fill.scale.set(rx, ry, rz); fill.renderOrder = 1; line.scale.set(rx + t, ry + t, rz + t); line.renderOrder = 2; g.add(fill, line); g.position.set(x, y, z); return g; };
+  // física das pontas da bandana (corrente de verlet em espaço de mundo: gravidade, inércia, colisão com a cabeça)
+  const BANDS = [], _V3 = () => new THREE.Vector3(), _a = _V3(), _v = _V3(), _r = _V3(), _c = _V3(), _d = _V3(), _gv = _V3(), _Y = new THREE.Vector3(0, 1, 0), _M = new THREE.Matrix4();
+  function placeTail(t, loc) { for (let i = 0; i < t.n; i++) { const a = loc[i], b = loc[i + 1], m = t.meshes[i];
+    m.position.copy(a).add(b).multiplyScalar(.5); _d.copy(b).sub(a); if (_d.lengthSq() > 1e-8) m.quaternion.setFromUnitVectors(_Y, _d.normalize()); } }
+  function bandPhys(b, dt) {
+    const g = b.g; if (!g.parent) return; g.updateWorldMatrix(true, false);
+    const M = g.matrixWorld, ws = M.getMaxScaleOnAxis(); if (ws < .05) { b.tails.forEach(t => t.init = false); return; }
+    _M.copy(M).invert(); _c.setFromMatrixPosition(M); _gv.set(0, -30 * ws, 0); const dt2 = dt * dt;
+    b.tails.forEach(t => {
+      _a.copy(t.anchor).applyMatrix4(M);
+      if (t.init && _a.distanceTo(t.pts[0]) > 5 * ws) t.init = false;
+      if (!t.init) { t.pts = [_a.clone()]; t.prev = [_a.clone()]; for (let i = 0; i < t.n; i++) { const p = t.rest[i].clone().applyMatrix4(M); t.pts.push(p); t.prev.push(p.clone()); } t.init = true; }
+      t.pts[0].copy(_a);
+      for (let i = 1; i <= t.n; i++) { const p = t.pts[i], pr = t.prev[i]; _v.copy(p).sub(pr).multiplyScalar(.955); pr.copy(p); p.add(_v).addScaledVector(_gv, dt2);
+        _r.copy(t.rest[i - 1]).applyMatrix4(M); p.lerp(_r, .03); }
+      for (let it = 0; it < 5; it++) { for (let i = 1; i <= t.n; i++) { const A = t.pts[i - 1], B = t.pts[i]; _d.copy(B).sub(A); const l = _d.length() || 1e-6, df = (l - t.L * ws) / l;
+          if (i === 1) B.addScaledVector(_d, -df); else { A.addScaledVector(_d, df * .5); B.addScaledVector(_d, -df * .5); } }
+        t.pts[0].copy(_a);
+        for (let i = 1; i <= t.n; i++) { _d.copy(t.pts[i]).sub(_c); const l = _d.length(), R = 1.14 * ws; if (l < R && l > 1e-6) t.pts[i].copy(_c).addScaledVector(_d, R / l); } }
+      placeTail(t, t.pts.map(p => p.clone().applyMatrix4(_M)));
+    }); }
+  let _bl = performance.now();
+  (function bandTick(now) { const dt = Math.min(.033, Math.max(.001, (now - _bl) / 1000)); _bl = now; for (let i = BANDS.length - 1; i >= 0; i--) { if (!BANDS[i].g.parent && BANDS[i].age++ > 600) BANDS.splice(i, 1); else bandPhys(BANDS[i], dt); } requestAnimationFrame(bandTick); })(performance.now());
+  function buildHat() {   // bandana branca "100% JESUS" com nó e pontas com física
+    const g = new THREE.Group(), id = nextPid(), Y = .52, W = 0xfafbff;
+    const fill = new THREE.Mesh(BAND, stencilize(rimize(LM({ map: bandTex() })), id)), line = new THREE.Mesh(SPHERE, charHull(id));
+    fill.scale.set(1.1, .36, 1.1); line.scale.set(1.18, .44, 1.18); fill.position.y = line.position.y = Y; fill.renderOrder = 1; line.renderOrder = 2; g.add(fill, line);
+    const add = (c, rx, ry, rz, x, y, z, t, ex = 0, ey = 0, ez = 0) => { const p = pieceR(c, rx, ry, rz, x, y, z, t); p.rotation.set(ex, ey, ez); g.add(p); return p; };
+    add(W, .24, .2, .18, 0, Y, -1.12, .07);                                  // nó
+    add(0xe9ecf4, .13, .1, .1, -.14, Y + .06, -1.24, .05, 0, 0, .5); add(0xe9ecf4, .13, .1, .1, .14, Y + .06, -1.24, .05, 0, 0, -.5);   // dobras do nó
+    const b = { g, age: 0, tails: [] }, RX = [.17, .15, .12], RZ = [.06, .055, .05];
+    [-1, 1].forEach(sd => { const t = { n: 3, L: .4, anchor: new THREE.Vector3(sd * .14, Y - .02, -1.22), meshes: [], rest: [], init: false };
+      for (let i = 0; i < 3; i++) { t.rest.push(new THREE.Vector3(sd * (.14 + .06 * (i + 1)), Y - .02 - .4 * (i + 1), -1.22 - .1 * (i + 1))); t.meshes.push(add(W, RX[i], .27, RZ[i], 0, 0, 0, .05)); }
+      placeTail(t, [t.anchor, ...t.rest]); b.tails.push(t); });
+    BANDS.push(b); if (BANDS.length > 80) BANDS.shift(); return g;
   }
+  let _bi = null;
+  const ballIcon = () => { if (_bi) return _bi; const cv = document.createElement('canvas'); cv.width = cv.height = 128; const c = cv.getContext('2d');
+    const pent = (cx, cy, r, rot) => { c.beginPath(); for (let i = 0; i < 5; i++) { const a = rot + i * Math.PI * 2 / 5; c[i ? 'lineTo' : 'moveTo'](cx + r * Math.cos(a), cy + r * Math.sin(a)); } c.closePath(); };
+    c.fillStyle = '#fff'; c.beginPath(); c.arc(64, 64, 61, 0, 7); c.fill();
+    c.save(); c.beginPath(); c.arc(64, 64, 61, 0, 7); c.clip(); c.fillStyle = '#111'; c.strokeStyle = '#111'; c.lineWidth = 6; c.lineJoin = 'round';
+    pent(64, 64, 22, -Math.PI / 2); c.fill();
+    for (let i = 0; i < 5; i++) { const a = -Math.PI / 2 + i * Math.PI * 2 / 5; c.beginPath(); c.moveTo(64 + 22 * Math.cos(a), 64 + 22 * Math.sin(a)); c.lineTo(64 + 42 * Math.cos(a), 64 + 42 * Math.sin(a)); c.stroke(); pent(64 + 62 * Math.cos(a + Math.PI / 5), 64 + 62 * Math.sin(a + Math.PI / 5), 24, a + Math.PI / 5 + Math.PI); c.fill(); }
+    c.restore(); c.strokeStyle = '#111'; c.lineWidth = 8; c.beginPath(); c.arc(64, 64, 60, 0, 7); c.stroke();
+    return _bi = new THREE.CanvasTexture(cv); };
   function cleatKit(fl, fr) {   // chuteira Nuvem: pé violeta, bico ciano, calcanhar rosa, placa branca, travas e emblema
     const ID = 201, mk = side => { const g = new THREE.Group();
       g.add(pieceT(0xf2f2f2, .32, .055, .41, 0, -.17, .02, ID, .05));
-      g.add(pieceT(GC[1], .22, .15, .2, 0, -.03, .24, ID, .055));
-      g.add(pieceT(GC[2], .2, .15, .12, 0, 0, -.25, ID, .055));
-      g.add(pieceT(0x232323, .13, .035, .09, 0, .17, -.17, ID, .035));
+      g.add(pieceT(0x3a3d4c, .22, .15, .2, 0, -.03, .24, ID, .055));
+      g.add(pieceT(0x3a3d4c, .2, .15, .12, 0, 0, -.25, ID, .055));
+      g.add(pieceT(0x5a5e70, .13, .035, .09, 0, .17, -.17, ID, .035));
       [.13, .04, -.05].forEach(z => g.add(pieceT(0xffffff, .11, .028, .03, 0, .205, z, ID, .03)));
-      const em = new THREE.Mesh(new THREE.CircleGeometry(.11, 24), new THREE.MeshBasicMaterial({ map: gTex(), transparent: true, polygonOffset: true, polygonOffsetFactor: -2 }));
+      const em = new THREE.Mesh(new THREE.CircleGeometry(.14, 28), new THREE.MeshBasicMaterial({ map: ballIcon(), transparent: true, polygonOffset: true, polygonOffsetFactor: -2 }));
       em.rotation.y = side * Math.PI / 2; em.position.set(side * .3, .03, 0); g.add(em);
-      [[-.13, .16], [.13, .16], [-.13, -.14], [.13, -.14]].forEach(([x, z]) => { const st = new THREE.Mesh(new THREE.CylinderGeometry(.04, .055, .11, 8), LM({ color: 0x2b2b33 })); st.position.set(x, -.27, z); g.add(st); });
+      [[-.13, .16], [.13, .16], [-.13, -.14], [.13, -.14]].forEach(([x, z]) => { const st = new THREE.Mesh(new THREE.CylinderGeometry(.04, .055, .11, 8), LM({ color: 0x4a4d5a })); st.position.set(x, -.27, z); g.add(st); });
       g.visible = false; return g; };
     const gL = mk(-1), gR = mk(1); fl.add(gL); fr.add(gR);
-    return { on: false, set(v) { this.on = v; gL.visible = gR.visible = v; fl.children[0].material.color.setHex(v ? GC[0] : ORIG.L); fr.children[0].material.color.setHex(v ? GC[0] : ORIG.R); } };
+    return { on: false, set(v) { this.on = v; gL.visible = gR.visible = v; fl.children[0].material.color.setHex(v ? 0x17181f : ORIG.L); fr.children[0].material.color.setHex(v ? 0x17181f : ORIG.R); } };
   }
 
   /* ---------- aplicar no jogo ---------- */
@@ -7407,7 +7454,7 @@ addEventListener('resize', () => {
       grid.appendChild(d); drawables.push(card3d(tabK, it.id, cv));
     });
     drawables.push(stage3d($('wrBig')));
-    $('wrCap').textContent = NAMES[e.ball] + ' • ' + (e.hat ? 'Bandana Nuvem' : 'Sem acessório') + ' • ' + (e.cleat ? 'Chuteira Nuvem' : 'Chuteira clássica');
+    $('wrCap').textContent = NAMES[e.ball] + ' • ' + (e.hat ? 'Bandana' : 'Sem acessório') + ' • ' + (e.cleat ? 'Chuteira Nuvem' : 'Chuteira clássica');
     document.querySelectorAll('.wrTabs button').forEach(b => b.classList.toggle('on', b.dataset.t === tabK));
   }
   function loop(ms) {
