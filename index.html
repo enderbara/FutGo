@@ -6893,7 +6893,7 @@ addEventListener('resize', () => {
   <div class="gl-ph"><canvas id="gPhone" width="400" height="320"></canvas></div>
   <h3>Entre com sua conta Google</h3><p class="s">Grátis, em um toque. Veja o que você ganha:</p>
   <ul>
-    <li class="gift"><i>🎁</i><span>Presente de boas-vindas<small>Bola, Bandana e Chuteira Nuvem exclusivos</small></span></li>
+    <li class="gift"><i>🎁</i><span>Presente de boas-vindas<small>Bola, Chapéu Cowboy e Chuteira Nuvem exclusivos</small></span></li>
     <li><i>☁️</i><span>Progresso salvo na nuvem<small>Time, escudo, nomes e configurações</small></span></li>
     <li><i>📱</i><span>Jogue em qualquer aparelho<small>Celular, tablet ou computador com o mesmo jogo</small></span></li>
     <li><i>👕</i><span>Vestiário com itens extras<small>Skins de bola, chapéus e cabelos</small></span></li>
@@ -7166,8 +7166,9 @@ addEventListener('resize', () => {
 <div id="wrPop"><div class="wrBox">
   <div class="wrStage"><div class="wrTitle">VESTIÁRIO<small>Seu jogador e sua bola</small></div><div id="wrBig"></div><div id="wrCap"></div></div>
   <div class="wrSide">
-    <div class="wrTabs"><button type="button" data-t="ball" class="on">⚽ Bolas</button><button type="button" data-t="hat">🧢 Chapéus</button><button type="button" data-t="cleat">👟 Chuteiras</button></div>
+    <div class="wrTabs"><button type="button" data-t="ball" class="on">⚽ Bolas</button><button type="button" data-t="hat">🤠 Chapéus</button><button type="button" data-t="cleat">👟 Chuteiras</button></div>
     <div class="wrG" id="wrGrid"></div>
+    <div id="wrSkinBox"><p class="wrNote">Tom de pele</p><div class="pal" id="wrSkin"></div></div>
     <p class="wrNote">Itens com 🔒 são liberados ao entrar com a conta Google. Cabelos chegam em breve.</p>
     <button id="wrClose" type="button">Voltar</button>
   </div>
@@ -7175,7 +7176,7 @@ addEventListener('resize', () => {
 <div id="wrGift"><div>
   <div style="font-size:42px">🎁</div><h3 style="margin:6px 0">Presente da sua conta!</h3>
   <div><canvas id="wgB" width="220" height="220"></canvas><canvas id="wgH" width="220" height="220"></canvas><canvas id="wgC" width="220" height="220"></canvas></div>
-  <p style="opacity:.85;font-size:14px;line-height:1.4;margin:6px 0 16px">Você ganhou a <b>Bola de Login</b>, o <b>Bandana</b> e a <b>Chuteira Nuvem</b>. Já estão equipados! Veja tudo no Vestiário.</p>
+  <p style="opacity:.85;font-size:14px;line-height:1.4;margin:6px 0 16px">Você ganhou a <b>Bola de Login</b>, o <b>Chapéu Cowboy</b> e a <b>Chuteira Nuvem</b>. Já estão equipados! Veja tudo no Vestiário.</p>
   <button id="wgOk" type="button" style="padding:11px 26px;border:0;border-radius:12px;background:#ffd54a;color:#111;font:800 15px system-ui;cursor:pointer">Legal!</button>
 </div></div>
 <script>
@@ -7185,7 +7186,7 @@ addEventListener('resize', () => {
   const getW = () => { try { const o = JSON.parse(LS.getItem('futio_wr')) || {}; for (const k in o) if (o[k] === 'google') o[k] = 'nimbus'; return o; } catch (_) { return {}; } };
   const setW = w => LS.setItem('futio_wr', JSON.stringify(w));
   const ITEMS = { ball: [{ id: 'classic', n: 'Bola Clássica' }, { id: 'nimbus', n: 'Bola de Login', lock: 1 }],
-                  hat: [{ id: null, n: 'Sem acessório' }, { id: 'nimbus', n: 'Bandana', lock: 1 }],
+                  hat: [{ id: null, n: 'Sem acessório' }, { id: 'nimbus', n: 'Chapéu Cowboy', lock: 1 }],
                   cleat: [{ id: null, n: 'Chuteira Clássica' }, { id: 'nimbus', n: 'Chuteira Nuvem', lock: 1 }] };
   function emblem(c, cx, cy, r) {   // emblema próprio: estrela de 4 pontas + faísca
     const k = r / 92, star = (x, y, ro) => { c.beginPath(); c.moveTo(x, y - ro); c.quadraticCurveTo(x, y, x + ro, y); c.quadraticCurveTo(x, y, x, y + ro); c.quadraticCurveTo(x, y, x - ro, y); c.quadraticCurveTo(x, y, x, y - ro); c.fill(); };
@@ -7210,41 +7211,20 @@ addEventListener('resize', () => {
     const id = nextPid(), g = new THREE.Group(), fill = new THREE.Mesh(CONE, stencilize(LM({ color: col }), id)), line = new THREE.Mesh(CONE, charHull(id));
     fill.scale.set(r, h, r); line.scale.set(r + t, h + t * 1.6, r + t); line.position.y = -t * .6; fill.renderOrder = 1; line.renderOrder = 2; g.add(fill, line);
     g.position.set(x, y, z); g.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(dx, dy, dz).normalize()); return g; };
-  let _bt = null;
-  const bandTex = () => { if (_bt) return _bt;   // textura da bandana: tecido branco, costuras e "100% JESUS ❤️"
-    const W = 2048, H = 512, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const c = cv.getContext('2d');
-    const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#e9ecf4'); g.addColorStop(.3, '#ffffff'); g.addColorStop(.7, '#ffffff'); g.addColorStop(1, '#e9ecf4'); c.fillStyle = g; c.fillRect(0, 0, W, H);
-    c.strokeStyle = '#b9bfd1'; c.lineWidth = 5; c.setLineDash([22, 14]);   // costuras tracejadas nas bordas
-    [H * .5 - 100, H * .5 + 100].forEach(y => { c.beginPath(); c.moveTo(0, y); c.lineTo(W, y); c.stroke(); }); c.setLineDash([]);
-    c.save(); c.translate(W * .25, H * .5); c.scale(.63, 1); c.textBaseline = 'middle'; c.textAlign = 'left';
-    c.font = '900 116px "Arial Black", Impact, "Segoe UI Black", sans-serif'; const lab = '100% JESUS ', w1 = c.measureText(lab).width, x0 = -(w1 + 120) / 2;
-    c.lineJoin = 'round'; c.lineWidth = 10; c.strokeStyle = '#ffffff'; c.strokeText(lab, x0, 6); c.fillStyle = '#14141c'; c.fillText(lab, x0, 6);
-    c.font = '108px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif'; c.fillText('\u2764\uFE0F', x0 + w1, 6); c.restore();
-    _bt = new THREE.CanvasTexture(cv); _bt.anisotropy = 4; return _bt; };
-  const BAND = new THREE.SphereGeometry(1, 64, 24);
-  const BANDS = [], BOX = new THREE.BoxGeometry(1, 1, 1), _bp = new THREE.Vector3();
-  // peça retangular com contorno igual ao do player (charHull); pv=true -> pivô no topo
-  const pieceB = (color, w, h, d, x, y, z, t, pv) => { const id = nextPid(), g = new THREE.Group(), fill = new THREE.Mesh(BOX, stencilize(LM({ color }), id)), line = new THREE.Mesh(BOX, charHull(id));
-    fill.scale.set(w, h, d); line.scale.set(w + t, h + t, d + t); fill.renderOrder = 1; line.renderOrder = 2;
-    if (pv) fill.position.y = line.position.y = -h / 2; g.add(fill, line); g.position.set(x, y, z); return g; };
-  // animação "de desenho": as pontas balançam em seno e esticam para trás conforme a velocidade
-  function bandAnim(b, now, dt) { const g = b.g; if (!g.parent) return; g.getWorldPosition(_bp);
-    const sp = b.last ? _bp.distanceTo(b.last) / dt : 0; b.last = (b.last || new THREE.Vector3()).copy(_bp);
-    b.lean += (Math.min(sp * .04, .7) - b.lean) * Math.min(1, dt * 8); const T = now / 1000;
-    b.tails.forEach(t => { t.p.rotation.z = t.side * (.2 + .07 * Math.sin(T * 3 + t.ph)); t.p.rotation.x = .08 + b.lean + .09 * Math.sin(T * 2.4 + t.ph * 1.7); });
-    b.knot.rotation.z = .04 * Math.sin(T * 3.2); }
-  let _bl = performance.now();
-  (function bandTick(now) { const dt = Math.min(.033, Math.max(.001, (now - _bl) / 1000)); _bl = now; for (let i = BANDS.length - 1; i >= 0; i--) { if (!BANDS[i].g.parent && BANDS[i].age++ > 600) BANDS.splice(i, 1); else bandAnim(BANDS[i], now, dt); } requestAnimationFrame(bandTick); })(performance.now());
-  function buildHat() {   // bandana branca "100% JESUS" com nó de 2 retângulos e pontas animadas
-    const g = new THREE.Group(), id = nextPid(), Y = .52, W = 0xfafbff;
-    const fill = new THREE.Mesh(BAND, stencilize(LM({ map: bandTex() }), id)), line = new THREE.Mesh(SPHERE, charHull(id));
-    fill.scale.set(1.1, .36, 1.1); line.scale.set(1.17, .43, 1.17); fill.position.y = line.position.y = Y; fill.renderOrder = 1; line.renderOrder = 2; g.add(fill, line);
-    const knot = new THREE.Group(); knot.position.set(0, Y, -1.15); g.add(knot);
-    [.55, -.55].forEach(r => { const p = pieceB(W, .56, .17, .1, 0, 0, 0, .05); p.rotation.z = r; knot.add(p); });   // nó = dois retângulos cruzados
-    const b = { g, knot, age: 0, tails: [], lean: 0, last: null };
-    [-1, 1].forEach(sd => { const p = pieceB(0xe9ecf4, .17, .62, .05, 0, 0, 0, .05, true), pv = new THREE.Group(); pv.position.set(sd * .08, Y - .06, -1.22); pv.add(p); g.add(pv);
-      b.tails.push({ p: pv, side: sd, ph: sd > 0 ? 0 : 1.9 }); });
-    BANDS.push(b); if (BANDS.length > 80) BANDS.shift(); return g;
+  // chapéu cowboy: aba larga + copa + faixa marrom com fivela; contorno igual ao do player (charHull)
+  const CYL = new THREE.CylinderGeometry(1, 1, 1, 24), CROWN = new THREE.CylinderGeometry(.64, .86, .78, 24), SPH3 = new THREE.SphereGeometry(1, 28, 14), BOX = new THREE.BoxGeometry(1, 1, 1);
+  const hp = (geo, color, sx, sy, sz, x, y, z, t, id, hull) => { const g = new THREE.Group(), fill = new THREE.Mesh(geo, stencilize(LM({ color }), id));
+    fill.scale.set(sx, sy, sz); fill.renderOrder = 1; g.add(fill);
+    if (hull) { const l = new THREE.Mesh(geo, charHull(id)); l.scale.set(sx + t, sy + t, sz + t); l.renderOrder = 2; g.add(l); }
+    g.position.set(x, y, z); return g; };
+  function buildHat() {
+    const g = new THREE.Group(), idB = nextPid(), idC = nextPid();
+    g.add(hp(SPH3, 0xc9944f, 1.8, .12, 1.7, 0, .6, 0, .07, idB, true));       // aba
+    g.add(hp(CROWN, 0xb8803f, 1, 1, 1, 0, 1.0, 0, .06, idC, true));           // copa
+    g.add(hp(SPH3, 0x9a6a30, .42, .07, .52, 0, 1.39, 0, 0, idC, false));      // amassado do topo
+    g.add(hp(CYL, 0x4a2e1a, .85, .15, .85, 0, .72, 0, 0, idC, false));        // faixa
+    g.add(hp(BOX, 0xffd54a, .17, .17, .05, 0, .72, .85, 0, idC, false));      // fivela
+    return g;
   }
   let _bi = null;
   const ballIcon = () => { if (_bi) return _bi; const cv = document.createElement('canvas'); cv.width = cv.height = 128; const c = cv.getContext('2d');
@@ -7307,17 +7287,41 @@ addEventListener('resize', () => {
     hat = buildHat(); hat.position.set(0, HAT_Y, 0); hat.rotation.x = HAT_RX; head.add(hat);
   }
   function applyCleat(id) { if (!realKit) realKit = cleatKit(footL, footR); realKit.set(id === 'nimbus'); }
+  const eqv = () => { if (!tgt) return equipped(); const w = (unlocked() && tmGet()[tgt.i]) || {}; return { ball: 'classic', hat: w.hat ? 'nimbus' : null, cleat: w.cleat ? 'nimbus' : null }; };
   const equipped = () => { const w = unlocked() ? getW() : {}; return { ball: w.ball || 'classic', hat: w.hat || null, cleat: w.cleat || null }; };
   function applyAll() {
     if (unlocked()) { const w = getW(); if (w.cleat === undefined) { w.cleat = 'nimbus'; setW(w); } }   // quem já tinha o presente ganha a chuteira equipada
     const e = equipped(); try { applyBall(e.ball); applyHat(e.hat); applyCleat(e.cleat); } catch (err) { console.error(err); }
   }
 
+  /* ---------- roupas do Login nos companheiros de time (painel do jogador) ---------- */
+  const TMK = 'futio_tm', tmGet = () => { try { return JSON.parse(LS.getItem(TMK) || '{}'); } catch (e) { return {}; } };
+  const mates = () => members.filter(m => m.ch && !m.isU && !m.isK);
+  function mateSync() {
+    const on = unlocked(), st = tmGet();
+    mates().forEach(m => { const w = (on && st[m.i]) || {};
+      if (!!w.hat !== !!m.hatObj) {
+        if (m.hatObj) { m.head.remove(m.hatObj); m.hatObj = null; }
+        else { const h = buildHat(); h.position.set(0, HAT_Y, 0); h.rotation.x = HAT_RX; m.head.add(h); m.hatObj = h; } }
+      if (!!w.cleat !== !!(m.ch.kit && m.ch.kit.on)) (m.ch.kit || (m.ch.kit = cleatKit(m.ch.footL, m.ch.footR))).set(!!w.cleat);
+    });
+  }
+  let tgt = null;   // null = seu jogador; senão o companheiro que está sendo vestido no Vestiário
+  (function gearPanel() {
+    const insp = $('inspector'); if (!insp) return;
+    const box = document.createElement('div'); box.className = 'isec';
+    box.innerHTML = '<button class="b" id="gDress" style="width:100%">👕 Vestir</button>';
+    insp.insertBefore(box, $('iRand'));
+    $('gDress').onclick = () => { const m = members[focusIdx]; if (!m || m.isK) return; tgt = m.isU ? null : m; build(); $('wrPop').classList.add('on'); start(); };
+    setInterval(() => { mateSync(); if (insp.offsetParent) { const m = members[focusIdx]; $('gDress').disabled = !!(m && m.isK); } }, 400); mateSync();
+  })();
+
   /* ---------- modelos ORIGINAIS do jogo para os pop-ups ---------- */
   function mkChar(hatId, cleatId) {
     const ch = makeChar(50, 0xffffff, 0xffffff); scene.remove(ch.g);
     ch.handL.scale.setScalar(1 / 1.35); ch.handR.scale.setScalar(1 / 1.35);
     for (const k in REAL) { const a = REAL[k].children[0].material, b = ch[k].children[0].material; b.color.copy(a.color); if (a.map) { b.map = a.map; b.needsUpdate = true; } }
+    if (tgt && tgt.skin != null) [ch.head, ch.handL, ch.handR].forEach(p => p.children[0].material.color.set(tgt.skin));
     ch.footL.children[0].material.color.setHex(ORIG.L); ch.footR.children[0].material.color.setHex(ORIG.R);
     ch.kit = cleatKit(ch.footL, ch.footR); ch.kit.set(cleatId === 'nimbus');
     if (hatId === 'nimbus') { const h = buildHat(); h.position.set(0, HAT_Y, 0); h.rotation.x = HAT_RX; ch.head.add(h); }
@@ -7345,9 +7349,9 @@ addEventListener('resize', () => {
   function stage3d(host) {
     if (!R2) R2 = mkRend(420, 340);
     host.innerHTML = ''; host.appendChild(R2.domElement); R2.domElement.style.cssText = 'width:100%;max-width:420px;height:auto';
-    const e = equipped(), sc = new THREE.Scene(); lights(sc); sc.add(floor(3));
+    const e = eqv(), sc = new THREE.Scene(); lights(sc); sc.add(floor(3));
     const ch = mkChar(e.hat, e.cleat); ch.g.position.x = -1.5; sc.add(ch.g);
-    const b = mkBall(e.ball); b.g.scale.setScalar(1.7); b.g.position.set(1.7, .45 * 1.7, .6); sc.add(b.g);
+    const b = mkBall(e.ball); b.g.scale.setScalar(1.7); b.g.position.set(1.7, .45 * 1.7, .6); b.g.visible = !tgt; sc.add(b.g);
     const cam = new THREE.PerspectiveCamera(32, 420 / 340, .1, 60); cam.position.set(0, 2.0, 9.6); cam.lookAt(0, 1.8, 0);
     return { draw(t) { ch.g.rotation.y = Math.sin(t * .9) * .7; b.g.rotation.y = Math.sin(t * .8) * .5; R2.render(sc, cam); } };
   }
@@ -7422,18 +7426,24 @@ addEventListener('resize', () => {
   const NAMES = { classic: 'Bola Clássica', google: 'Bola de Login' };
   function build() {
     if (!R1) R1 = mkRend(220, 220);
-    const ok = unlocked(), e = equipped(), grid = $('wrGrid'); grid.innerHTML = ''; drawables = [];
+    document.querySelector('.wrTabs [data-t="ball"]').style.display = tgt ? 'none' : ''; if (tgt && tabK === 'ball') tabK = 'hat';
+    document.querySelector('.wrTitle small').textContent = tgt ? tgt.name : 'Seu jogador e sua bola';
+    const sb = $('wrSkinBox'); sb.style.display = tgt ? 'none' : '';
+    if (!tgt) { const u = members[USER_SLOT], p = $('wrSkin'); p.innerHTML = '';
+      SKIN_TONES.forEach(c => { const sw = document.createElement('div'); sw.className = 'sw' + (u.skin === c ? ' on' : ''); sw.style.background = '#' + c.toString(16).padStart(6, '0');
+        sw.onclick = () => { setSkin(u, c); persist(); build(); }; p.appendChild(sw); }); }
+    const ok = unlocked(), e = eqv(), grid = $('wrGrid'); grid.innerHTML = ''; drawables = [];
     ITEMS[tabK].forEach(it => {
       const lk = it.lock && !ok, on = e[tabK] === it.id;
       const d = document.createElement('div'); d.className = 'wrI' + (lk ? ' lk' : '') + (on ? ' on' : '') + (it.lock ? ' epic' : '');
       const cv = document.createElement('canvas'); cv.width = cv.height = 220; d.appendChild(cv);
       if (it.lock) d.insertAdjacentHTML('beforeend', '<span class="bd">NUVEM</span>');
       d.insertAdjacentHTML('beforeend', it.n + (lk ? '<small>🔒 Entre com Google</small>' : on ? '<small>✔ Equipado</small>' : '<small>Toque para equipar</small>'));
-      d.onclick = () => { if (lk) return; const w = getW(); w[tabK] = (it.id === 'classic') ? null : it.id; setW(w); applyAll(); build(); };
+      d.onclick = () => { if (lk) return; if (tgt) { const st = tmGet(); st[tgt.i] = st[tgt.i] || {}; st[tgt.i][tabK] = it.id ? 1 : 0; LS.setItem(TMK, JSON.stringify(st)); mateSync(); build(); return; } const w = getW(); w[tabK] = (it.id === 'classic') ? null : it.id; setW(w); applyAll(); build(); };
       grid.appendChild(d); drawables.push(card3d(tabK, it.id, cv));
     });
     drawables.push(stage3d($('wrBig')));
-    $('wrCap').textContent = NAMES[e.ball] + ' • ' + (e.hat ? 'Bandana' : 'Sem acessório') + ' • ' + (e.cleat ? 'Chuteira Nuvem' : 'Chuteira clássica');
+    $('wrCap').textContent = (tgt ? tgt.name : NAMES[e.ball]) + ' • ' + (e.hat ? 'Chapéu Cowboy' : 'Sem acessório') + ' • ' + (e.cleat ? 'Chuteira Nuvem' : 'Chuteira clássica');
     document.querySelectorAll('.wrTabs button').forEach(b => b.classList.toggle('on', b.dataset.t === tabK));
   }
   function loop(ms) {
@@ -7444,12 +7454,12 @@ addEventListener('resize', () => {
   }
   const start = () => { if (!raf) raf = requestAnimationFrame(loop); };
   document.querySelectorAll('.wrTabs button').forEach(b => b.onclick = () => { tabK = b.dataset.t; build(); });
-  $('bWr').onclick = () => { build(); $('wrPop').classList.add('on'); start(); };
-  $('wrClose').onclick = () => $('wrPop').classList.remove('on');
+  $('bWr').onclick = () => { tgt = null; build(); $('wrPop').classList.add('on'); start(); };
+  $('wrClose').onclick = () => { tgt = null; $('wrPop').classList.remove('on'); };
   $('wrPop').addEventListener('click', e => { if (e.target.id === 'wrPop') $('wrPop').classList.remove('on'); });
   $('wgOk').onclick = () => $('wrGift').classList.remove('on');
   new MutationObserver(() => { if ($('gLogin').classList.contains('on')) { try { if (!phoneD) phoneD = phoneCard(); } catch (err) { console.error(err); } start(); } }).observe($('gLogin'), { attributes: true, attributeFilter: ['class'] });
-  window.__wr = { gift() { applyAll(); if (!R1) R1 = mkRend(220, 220);
+  window.__wr = { gift() { tgt = null; applyAll(); if (!R1) R1 = mkRend(220, 220);
     drawables = [card3d('ball', 'nimbus', $('wgB')), card3d('hat', 'nimbus', $('wgH')), card3d('cleat', 'nimbus', $('wgC'))]; $('wrGift').classList.add('on'); start(); } };
   applyAll();
 })();
