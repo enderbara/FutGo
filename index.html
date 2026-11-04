@@ -7344,8 +7344,8 @@ addEventListener('resize', () => {
   const pOK = { lider: () => !!getP().lider, trai: () => !!getP().trai, mus: () => !!getP().eye, perd: () => !!getP().perd, troph: () => !!getP().troph, gold: () => !!getP().gold };
   const HINT = { lider: () => '🔒 Missão: dê carrinho nas líderes de torcida (elas entram em campo durante a partida)', trai: () => '🔒 Faça um gol contra', mus: () => '🔒 Faça um carrinho em alguém', perd: () => '🔒 Deixe o inimigo fazer 1 gol', troph: () => '🔒 Faça 5 gols no adversário (' + Math.min(5, getP().goals || 0) + '/5)', gold: () => '🔒 Faça 10 gols no adversário (' + Math.min(10, getP().goals || 0) + '/10)' };
   let KC = 0;
-  const MIS = { cap: ['goals', 1], beanie: ['slides', 3], party: ['kicks', 40], top: ['goals', 15], viking: ['slides', 15], crown: ['goals', 30], halo: ['goals', 50],
-    cpink: ['kicks', 20], clime: ['goals', 2], cice: ['slides', 6], cfire: ['goals', 8], cdark: ['goals', 20], ccosmo: ['kicks', 150], bocean: ['kicks', 10], bneon: ['slides', 10], bfire: ['goals', 25], bgal: ['goals', 60], bsun: ['kicks', 100], bcryst: ['slides', 20], btoxic: ['goals', 35], bplasma: ['kicks', 300], brain: ['goals', 80], bvoid: ['slides', 80], cdiam: ['goals', 40], cphx: ['slides', 40] };
+  const MIS = { cap: ['goals', 1], beanie: ['slides', 3], party: ['kicks', 40], top: ['goals', 25], viking: ['slides', 30], crown: ['goals', 60], halo: ['goals', 120],
+    cpink: ['kicks', 20], clime: ['goals', 2], cice: ['slides', 12], cfire: ['goals', 12], cdark: ['goals', 35], ccosmo: ['kicks', 400], bocean: ['kicks', 10], bneon: ['slides', 10], bfire: ['goals', 45], bgal: ['goals', 100], bsun: ['kicks', 100], bcryst: ['slides', 20], btoxic: ['goals', 60], bplasma: ['kicks', 600], brain: ['goals', 150], bvoid: ['slides', 150], cdiam: ['goals', 80], cphx: ['slides', 100] };
   const MTX = { goals: n => 'faça ' + n + (n > 1 ? ' gols' : ' gol') + ' no adversário', slides: n => 'dê ' + n + ' carrinhos', kicks: n => 'dê ' + n + ' chutes' };
   for (const k in MIS) { const [c, n] = MIS[k]; pOK[k] = () => (getP()[c] || 0) >= n; HINT[k] = () => '🔒 Missão: ' + MTX[c](n) + ' (' + Math.min(n, getP()[c] || 0) + '/' + n + ')'; }
   const misToast = (c, a, b) => { for (const k in MIS) if (MIS[k][0] === c && a < MIS[k][1] && b >= MIS[k][1]) { const it = ITEMS.hat.concat(ITEMS.cleat, ITEMS.ball).find(x => x.id === k); kToast('🎉 Desbloqueou <b>' + (it ? it.n : k) + '</b>!' + SUB + 'Veja no Vestiário.</small>'); } };
@@ -7373,7 +7373,7 @@ addEventListener('resize', () => {
       const ph = (x + .5) / W * Math.PI * 2, th = (y + .5) / H * Math.PI, sx = -Math.cos(ph) * Math.sin(th), sy = Math.cos(th), sz = Math.sin(ph) * Math.sin(th), px = sz < 0 ? -sx : sx;
       const u = Math.min(S - 1, Math.max(0, (px / .9 * .5 + .5) * S | 0)), v = Math.min(S - 1, Math.max(0, (-sy / .9 * .5 + .5) * S | 0)), i = (v * S + u) * 4, o = (y * W + x) * 4;
       d[o] = pd[i]; d[o + 1] = pd[i + 1]; d[o + 2] = pd[i + 2]; d[o + 3] = 255; }
-    c.putImageData(im, 0, 0); const t = new THREE.CanvasTexture(cv); t.anisotropy = 4; return t; }
+    c.putImageData(im, 0, 0); const t = new THREE.CanvasTexture(cv); t.anisotropy = 4; t.wrapS = THREE.RepeatWrapping; return t; }
   const drawMus = (p, cx, cy, k, col) => { p.fillStyle = col; p.beginPath(); p.moveTo(cx, cy - .14 * k);
     p.bezierCurveTo(cx + .3 * k, cy - .4 * k, cx + .7 * k, cy - .2 * k, cx + k, cy - .55 * k); p.bezierCurveTo(cx + k, cy + .15 * k, cx + .55 * k, cy + .32 * k, cx + .12 * k, cy + .2 * k);
     p.quadraticCurveTo(cx, cy + .26 * k, cx - .12 * k, cy + .2 * k); p.bezierCurveTo(cx - .55 * k, cy + .32 * k, cx - k, cy + .15 * k, cx - k, cy - .55 * k);
@@ -7492,7 +7492,7 @@ addEventListener('resize', () => {
     top() { const g = new THREE.Group(), a = nextPid(), b = nextPid(); g.add(hp(CYL, 0x15151a, 1.5, .08, 1.5, 0, .64, 0, .06, a, true)); g.add(hp(CYL, 0x1c1c22, .95, 1.3, .95, 0, 1.3, 0, .06, b, true));
       g.add(hp(CYL, 0xb71c1c, .97, .2, .97, 0, .85, 0, 0, b, false)); g.add(hp(BOX, 0xffc928, .24, .26, .05, 0, .85, .97, 0, b, true)); return g; },
     viking() { const g = new THREE.Group(), a = nextPid(); g.add(hp(SPH3, 0x9aa0aa, 1.0, .72, 1.0, 0, .8, 0, .06, a, true)); g.add(hp(CYL, 0x6d4c2a, 1.03, .14, 1.03, 0, .68, 0, 0, a, false));
-      [-1, 1].forEach(sd => { g.add(hp(SPH3, 0x6d4c2a, .2, .2, .2, sd * .95, .9, 0, .03, a, true)); g.add(spike(0xf5ead0, .2, .6, sd * .95, .9, 0, sd, .6, 0, .05)); g.add(spike(0xe6d6aa, .14, .7, sd * 1.42, 1.2, 0, sd * .3, 1, 0, .05)); }); return g; },
+      [-1, 1].forEach(sd => { g.add(hp(SPH3, 0x6d4c2a, .2, .2, .2, sd * .95, .9, 0, .03, a, true)); g.add(spike(0xf5ead0, .22, 1.0, sd * .95, .9, 0, sd, .8, 0, .05)); }); return g; },
     crown() { const g = new THREE.Group(), a = nextPid(), tips = []; g.add(hp(CYL, 0xffc928, .9, .34, .9, 0, .85, 0, .06, a, true)); g.add(hp(CYL, 0xb71c1c, .84, .1, .84, 0, 1.04, 0, 0, a, false));
       for (let i = 0; i < 5; i++) { const t = i * Math.PI * 2 / 5, x = Math.cos(t) * .74, z = Math.sin(t) * .74; g.add(spike(0xffc928, .15, .55, x, 1.0, z, 0, 1, 0, .04)); const tb = hp(SPH3, 0xffffff, .09, .09, .09, x, 1.58, z, 0, a, false); tips.push(tb); g.add(tb); }
       ring(g, 5, .91, .85, (x, y, z, i) => hp(SPH3, i % 2 ? 0x29b6f6 : 0xe53935, .1, .1, .1, x, y, z, 0, a, false)); const gl = glow('255,200,60', 3.4, 1.2); g.add(gl);
@@ -7593,20 +7593,45 @@ addEventListener('resize', () => {
   setInterval(checkPic, 1500); checkPic();
   const FX = { gold: [0xffa000, '255,200,60'], bfire: [0xff4400, '255,120,30'], bgal: [0xaa44ff, '170,90,255'], bsun: [0xff9800, '255,170,40'], bcryst: [0x4fc3f7, '120,210,255'], btoxic: [0x76ff03, '150,255,40'], bplasma: [0x7c4dff, '110,200,255'], brain: [0xffffff, '255,255,255'], bvoid: [0x7c4dff, '150,90,255'], bneon: [0x39ff14, '60,255,40'], bocean: [0x29b6f6, '80,190,255'] };
   const ballMat = (k, id) => stencilize(new THREE.MeshLambertMaterial(FX[k] ? { map: BTEX(k), emissive: FX[k][0], emissiveIntensity: .45 } : { map: BTEX(k) }), id);
+  const TA = { gold: [.002, 0], bocean: [.004, .02], bneon: [-.006, 0], bfire: [.003, .03], bgal: [.002, 0], bsun: [.003, 0], bcryst: [.0015, .01], btoxic: [.004, 0], bplasma: [.001, 0, .04], brain: [.005, 0], bvoid: [-.004, 0] };
   let halo = null, goldM = null;
   const haloTex = (rgb = '255,200,60') => { const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'), g = x.createRadialGradient(64, 64, 8, 64, 64, 64);
     g.addColorStop(0, 'rgba(' + rgb + ',.95)'); g.addColorStop(.35, 'rgba(' + rgb + ',.45)'); g.addColorStop(1, 'rgba(' + rgb + ',0)'); x.fillStyle = g; x.fillRect(0, 0, 128, 128); return new THREE.CanvasTexture(c); };
   function applyBall(id) { applyBall.cur = id; ballMesh.material = BTEX(id) ? ((applyBall.c = applyBall.c || {})[id] || (applyBall.c[id] = ballMat(id, 2))) : DEF_BALL_MAT;
     if (halo) { ball.remove(halo); halo = null; } goldM = FX[id] ? ballMesh.material : null;
     if (goldM && ['gold', 'bfire', 'bgal', 'bplasma', 'btoxic', 'brain', 'bvoid'].includes(id)) { halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: haloTex(FX[id][1]), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); halo.scale.setScalar(BR * 5); ball.add(halo); } }
-  setInterval(() => { const t = performance.now() / 300; if (goldM) { goldM.emissiveIntensity = .5 + .3 * Math.sin(t); if (applyBall.cur === 'brain') { goldM.emissive.setHSL((t / 14) % 1, 1, .5); if (halo) halo.material.color.setHSL((t / 14) % 1, 1, .6); } } if (halo) halo.material.opacity = .65 + .3 * Math.sin(t); }, 50);
+  setInterval(() => { const t = performance.now() / 300; if (goldM) { goldM.emissiveIntensity = .5 + .3 * Math.sin(t); { const T = goldM.map, A = TA[applyBall.cur]; if (T && A) { T.offset.x = (T.offset.x + A[0]) % 1; T.offset.y = A[1] ? Math.sin(t / 3) * A[1] : 0; if (A[2]) T.offset.x += (Math.random() - .5) * A[2]; } } if (applyBall.cur === 'brain') { goldM.emissive.setHSL((t / 14) % 1, 1, .5); if (halo) halo.material.color.setHSL((t / 14) % 1, 1, .6); } } if (halo) halo.material.opacity = .65 + .3 * Math.sin(t); }, 50);
   function applyMus(id) { if (musO) { head.remove(musO); musO = null; } if (id) { musO = buildMus(); head.add(musO); } }
   function applyHat(id) {
     if (hat) { head.remove(hat); hat = null; }
     if (!id) return;
     hat = buildHat(id); hat.position.set(0, HAT_Y, 0); hat.rotation.x = HAT_RX; head.add(hat);
   }
-  function applyCleat(id) { if (!realKit) realKit = cleatKit(footL, footR); realKit.set(id); }
+  /* ---------- efeitos das chuteiras ao andar ---------- */
+  const PFX = { cice: { c: '#bfe9ff', m: 'melt', l: 2.2, s: .55, r: .35 }, clime: { c: '#9cff4a', m: 'melt', l: 1.6, s: .45, r: .3 }, cfire: { c: '#ff7a1a', m: 'rise', a: 1, l: .7, s: .45, r: .8 }, cphx: { c: '#ffb020', m: 'rise', a: 1, l: .9, s: .6, r: 1 },
+    ccosmo: { c: '#c58bff', m: 'float', a: 1, l: 1.3, s: .35, r: .7 }, cdiam: { c: '#c8fbff', m: 'twinkle', a: 1, l: .9, s: .3, r: .7 }, cdark: { c: '#2b2b33', m: 'smoke', l: 1.2, s: .5, r: .5 }, cpink: { c: '#ff7ab8', m: 'float', a: 1, l: 1, s: .3, r: .4 }, gold: { c: '#ffd54a', m: 'twinkle', a: 1, l: .8, s: .28, r: .5 } };
+  const PT = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'), g = x.createRadialGradient(32, 32, 0, 32, 32, 32); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(.5, 'rgba(255,255,255,.6)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64); return new THREE.CanvasTexture(c); })();
+  const PL = []; let pLast = null, pFoot = 0, curCleat = null; const pv = new THREE.Vector3();
+  function pSpawn(f, pos) {
+    let q = PL.find(o => !o.on);
+    if (!q) { if (PL.length >= 140) return; const m = new THREE.SpriteMaterial({ map: PT, transparent: true, depthWrite: false }), sp = new THREE.Sprite(m); sp.renderOrder = 15; scene.add(sp); q = { sp, m, on: false }; PL.push(q); }
+    q.on = true; q.f = f; q.t = 0; q.life = f.l * (.8 + Math.random() * .4); q.sp.visible = true; q.m.color.set(f.c); q.m.blending = f.a ? THREE.AdditiveBlending : THREE.NormalBlending; q.m.needsUpdate = true;
+    q.sp.position.set(pos.x + (Math.random() - .5) * .4, f.m === 'melt' ? .08 : pos.y + .1, pos.z + (Math.random() - .5) * .4);
+    q.vy = f.m === 'rise' ? 1.8 + Math.random() : f.m === 'smoke' ? .7 : f.m === 'melt' ? 0 : .5; q.vx = (Math.random() - .5) * .6; q.vz = (Math.random() - .5) * .6;
+  }
+  function pStep(dt) {
+    for (const q of PL) { if (!q.on) continue; q.t += dt; const u = q.t / q.life; if (u >= 1) { q.on = false; q.sp.visible = false; continue; }
+      const f = q.f, p = q.sp.position; p.x += q.vx * dt; p.z += q.vz * dt; p.y += q.vy * dt; let sc = f.s, o = 1 - u;
+      if (f.m === 'melt') { sc = f.s * (1 - u * .85); o = u < .6 ? 1 : 1 - (u - .6) / .4; q.sp.scale.set(sc * (1 + u * 1.2), sc * (1 - u * .5), 1); q.m.opacity = .9 * o; if (u > .5) q.m.color.set(f.c === '#bfe9ff' ? '#6ec6ff' : '#5ab52a'); continue; }
+      if (f.m === 'smoke') { sc = f.s * (1 + u * 2); o = (1 - u) * .55; } else if (f.m === 'twinkle') o = Math.abs(Math.sin(q.t * 18)); else sc = f.s * (1 - u * .6);
+      q.sp.scale.set(sc, sc, 1); q.m.opacity = o; }
+  }
+  setInterval(() => {
+    const P = typeof player !== 'undefined' ? player : null, f = PFX[curCleat];
+    if (P && f) { if (pLast) { const sp = Math.hypot(P.position.x - pLast.x, P.position.z - pLast.z) / .033; if (sp > 2 && P.visible && Math.random() < f.r) { (pFoot++ % 2 ? footR : footL).getWorldPosition(pv); pSpawn(f, pv); } } else pLast = new THREE.Vector3(); pLast.copy(P.position); }
+    pStep(.033);
+  }, 33);
+  function applyCleat(id) { curCleat = id; if (!realKit) realKit = cleatKit(footL, footR); realKit.set(id); }
   const NM = (L, id) => { const x = L.find(i => i.id === id); return x ? x.n : L[0].n; };
   const eqv = () => { if (!tgt) return equipped(); const st = tmGet()[tgt.i] || {}, u = unlocked(); return { ball: 'classic', hat: u && st.hat ? 'nimbus' : null, cleat: u && st.cleat ? 'nimbus' : null, mus: pOK.mus() && st.mus ? 'mus' : null }; };
   const equipped = () => { const w = getW(), u = unlocked(), bl = w.ball || 'classic', bad = (bl === 'nimbus' && !u) || (bl === 'perd' && !pOK.perd()) || (bl === 'gold' && !pOK.gold()) || (MIS[bl] && !pOK[bl]()) || !['classic', 'nimbus', 'perd', 'gold', 'bocean', 'bneon', 'bfire', 'bgal', 'bsun', 'bcryst', 'btoxic', 'bplasma', 'brain', 'bvoid'].includes(bl);
