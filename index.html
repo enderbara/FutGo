@@ -7323,7 +7323,7 @@ addEventListener('resize', () => {
     <div class="wrTabs"><button type="button" data-t="ball" class="on">⚽ Bolas</button><button type="button" data-t="hat">🤠 Acessórios</button><button type="button" data-t="cleat">👟 Chuteiras</button><button type="button" data-t="cel">🎉 Comemoração</button></div>
     <div class="wrG" id="wrGrid"></div>
     <div id="wrSkinBox"><p class="wrNote">Tom de pele</p><div class="pal" id="wrSkin"></div></div>
-    <p class="wrNote">Itens com 🔒 estão bloqueados: entre com o Google ou cumpra a missão do item.</p>
+    <p class="wrNote">Itens com 🔒 estão bloqueados: entre com o Google ou cumpra a missão do item. Toque num item (ou no 👁) para ver como ficaria no seu jogador.</p>
     <button id="wrClose" type="button">Voltar</button>
   </div>
 </div></div>
@@ -7732,7 +7732,7 @@ addEventListener('resize', () => {
   function stage3d(host) {
     if (!R2) R2 = mkRend(420, 340);
     host.innerHTML = ''; host.appendChild(R2.domElement); R2.domElement.style.cssText = 'width:100%;max-width:420px;height:auto';
-    const e = eqv(), sc = new THREE.Scene(); lights(sc); sc.add(floor(3));
+    const e = pvE(), sc = new THREE.Scene(); lights(sc); sc.add(floor(3));
     const ch = mkChar(e.hat, e.cleat, e.mus); ch.g.position.x = -1.5; sc.add(ch.g);
     const b = mkBall(e.ball); b.g.scale.setScalar(1.7); b.g.position.set(1.7, .45 * 1.7, .6); b.g.visible = !tgt; sc.add(b.g);
     const cam = new THREE.PerspectiveCamera(32, 420 / 340, .1, 60); cam.position.set(0, 2.0, 9.6); cam.lookAt(0, 1.8, 0);
@@ -7742,6 +7742,8 @@ addEventListener('resize', () => {
 
   /* ---------- prévias das comemorações (cenas em loop; por enquanto só no Vestiário) ---------- */
   const celCache = {}; let prevCel = null;
+  let PV = null; const ORD = 'curlm', RN = { c: 'COMUM', u: 'INCOMUM', r: 'RARO', l: 'LENDÁRIO', m: 'MÍSTICO' };
+  function pvE() { const e = { ...eqv() }; if (PV) { if (PV.t === 'ball') e.ball = PV.id; else if (PV.t === 'cleat') e.cleat = PV.id; else if (PV.t === 'hat') { if (PV.id === null) { e.hat = null; e.mus = null; } else if (PV.slot === 'mus') e.mus = PV.id; else e.hat = PV.id; } } return e; }
   const CELN = { pad: 'Comemoração Padrão', login: 'Selfie do Login', lider: 'Líderes de Torcida' };
   function celStage(host, id) {
     if (!R2) R2 = mkRend(420, 340);
@@ -7892,19 +7894,22 @@ addEventListener('resize', () => {
       SKIN_TONES.forEach(c => { const sw = document.createElement('div'); sw.className = 'sw' + (u.skin === c ? ' on' : ''); sw.style.background = '#' + c.toString(16).padStart(6, '0');
         sw.onclick = () => { setSkin(u, c); persist(); build(); }; p.appendChild(sw); }); }
     const ok = unlocked(), e = eqv(), grid = $('wrGrid'); grid.innerHTML = ''; drawables = [];
-    ITEMS[tabK].forEach(it => {
+    const rk = x => x.rar ? ORD.indexOf(x.rar) + 1 : 0, cnt = r => ITEMS[tabK].filter(x => (x.rar || '') === r && !(tgt && x.solo)).length; let lastR = '';
+    [...ITEMS[tabK]].sort((a, b) => rk(a) - rk(b)).forEach(it => {
+      if (!(tgt && it.solo) && (it.rar || '') !== lastR) { lastR = it.rar || ''; const h = document.createElement('div'); h.className = 'wrH r' + lastR; h.innerHTML = RN[lastR] + ' <i>' + cnt(lastR) + '</i>'; grid.appendChild(h); }
       if (tgt && it.solo) return;
       const need = it.req && !pOK[it.req](), lk = (it.lock && !ok) || need, on = it.id === null && tabK === 'hat' ? (!e.hat && !e.mus) : e[it.slot || tabK] === it.id;
       const d = document.createElement('div'); d.className = 'wrI' + (lk ? ' lk' : '') + (on ? ' on' : '') + (it.rar ? ' r' + it.rar : it.lock ? ' epic' : '');
       const cv = document.createElement('canvas'); cv.width = cv.height = 220; d.appendChild(cv);
       if (it.rar) d.insertAdjacentHTML('beforeend', '<span class="bd r' + it.rar + '">' + ({ c: 'COMUM', u: 'INCOMUM', r: 'RARO', l: 'LENDÁRIO', m: 'MÍSTICO' })[it.rar] + '</span>'); else if (it.lock) d.insertAdjacentHTML('beforeend', '<span class="bd">NUVEM</span>');
       d.insertAdjacentHTML('beforeend', it.n + (lk ? '<small>' + (need ? HINT[it.req]() : '🔒 Entre com Google') + '</small>' : on ? '<small>✔ Equipado</small>' : '<small>Toque para equipar</small>'));
-      d.onclick = () => { if (lk) { if (tabK === 'cel') { prevCel = it.id; build(); } return; } if (tabK === 'cel') prevCel = null; if (tgt) { const st = tmGet(); st[tgt.i] = st[tgt.i] || {}; if (tabK === 'hat') { if (it.id === null) { st[tgt.i].hat = 0; st[tgt.i].mus = 0; } else st[tgt.i][it.slot] = st[tgt.i][it.slot] ? 0 : 1; } else st[tgt.i][tabK] = it.id ? 1 : 0; LS.setItem(TMK, JSON.stringify(st)); mateSync(); build(); return; } const w = getW(); if (tabK === 'hat') { if (it.id === null) { w.hat = null; w.mus = null; } else w[it.slot] = w[it.slot] === it.id ? null : it.id; } else w[tabK] = (it.id === 'classic') ? null : it.id; setW(w); applyAll(); build(); };
+      if (tabK !== 'cel') { const on2 = PV && PV.t === tabK && PV.id === it.id; const eye = document.createElement('button'); eye.type = 'button'; eye.className = 'pvb' + (on2 ? ' on' : ''); eye.title = 'Ver no meu jogador'; eye.textContent = '👁'; eye.onclick = ev => { ev.stopPropagation(); PV = on2 ? null : { t: tabK, id: it.id, slot: it.slot }; build(); }; d.appendChild(eye); }
+      d.onclick = () => { if (lk) { if (tabK === 'cel') { prevCel = it.id; build(); } else { PV = { t: tabK, id: it.id, slot: it.slot }; build(); } return; } if (tabK === 'cel') prevCel = null; PV = null; if (tgt) { const st = tmGet(); st[tgt.i] = st[tgt.i] || {}; if (tabK === 'hat') { if (it.id === null) { st[tgt.i].hat = 0; st[tgt.i].mus = 0; } else st[tgt.i][it.slot] = st[tgt.i][it.slot] ? 0 : 1; } else st[tgt.i][tabK] = it.id ? 1 : 0; LS.setItem(TMK, JSON.stringify(st)); mateSync(); build(); return; } const w = getW(); if (tabK === 'hat') { if (it.id === null) { w.hat = null; w.mus = null; } else w[it.slot] = w[it.slot] === it.id ? null : it.id; } else w[tabK] = (it.id === 'classic') ? null : it.id; setW(w); applyAll(); build(); };
       grid.appendChild(d); drawables.push(card3d(it.slot === 'mus' ? 'mus' : tabK, it.id, cv));
     });
     drawables.push(tabK === 'cel' ? celStage($('wrBig'), prevCel || e.cel) : stage3d($('wrBig')));
-    { const st = document.querySelector('.wrStage'); if (st) st.classList.toggle('mys', [e.ball, e.hat, e.cleat].some(x => ['mball', 'mhat', 'mcleat'].includes(x))); }
-    $('wrCap').textContent = (tgt ? tgt.name : NAMES[e.ball]) + ' • ' + (e.hat || e.mus ? NM(ITEMS.hat, e.hat) : 'Sem acessório') + (e.mus ? ' + Olho Roxo' : '') + ' • ' + NM(ITEMS.cleat, e.cleat) + ' • ' + CELN[e.cel];
+    { const st = document.querySelector('.wrStage'); if (st) st.classList.toggle('mys', [pvE().ball, pvE().hat, pvE().cleat].some(x => ['mball', 'mhat', 'mcleat'].includes(x))); }
+    { const e = pvE(); $('wrCap').textContent = (PV ? '👁 Prévia • ' : '') + (tgt ? tgt.name : (NAMES[e.ball] || NM(ITEMS.ball, e.ball))) + ' • ' + (e.hat || e.mus ? NM(ITEMS.hat, e.hat) : 'Sem acessório') + (e.mus ? ' + Olho Roxo' : '') + ' • ' + NM(ITEMS.cleat, e.cleat) + ' • ' + CELN[e.cel]; }
     document.querySelectorAll('.wrTabs button').forEach(b => b.classList.toggle('on', b.dataset.t === tabK));
   }
   function loop(ms) {
@@ -7914,9 +7919,9 @@ addEventListener('resize', () => {
     raf = requestAnimationFrame(loop);
   }
   const start = () => { if (!raf) raf = requestAnimationFrame(loop); };
-  document.querySelectorAll('.wrTabs button').forEach(b => b.onclick = () => { tabK = b.dataset.t; build(); });
-  $('bWr').onclick = () => { tgt = null; build(); $('wrPop').classList.add('on'); start(); };
-  $('wrClose').onclick = () => { tgt = null; $('wrPop').classList.remove('on'); };
+  document.querySelectorAll('.wrTabs button').forEach(b => b.onclick = () => { tabK = b.dataset.t; PV = null; build(); });
+  $('bWr').onclick = () => { tgt = null; PV = null; build(); $('wrPop').classList.add('on'); start(); };
+  $('wrClose').onclick = () => { tgt = null; PV = null; $('wrPop').classList.remove('on'); };
   $('wrPop').addEventListener('click', e => { if (e.target.id === 'wrPop') $('wrPop').classList.remove('on'); });
   $('wgOk').onclick = () => $('wrGift').classList.remove('on');
   new MutationObserver(() => { if ($('gLogin').classList.contains('on')) { try { if (!phoneD) phoneD = phoneCard(); } catch (err) { console.error(err); } start(); } }).observe($('gLogin'), { attributes: true, attributeFilter: ['class'] });
@@ -7925,5 +7930,15 @@ addEventListener('resize', () => {
   applyAll();
 })();
 </script>
+<style>
+  .wrI.rm{border-color:#ff3b3b;background:linear-gradient(120deg,#3a0508,#8a0f14,#c1121f,#4a0509,#3a0508);background-size:300% 300%;animation:mysBg 5s linear infinite;box-shadow:0 0 20px #ff2a2abb}
+  .wrI .bd.rm{background:linear-gradient(90deg,#ff1e1e,#ff7a45,#b00014,#ff1e1e);background-size:300% 100%;animation:mysBg 3s linear infinite;color:#fff}
+  .wrStage.mys{background:radial-gradient(circle at 50% 45%,#ff2a2a77,transparent 65%),linear-gradient(120deg,#2a0306,#6b0a10,#a30f1a,#2a0306);background-size:100% 100%,300% 300%;animation:mysBg 6s linear infinite}
+  .wrH{grid-column:1/-1;display:flex;align-items:center;gap:8px;font:900 12px system-ui;letter-spacing:2px;padding:6px 4px 3px;margin-top:6px;border-bottom:2px solid currentColor}
+  .wrH i{font-style:normal;opacity:.6;font-weight:700}
+  .wrH.rc{color:#b0b6bd}.wrH.ru{color:#3ddc84}.wrH.rr{color:#5aa2ff}.wrH.rl{color:#ffc933}.wrH.rm{color:#ff4b4b}
+  .pvb{position:absolute;top:6px;right:6px;width:28px;height:28px;padding:0;border:0;border-radius:50%;background:rgba(0,0,0,.5);color:#fff;font-size:14px;cursor:pointer}
+  .pvb.on{background:#ffd54a;color:#111}
+</style>
 </body>
 </html>
