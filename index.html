@@ -2473,7 +2473,8 @@ function resetPlayerPose() {
 
 function onGoal(home) { sfxCrowd(true);
   if (home) scoreHome++; else scoreAway++;
-  if (!home && match.on && window.__prog) __prog.conc();   // inimigo fez gol -> missão da bola Perdedor
+  if (!home && match.on && window.__prog) __prog.conc();
+  if (home && match.on && window.__prog) __prog.goal();   // inimigo fez gol -> missão da bola Perdedor
   match.conc = home ? 1 : 0; match.offL = null; match.rs = null; chgOn = false;
   if (match.on) for (const b of bots) if (b.t === match.conc) b.ang = (b.ang || 0) + 0.12;   // tomou gol: o time fica nervoso
   goalLock = 3.5; celebT = (match.on && !home) ? 0 : 3.5;
@@ -7152,7 +7153,7 @@ addEventListener('resize', () => {
   .wrI{position:relative;padding:10px 8px 12px;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.04));border:2px solid rgba(255,255,255,.14);cursor:pointer;text-align:center;font:800 13px system-ui;color:#fff;transition:transform .15s}
   .wrI:hover{transform:translateY(-3px)}.wrI canvas{width:110px;height:110px;display:block;margin:0 auto 4px}
   .wrI.epic{border-color:#6d4affaa;background:linear-gradient(180deg,#6d4aff33,rgba(255,255,255,.04))}
-  .wrTabs{flex-wrap:wrap}.wrI.rc{border-color:#9aa0a6aa;background:linear-gradient(180deg,#9aa0a655,rgba(255,255,255,.04))}.wrI.ru{border-color:#2ecc71aa;background:linear-gradient(180deg,#2ecc7155,rgba(255,255,255,.04))}.wrI .bd.rc{background:#7d848d}.wrI .bd.ru{background:#1e9e52}
+  .wrTabs{flex-wrap:wrap}.wrI.rc{border-color:#9aa0a6aa;background:linear-gradient(180deg,#9aa0a655,rgba(255,255,255,.04))}.wrI.ru{border-color:#2ecc71aa;background:linear-gradient(180deg,#2ecc7155,rgba(255,255,255,.04))}.wrI .bd.rc{background:#7d848d}.wrI .bd.ru{background:#1e9e52}.wrI.rr{border-color:#3b8bffaa;background:linear-gradient(180deg,#3b8bff55,rgba(255,255,255,.04))}.wrI .bd.rr{background:#2a6fd6}
   .wrI.on{border-color:#ffd54a;box-shadow:0 0 0 3px #ffd54a55,0 8px 24px #0008}
   .wrI.lk canvas{filter:grayscale(.8) brightness(.6)}.wrI.lk{cursor:not-allowed}
   .wrI small{display:block;font-weight:600;opacity:.75;margin-top:2px;font-size:11px}
@@ -7189,8 +7190,8 @@ addEventListener('resize', () => {
   const setW = w => LS.setItem('futio_wr', JSON.stringify(w));
   /* ---------- missões, avisos e texturas das bolas novas ---------- */
   const PK = 'futio_prog', getP = () => { try { return JSON.parse(LS.getItem(PK)) || {}; } catch (e) { return {}; } }, setP = p => LS.setItem(PK, JSON.stringify(p));
-  const pOK = { mus: () => !!getP().mus, perd: () => !!getP().perd, cow: () => unlocked() };
-  const HINT = { mus: () => '🔒 Chute a bola 5 vezes (' + Math.min(5, getP().kicks || 0) + '/5)', perd: () => '🔒 Deixe o inimigo fazer 1 gol', cow: () => '🔒 Precisa do Chapéu Cowboy (entre com o Google)' };
+  const pOK = { mus: () => !!getP().mus, perd: () => !!getP().perd, troph: () => !!getP().troph, gold: () => !!getP().gold };
+  const HINT = { mus: () => '🔒 Chute a bola 5 vezes (' + Math.min(5, getP().kicks || 0) + '/5)', perd: () => '🔒 Deixe o inimigo fazer 1 gol', troph: () => '🔒 Faça 5 gols no adversário (' + Math.min(5, getP().goals || 0) + '/5)', gold: () => '🔒 Faça 10 gols no adversário (' + Math.min(10, getP().goals || 0) + '/10)' };
   let kT = 0;
   const kToast = msg => { let t = document.getElementById('kToast');
     if (!t) { t = document.createElement('div'); t.id = 'kToast'; t.style.cssText = 'position:fixed;top:78px;left:50%;transform:translateX(-50%);z-index:200010;background:rgba(8,12,24,.94);color:#fff;border:2px solid #ffd54a;border-radius:14px;padding:12px 22px;font:700 15px system-ui;text-align:center;pointer-events:none;opacity:0;transition:opacity .4s;box-shadow:0 8px 30px #000a'; document.body.appendChild(t); }
@@ -7199,6 +7200,9 @@ addEventListener('resize', () => {
   window.__prog = {
     kick() { const p = getP(); if (p.mus) return; p.kicks = (p.kicks || 0) + 1; if (p.kicks >= 5) p.mus = 1; setP(p);
       if (p.mus) kToast('🥸 Desbloqueou o <b>Bigodinho</b>!' + SUB + 'Veja em Acessórios, no Vestiário.</small>'); },
+    goal() { const p = getP(); p.goals = (p.goals || 0) + 1; const t = !p.troph && p.goals >= 5, g = !p.gold && p.goals >= 10; if (t) p.troph = 1; if (g) p.gold = 1; setP(p);
+      if (g) kToast('✨ Desbloqueou a <b>Bola de Ouro</b>!' + SUB + '10 gols no adversário. Veja em Bolas, no Vestiário.</small>');
+      else if (t) kToast('🏆 Desbloqueou o <b>Chapéu de Troféu</b>!' + SUB + '5 gols no adversário. Veja em Acessórios, no Vestiário.</small>'); },
     conc() { const p = getP(); if (p.perd) return; p.perd = 1; setP(p); kToast('😢 Desbloqueou a bola <b>Perdedor</b>!' + SUB + 'O inimigo fez um gol. Veja no Vestiário.</small>'); } };
   function ballTex(draw) {   // mesma projeção da Bola de Login: imagem 256x256 na frente e atrás da bola
     const S = 256, pc = document.createElement('canvas'); pc.width = pc.height = S; const p = pc.getContext('2d'); draw(p, S);
@@ -7217,13 +7221,10 @@ addEventListener('resize', () => {
   const BTEX = k => k === 'nimbus' ? nimTex() : k === 'perd' ? (_pt = _pt || ballTex((p, S) => {   // Perdedor: bola vermelha com L amarelo no centro
       p.fillStyle = '#d32f2f'; p.fillRect(0, 0, S, S); p.font = '900 190px "Arial Black",Impact,sans-serif'; p.textAlign = 'center'; p.textBaseline = 'middle';
       p.lineJoin = 'round'; p.lineWidth = 12; p.strokeStyle = '#232323'; p.strokeText('L', S / 2, S / 2 + 8); p.fillStyle = '#ffd54a'; p.fillText('L', S / 2, S / 2 + 8); }))
-    : k === 'cow' ? (_mt = _mt || ballTex((p, S) => { p.fillStyle = '#f3e2c0'; p.fillRect(0, 0, S, S); p.lineJoin = 'round'; p.lineWidth = 9; p.strokeStyle = '#232323';   // Bola Cowboy: chapéu desenhado no centro
-      const hat = (path, col) => { p.beginPath(); path(); p.closePath(); p.fillStyle = col; p.fill(); p.stroke(); };
-      hat(() => p.ellipse(S / 2, S / 2 + 36, 100, 26, 0, 0, 7), '#c9944f');
-      hat(() => { p.moveTo(S / 2 - 52, S / 2 + 30); p.lineTo(S / 2 - 40, S / 2 - 40); p.quadraticCurveTo(S / 2, S / 2 - 56, S / 2 + 40, S / 2 - 40); p.lineTo(S / 2 + 52, S / 2 + 30); p.quadraticCurveTo(S / 2, S / 2 + 44, S / 2 - 52, S / 2 + 30); }, '#b8803f');
-      p.fillStyle = '#4a2e1a'; p.fillRect(S / 2 - 49, S / 2 + 2, 98, 18); })) : null;
-  const ITEMS = { ball: [{ id: 'classic', n: 'Bola Clássica' }, { id: 'perd', n: 'Perdedor', rar: 'c', req: 'perd' }, { id: 'cow', n: 'Bola Cowboy', rar: 'u', req: 'cow' }, { id: 'nimbus', n: 'Bola de Login', lock: 1 }],
-                  hat: [{ id: null, n: 'Sem acessório' }, { id: 'nimbus', slot: 'hat', n: 'Chapéu Cowboy', lock: 1, rar: 'u' }, { id: 'mus', slot: 'mus', n: 'Bigodinho', rar: 'c', req: 'mus' }],
+    : k === 'gold' ? (_mt = _mt || ballTex((p, S) => { const g = p.createRadialGradient(S * .35, S * .3, 10, S / 2, S / 2, S * .75); g.addColorStop(0, '#fff3a0'); g.addColorStop(.45, '#ffc928'); g.addColorStop(1, '#b8780a'); p.fillStyle = g; p.fillRect(0, 0, S, S);   // Bola de Ouro
+      p.lineJoin = 'round'; p.lineWidth = 8; p.strokeStyle = '#7a4a05'; p.fillStyle = '#e8a812'; p.beginPath(); for (let i = 0; i < 5; i++) { const a = -Math.PI / 2 + i * Math.PI * 2 / 5; p[i ? 'lineTo' : 'moveTo'](S / 2 + 50 * Math.cos(a), S / 2 + 50 * Math.sin(a)); } p.closePath(); p.fill(); p.stroke(); })) : null;
+  const ITEMS = { ball: [{ id: 'classic', n: 'Bola Clássica' }, { id: 'perd', n: 'Perdedor', rar: 'c', req: 'perd' }, { id: 'gold', n: 'Bola de Ouro', rar: 'r', req: 'gold' }, { id: 'nimbus', n: 'Bola de Login', lock: 1 }],
+                  hat: [{ id: null, n: 'Sem acessório' }, { id: 'nimbus', slot: 'hat', n: 'Chapéu Cowboy', lock: 1, rar: 'u' }, { id: 'troph', slot: 'hat', n: 'Chapéu de Troféu', rar: 'u', req: 'troph', solo: 1 }, { id: 'mus', slot: 'mus', n: 'Bigodinho', rar: 'c', req: 'mus' }],
                   cleat: [{ id: null, n: 'Chuteira Clássica' }, { id: 'nimbus', n: 'Chuteira Nuvem', lock: 1 }] };
   function emblem(c, cx, cy, r) {   // emblema próprio: estrela de 4 pontas + faísca
     const k = r / 92, star = (x, y, ro) => { c.beginPath(); c.moveTo(x, y - ro); c.quadraticCurveTo(x, y, x + ro, y); c.quadraticCurveTo(x, y, x, y + ro); c.quadraticCurveTo(x, y, x - ro, y); c.quadraticCurveTo(x, y, x, y - ro); c.fill(); };
@@ -7254,7 +7255,17 @@ addEventListener('resize', () => {
     fill.scale.set(sx, sy, sz); fill.renderOrder = 1; g.add(fill);
     if (hull) { const l = new THREE.Mesh(geo, charHull(id)); l.scale.set(sx + t, sy + t, sz + t); l.renderOrder = 2; g.add(l); }
     g.position.set(x, y, z); return g; };
-  function buildHat() {
+  const TCUP = new THREE.CylinderGeometry(1, .55, 1, 24), TTOR = new THREE.TorusGeometry(.5, .13, 8, 18);
+  function buildTrophy() {
+    const g = new THREE.Group(), idB = nextPid(), idC = nextPid(), Au = 0xffc928;
+    g.add(hp(CYL, Au, .5, .1, .5, 0, 1.0, 0, .06, idB, true));      // base
+    g.add(hp(CYL, 0xe0a410, .12, .24, .12, 0, 1.17, 0, 0, idB, false)); // haste
+    g.add(hp(TCUP, Au, .62, .55, .62, 0, 1.62, 0, .06, idC, true));  // taça
+    g.add(hp(TTOR, Au, .55, .55, .55, -.66, 1.66, 0, 0, idC, false)); g.add(hp(TTOR, Au, .55, .55, .55, .66, 1.66, 0, 0, idC, false)); // alças
+    return g;
+  }
+  function buildHat(id) {
+    if (id === 'troph') return buildTrophy();
     const g = new THREE.Group(), idB = nextPid(), idC = nextPid();
     g.add(hp(SPH3, 0xc9944f, 1.8, .12, 1.7, 0, .6, 0, .07, idB, true));       // aba
     g.add(hp(CROWN, 0xb8803f, 1, 1, 1, 0, 1.0, 0, .06, idC, true));           // copa
@@ -7270,11 +7281,11 @@ addEventListener('resize', () => {
       sh.quadraticCurveTo(0, -.06 * k, -.13 * k, -.2 * k); sh.bezierCurveTo(-.55 * k, -.34 * k, -1.04 * k, -.12 * k, -k, .62 * k); sh.bezierCurveTo(-.72 * k, .2 * k, -.3 * k, .42 * k, 0, .14 * k);
       _mg = new THREE.ExtrudeGeometry(sh, { depth: .07, bevelEnabled: true, bevelThickness: .035, bevelSize: .03, bevelSegments: 2, curveSegments: 14 }); _mg.translate(0, 0, -.035);
       const P = _mg.attributes.position; for (let i = 0; i < P.count; i++) P.setZ(i, P.getZ(i) + Math.sqrt(Math.max(.05, 1 - P.getX(i) * P.getX(i) - P.getY(i) * P.getY(i))) - 1);
-      _mg.computeVertexNormals(); }
+      _mg.scale(1, .5, 1); _mg.computeVertexNormals(); }
     const g = new THREE.Group(), id = nextPid(); const n = new THREE.Vector3(-.235, -.7, 0); n.z = Math.sqrt(1 - n.x * n.x - n.y * n.y); g.position.copy(n).multiplyScalar(.99);   // centro do rosto = meio dos olhos (x -0.235)
-    g.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), n);
+    { const xa = new THREE.Vector3(0, 1, 0).cross(n).normalize(), ya = n.clone().cross(xa); g.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(xa, ya, n)); }   // sem rolar: fica simétrico e centralizado entre os olhos
     const fill = new THREE.Mesh(_mg, stencilize(LM({ color: 0x2b1a0e }), id)), line = new THREE.Mesh(_mg, charHull(id));
-    fill.renderOrder = 1; line.scale.set(1.07, 1.12, 1.6); line.renderOrder = 2; g.add(fill, line); return g;
+    fill.renderOrder = 1; line.scale.set(1.04, 1.22, 1.6); line.renderOrder = 2; g.add(fill, line); return g;
   }
   let _bi = null;
   const ballIcon = () => { if (_bi) return _bi; const cv = document.createElement('canvas'); cv.width = cv.height = 128; const c = cv.getContext('2d');
@@ -7330,17 +7341,24 @@ addEventListener('resize', () => {
     im.onload = () => { if (!paintNim(im)) paintNim(null); }; im.onerror = () => paintNim(null); im.src = u;
   }
   setInterval(checkPic, 1500); checkPic();
-  function applyBall(id) { ballMesh.material = BTEX(id) ? ((applyBall.c = applyBall.c || {})[id] || (applyBall.c[id] = stencilize(new THREE.MeshLambertMaterial({ map: BTEX(id) }), 2))) : DEF_BALL_MAT; }
+  const ballMat = (k, id) => stencilize(new THREE.MeshLambertMaterial(k === 'gold' ? { map: BTEX(k), emissive: 0xffa000, emissiveIntensity: .45 } : { map: BTEX(k) }), id);
+  let halo = null, goldM = null;
+  const haloTex = () => { const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'), g = x.createRadialGradient(64, 64, 8, 64, 64, 64);
+    g.addColorStop(0, 'rgba(255,230,120,.95)'); g.addColorStop(.35, 'rgba(255,190,40,.45)'); g.addColorStop(1, 'rgba(255,170,0,0)'); x.fillStyle = g; x.fillRect(0, 0, 128, 128); return new THREE.CanvasTexture(c); };
+  function applyBall(id) { ballMesh.material = BTEX(id) ? ((applyBall.c = applyBall.c || {})[id] || (applyBall.c[id] = ballMat(id, 2))) : DEF_BALL_MAT;
+    if (halo) { ball.remove(halo); halo = null; } goldM = id === 'gold' ? ballMesh.material : null;
+    if (goldM) { halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: haloTex(), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); halo.scale.setScalar(BR * 5); ball.add(halo); } }
+  setInterval(() => { const t = performance.now() / 300; if (goldM) goldM.emissiveIntensity = .5 + .3 * Math.sin(t); if (halo) halo.material.opacity = .65 + .3 * Math.sin(t); }, 50);
   function applyMus(id) { if (musO) { head.remove(musO); musO = null; } if (id) { musO = buildMus(); head.add(musO); } }
   function applyHat(id) {
     if (hat) { head.remove(hat); hat = null; }
-    if (id !== 'nimbus') return;
-    hat = buildHat(); hat.position.set(0, HAT_Y, 0); hat.rotation.x = HAT_RX; head.add(hat);
+    if (id !== 'nimbus' && id !== 'troph') return;
+    hat = buildHat(id); hat.position.set(0, HAT_Y, 0); hat.rotation.x = HAT_RX; head.add(hat);
   }
   function applyCleat(id) { if (!realKit) realKit = cleatKit(footL, footR); realKit.set(id === 'nimbus'); }
   const eqv = () => { if (!tgt) return equipped(); const st = tmGet()[tgt.i] || {}, u = unlocked(); return { ball: 'classic', hat: u && st.hat ? 'nimbus' : null, cleat: u && st.cleat ? 'nimbus' : null, mus: pOK.mus() && st.mus ? 'mus' : null }; };
-  const equipped = () => { const w = getW(), u = unlocked(), bl = w.ball || 'classic', bad = (bl === 'nimbus' && !u) || (bl === 'perd' && !pOK.perd()) || (bl === 'cow' && !pOK.cow()) || !['classic', 'nimbus', 'perd', 'cow'].includes(bl);
-    return { ball: bad ? 'classic' : bl, hat: u ? w.hat || null : null, cleat: u ? w.cleat || null : null, mus: pOK.mus() ? w.mus || null : null }; };
+  const equipped = () => { const w = getW(), u = unlocked(), bl = w.ball || 'classic', bad = (bl === 'nimbus' && !u) || (bl === 'perd' && !pOK.perd()) || (bl === 'gold' && !pOK.gold()) || !['classic', 'nimbus', 'perd', 'gold'].includes(bl);
+    return { ball: bad ? 'classic' : bl, hat: w.hat === 'troph' ? (pOK.troph() ? 'troph' : null) : u ? w.hat || null : null, cleat: u ? w.cleat || null : null, mus: pOK.mus() ? w.mus || null : null }; };
   function applyAll() {
     if (unlocked()) { const w = getW(); if (w.cleat === undefined) { w.cleat = 'nimbus'; setW(w); } }   // quem já tinha o presente ganha a chuteira equipada
     const e = equipped(); try { applyBall(e.ball); applyHat(e.hat); applyCleat(e.cleat); applyMus(e.mus); } catch (err) { console.error(err); }
@@ -7379,13 +7397,13 @@ addEventListener('resize', () => {
     if (tgt && tgt.skin != null) [ch.head, ch.handL, ch.handR].forEach(p => p.children[0].material.color.set(tgt.skin));
     ch.footL.children[0].material.color.setHex(ORIG.L); ch.footR.children[0].material.color.setHex(ORIG.R);
     ch.kit = cleatKit(ch.footL, ch.footR); ch.kit.set(cleatId === 'nimbus');
-    if (hatId === 'nimbus') { const h = buildHat(); h.position.set(0, HAT_Y, 0); h.rotation.x = HAT_RX; ch.head.add(h); }
+    if (hatId) { const h = buildHat(hatId); h.position.set(0, HAT_Y, 0); h.rotation.x = HAT_RX; ch.head.add(h); }
     if (musId) ch.head.add(buildMus());
     return ch;
   }
   function mkBall(kind) {
     const g = part(0xf8f9fa, BR, BR, BR, 0, 0, 0, 51), spin = new THREE.Group(); g.add(spin);
-    const m = new THREE.Mesh(BALL_GEO, stencilize(new THREE.MeshLambertMaterial(BTEX(kind) ? { map: BTEX(kind) } : { color: 0xf8f9fa }), 51));
+    const m = new THREE.Mesh(BALL_GEO, stencilize(new THREE.MeshLambertMaterial(kind === 'gold' ? { map: BTEX(kind), emissive: 0xffa000, emissiveIntensity: .6 } : BTEX(kind) ? { map: BTEX(kind) } : { color: 0xf8f9fa }), 51));
     m.scale.setScalar(BR + .004); m.renderOrder = 1; spin.add(m); return { g, spin };
   }
   const mkRend = (w, h) => { const r = new THREE.WebGLRenderer({ alpha: true, antialias: true, stencil: true, preserveDrawingBuffer: true }); r.setSize(w, h, false); r.setPixelRatio(1); r.setClearColor(0, 0); const _rr = r.render.bind(r); r.render = (sc, cam) => { PXU.value.set(w, h); try { _rr(sc, cam); } finally { PXU.value.set(innerWidth, innerHeight); } }; return r; };
@@ -7480,7 +7498,7 @@ addEventListener('resize', () => {
   }
 
   /* ---------- UI ---------- */
-  const NAMES = { classic: 'Bola Clássica', nimbus: 'Bola de Login', google: 'Bola de Login', perd: 'Perdedor', cow: 'Bola Cowboy' };
+  const NAMES = { classic: 'Bola Clássica', nimbus: 'Bola de Login', google: 'Bola de Login', perd: 'Perdedor', gold: 'Bola de Ouro' };
   function build() {
     if (!R1) R1 = mkRend(220, 220);
     document.querySelector('.wrTabs [data-t="ball"]').style.display = tgt ? 'none' : ''; if (tgt && tabK === 'ball') tabK = 'hat';
@@ -7491,16 +7509,17 @@ addEventListener('resize', () => {
         sw.onclick = () => { setSkin(u, c); persist(); build(); }; p.appendChild(sw); }); }
     const ok = unlocked(), e = eqv(), grid = $('wrGrid'); grid.innerHTML = ''; drawables = [];
     ITEMS[tabK].forEach(it => {
+      if (tgt && it.solo) return;
       const need = it.req && !pOK[it.req](), lk = (it.lock && !ok) || need, on = it.id === null && tabK === 'hat' ? (!e.hat && !e.mus) : e[it.slot || tabK] === it.id;
       const d = document.createElement('div'); d.className = 'wrI' + (lk ? ' lk' : '') + (on ? ' on' : '') + (it.rar ? ' r' + it.rar : it.lock ? ' epic' : '');
       const cv = document.createElement('canvas'); cv.width = cv.height = 220; d.appendChild(cv);
-      if (it.rar) d.insertAdjacentHTML('beforeend', '<span class="bd r' + it.rar + '">' + (it.rar === 'c' ? 'COMUM' : 'INCOMUM') + '</span>'); else if (it.lock) d.insertAdjacentHTML('beforeend', '<span class="bd">NUVEM</span>');
+      if (it.rar) d.insertAdjacentHTML('beforeend', '<span class="bd r' + it.rar + '">' + ({ c: 'COMUM', u: 'INCOMUM', r: 'RARO' })[it.rar] + '</span>'); else if (it.lock) d.insertAdjacentHTML('beforeend', '<span class="bd">NUVEM</span>');
       d.insertAdjacentHTML('beforeend', it.n + (lk ? '<small>' + (need ? HINT[it.req]() : '🔒 Entre com Google') + '</small>' : on ? '<small>✔ Equipado</small>' : '<small>Toque para equipar</small>'));
       d.onclick = () => { if (lk) return; if (tgt) { const st = tmGet(); st[tgt.i] = st[tgt.i] || {}; if (tabK === 'hat') { if (it.id === null) { st[tgt.i].hat = 0; st[tgt.i].mus = 0; } else st[tgt.i][it.slot] = st[tgt.i][it.slot] ? 0 : 1; } else st[tgt.i][tabK] = it.id ? 1 : 0; LS.setItem(TMK, JSON.stringify(st)); mateSync(); build(); return; } const w = getW(); if (tabK === 'hat') { if (it.id === null) { w.hat = null; w.mus = null; } else w[it.slot] = w[it.slot] === it.id ? null : it.id; } else w[tabK] = (it.id === 'classic') ? null : it.id; setW(w); applyAll(); build(); };
       grid.appendChild(d); drawables.push(card3d(it.slot === 'mus' ? 'mus' : tabK, it.id, cv));
     });
     drawables.push(stage3d($('wrBig')));
-    $('wrCap').textContent = (tgt ? tgt.name : NAMES[e.ball]) + ' • ' + (e.hat ? 'Chapéu Cowboy' : 'Sem acessório') + (e.mus ? ' + Bigodinho' : '') + ' • ' + (e.cleat ? 'Chuteira Nuvem' : 'Chuteira clássica');
+    $('wrCap').textContent = (tgt ? tgt.name : NAMES[e.ball]) + ' • ' + (e.hat === 'troph' ? 'Chapéu de Troféu' : e.hat ? 'Chapéu Cowboy' : 'Sem acessório') + (e.mus ? ' + Bigodinho' : '') + ' • ' + (e.cleat ? 'Chuteira Nuvem' : 'Chuteira clássica');
     document.querySelectorAll('.wrTabs button').forEach(b => b.classList.toggle('on', b.dataset.t === tabK));
   }
   function loop(ms) {
