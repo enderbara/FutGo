@@ -2071,8 +2071,8 @@ addEventListener('keydown', e => {
 // seguida, para o time RIVAL, furioso (mãos na cabeça, pisões, gritos, socos no ar, reclamações, cara vermelha).
 const cel = { on: false, ph: 0, t: 0, T: 0, kind: -1, sd: 1, st: 0, ct: 1, A: [], B: [], C: new THREE.Vector3(), Cr: new THREE.Vector3(), foc: new THREE.Vector3(), burst: 0 };
 const CEL_T0 = 5.6, CEL_T1 = 4.2;
-const CEL_NAMES = ['RODA DA VITÓRIA', 'AVIÃOZINHO', 'DANCINHA DO GOL', 'SALTO MORTAL', 'SLIDE DE JOELHOS', 'ABRAÇO COLETIVO', 'GIRO NO AR', 'ONDINHA', 'CORRIDA DO ARTILHEIRO'];
-const CEL_DIST = [17, 25, 20, 20, 21, 13, 20, 22, 19], CEL_H = [4.5, 8.5, 4.6, 4.8, 5, 3.6, 4.6, 4.2, 3.8];
+const CEL_NAMES = ['RODA DA VITÓRIA', 'AVIÃOZINHO', 'DANCINHA DO GOL', 'SALTO MORTAL', 'SLIDE DE JOELHOS', 'ABRAÇO COLETIVO', 'GIRO NO AR', 'ONDINHA', 'CORRIDA DO ARTILHEIRO', 'COMEMORAÇÃO PADRÃO', 'SELFIE DO LOGIN', 'LÍDERES DE TORCIDA'];
+const CEL_DIST = [17, 25, 20, 20, 21, 13, 20, 22, 19, 20, 11, 24], CEL_H = [4.5, 8.5, 4.6, 4.8, 5, 3.6, 4.6, 4.2, 3.8, 4.6, 3.3, 5];
 const CEL_SAY = ['GOOOOL!', 'É nosso!', 'Aêêê!', 'Isso aí!', 'Que golaço!', 'Toma!'];
 const ANGRY_SAY = ['Não acredito!', 'Aff, de novo?!', 'Quem marcava ele?!', 'Que vergonha!', 'Fecha essa defesa!', '#$@%&!', 'Dormiram?!'];
 const UCH = { model, body, head, handL, handR, footL, footR };       // as peças do seu jogador, no mesmo formato dos bots
@@ -2108,17 +2108,84 @@ function celTurn(e, a, k) {
   e.rot += d * Math.min(1, k); e.g.rotation.y = e.rot;
 }
 
+// ---------- Comemorações do Vestiário: Padrão (9), Selfie do Login (10) e Líderes de Torcida (11); só a equipada aparece ----------
+function makePhone() {   // celular com a tela virada para a câmera: visor de foto + botão de disparo
+  const g = new THREE.Group(), cv = document.createElement('canvas'); cv.width = 128; cv.height = 220; const c = cv.getContext('2d');
+  c.fillStyle = '#10131a'; c.fillRect(0, 0, 128, 220); c.strokeStyle = '#fff'; c.lineWidth = 5; c.lineCap = 'round';
+  for (const [x, y, dx, dy] of [[16, 24, 1, 1], [112, 24, -1, 1], [16, 164, 1, -1], [112, 164, -1, -1]]) { c.beginPath(); c.moveTo(x, y + 24 * dy); c.lineTo(x, y); c.lineTo(x + 24 * dx, y); c.stroke(); }
+  c.fillStyle = '#fff'; c.beginPath(); c.arc(64, 194, 18, 0, 7); c.fill(); c.fillStyle = '#ff4f9a'; c.beginPath(); c.arc(64, 194, 12, 0, 7); c.fill();
+  c.font = '52px serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('😁', 64, 94);
+  g.add(new THREE.Mesh(new THREE.BoxGeometry(.8, 1.4, .08), new THREE.MeshLambertMaterial({ color: 0x202124 })));
+  const scr = new THREE.Mesh(new THREE.PlaneGeometry(.7, 1.2), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(cv) })); scr.position.z = .045; g.add(scr);
+  return g;
+}
+let SQ = null;
+function squad() {
+  if (SQ) return SQ; SQ = [];
+  const PM = [0xff4f9a, 0xffd54a, 0x19d3f3], PG = new THREE.SphereGeometry(1, 8, 6);
+  for (let i = 0; i < 6; i++) {
+    const c = makeChar(60, i % 2 ? 0xffd54a : 0xff4f9a, 0xffffff); c.handL.scale.setScalar(1 / 1.35); c.handR.scale.setScalar(1 / 1.35);
+    [c.handL, c.handR].forEach((h, j) => { const p = new THREE.Mesh(PG, new THREE.MeshLambertMaterial({ color: PM[(i + j) % 3], flatShading: true })); p.scale.setScalar(.75); p.position.y = .25; h.add(p); });
+    c.g.visible = false; const mat = c.head.children[0].material;
+    SQ.push({ c, ch: c, g: c.g, p: c.g.position, mat, skin: mat.color.clone(), walkT: Math.random() * 6, rot: 0, fall: -1, an: null });
+  }
+  return SQ;
+}
+const CAP = [[[-1.7, 3.2, .2], [1.7, 3.2, .2]], [[-1.7, 3.2, .2], [1.5, 1.2, .2]], [[-2, 2.2, 0], [2, 2.2, 0]], [[-1.5, 1.2, .2], [1.7, 3.2, .2]]];
+function cheerPose(c, ti) {   // coreografia com pompons: braços alternando no ritmo, pulinhos e balanço
+  resetCh(c); c.model.scale.set(1, 1, 1);
+  const per = .6, b = Math.floor(ti / per), fr = ti / per - b, k = Math.min(1, fr * 1.6), kk = k * k * (3 - 2 * k), A0 = CAP[((b % 4) + 4) % 4], A1 = CAP[(((b + 1) % 4) + 4) % 4], jmp = b % 2 ? 0 : Math.sin(fr * Math.PI) * .8;
+  c.handL.position.set(...A0[0].map((v, j) => v + (A1[0][j] - v) * kk)); c.handR.position.set(...A0[1].map((v, j) => v + (A1[1][j] - v) * kk));
+  c.model.position.y = jmp; c.model.rotation.z = Math.sin(ti * Math.PI / per) * .07; c.head.rotation.y = Math.sin(ti * 3) * .2;
+  c.footL.position.y = FOOT_Y + jmp * .3; c.footR.position.y = FOOT_Y + jmp * .3;
+}
+function cheerAngry(c, m, f) {
+  const q = f * 14; resetCh(c); c.model.scale.set(1, 1, 1);
+  c.handL.position.set(-1, HAND_Y + 0.9 + .35 * Math.sin(q * 2.2), 1); c.handR.position.set(1, HAND_Y + 0.9 + .35 * Math.sin(q * 2.2 + 1.7), 1);
+  c.model.position.y = .15 * Math.abs(Math.sin(q)); c.footL.position.y = FOOT_Y + Math.max(0, Math.sin(q)) * .35; c.footR.position.y = FOOT_Y + Math.max(0, -Math.sin(q)) * .35;
+  c.head.rotation.set(.15, Math.sin(q * .9) * .45, 0); m.mat.color.setHex(0xff7a6b);
+  if (!m.an) { angerSprite(0); m.an = new THREE.Sprite(angerMat); m.an.renderOrder = 20; scene.add(m.an); }
+  m.an.visible = true; m.an.position.set(m.g.position.x, 3.9, m.g.position.z + .9); m.an.scale.setScalar(1.25 + .3 * Math.sin(q));
+}
+function squadReset() { if (!SQ) return; SQ.forEach(m => { m.g.visible = false; m.g.rotation.set(0, 0, 0); m.mat.color.copy(m.skin); resetCh(m.c); m.c.model.scale.set(1, 1, 1); m.fall = -1; if (m.an) m.an.visible = false; }); }
+function stepSquadCel(dt) {
+  const T = cel.T, fc = -cel.sd * Math.PI / 2;
+  cel.sq.forEach((m, j) => { const u = clampN((T - .2 - j * .05) / 1.6, 0, 1), ez = u * u * (3 - 2 * u), px = m.sx + (m.tx - m.sx) * ez, pz = m.sz + (m.tz - m.sz) * ez, mx = px - m.p.x, mz = pz - m.p.z; m.p.x = px; m.p.z = pz;
+    if (u < 1) { if (hyp2(mx, mz) > .01) celTurn(m, Math.atan2(mx, mz), dt * 12); celRun(m, dt, Math.min(18, hyp2(mx, mz) / Math.max(dt, 1e-3)), false); }
+    else { celTurn(m, fc, dt * 10); cheerPose(m.c, T - j * .1); } });
+}
+// missão: as líderes de torcida entram em campo durante a partida; dê um carrinho nelas para desbloquear a comemoração
+const LD = { on: false, t: 0, clk: 0, next: 25, hit: false, end: 0 };
+function endLeaders() { LD.on = false; LD.clk = 0; LD.next = 60; squadReset(); }
+function stepLeaders(dt) {
+  const P = window.__prog; if (!P || (P.lid() && !LD.on)) return;
+  const live = match.on && menu.mode === 'play' && !replay.on && !cel.on && !intro.on && goalLock <= 0 && !match.over;
+  if (!live) { if (LD.on) endLeaders(); return; }
+  if (!LD.on) { if ((LD.clk += dt) < LD.next) return;
+    LD.on = true; LD.t = 0; LD.hit = false; LD.end = 1e9; squad().forEach((m, j) => { m.g.visible = true; m.g.position.set((j - 2.5) * 3.4, 0, -16); m.fall = -1; }); P.show(); }
+  LD.t += dt; const pp = player.position;
+  SQ.forEach((m, j) => { const c = m.c, g = m.g;
+    let d = Math.atan2(pp.x - g.position.x, pp.z - g.position.z) - g.rotation.y; while (d > Math.PI) d -= TAU; while (d < -Math.PI) d += TAU; g.rotation.y += d * Math.min(1, dt * 6);
+    if (m.fall < 0) { cheerPose(c, LD.t - j * .1);
+      if (slideT >= 0 && slideT < 0.6 && hyp2(pp.x - g.position.x, pp.z - g.position.z) < 2.8) { m.fall = 0; if (!LD.hit) { LD.hit = true; LD.end = LD.t + 9; P.lider(); } say(g, rnd(INSULTS), 2); } }
+    if (m.fall >= 0) { m.fall += dt; const f = m.fall, fl = f < .4 ? f / .4 : f < 1.6 ? 1 : f < 2 ? 1 - (f - 1.6) / .4 : 0; g.rotation.z = -1.3 * fl;
+      if (f < 1.6) { const q = f * 18; resetCh(c); c.handL.position.set(-1.5, HAND_Y + .6 + Math.sin(q) * .8, .4); c.handR.position.set(1.5, HAND_Y + .6 + Math.cos(q) * .8, .4); }
+      else cheerAngry(c, m, f); } });
+  if (LD.t > LD.end || LD.t > 40) endLeaders();
+}
+
 function startCel() {
   if (!match.on || match.over || ownGoal) return false;
   const st = 1 - match.conc, ct = match.conc, sd = replay.side;
   const A = celEnts(st), B = celEnts(ct);
   if (!A.length) return false;
+  if (LD.on) endLeaders();
   // o artilheiro (ou o mais perto da bola) vira o primeiro da lista e fica no centro da comemoração
   let si = A.findIndex(e => e.g === replay.focus);
   if (si < 0) { let bd = 1e9; A.forEach((e, i) => { const d = hyp2(e.p.x - ball.position.x, e.p.z - ball.position.z); if (d < bd) { bd = d; si = i; } }); }
   A.unshift(A.splice(si, 1)[0]); A[0].center = true;
-  let kind; do { kind = Math.floor(Math.random() * 9); } while (kind === cel.kind);     // aleatória, sem repetir a anterior
-  Object.assign(cel, { on: true, ph: 0, t: 0, T: 0, kind, sd, st, ct, A, B, burst: 0, close: false });
+  const eq = st === 0 && window.__wr && __wr.cel ? __wr.cel() : 'pad', kind = { pad: 9, login: 10, lider: 11 }[eq] || 9;     // só a comemoração equipada no Vestiário (o adversário usa a padrão)
+  Object.assign(cel, { on: true, ph: 0, t: 0, T: 0, kind, sd, st, ct, A, B, burst: 0, close: false, s1: 0, s2: 0, phone: null, sq: null });
   cel.C.set(sd * (GOAL_LINE - 32), 0, clampN(A[0].p.z, -20, 20));
   cel.Cr.set(sd * 58, 0, 0);
   cel.foc.copy(cel.C);
@@ -2144,7 +2211,13 @@ function startCel() {
       e.sx0 = C.x + sd * (13 + (j >> 1) * 1.9); e.sz0 = C.z + side * (1.6 + (j >> 1) * 1.1);
       e.tx = F.x + Math.cos(a) * 1.8; e.tz = F.z + Math.sin(a) * 1.8; e.fa = Math.atan2(F.x - e.tx, F.z - e.tz); e.dly = 0.25 + (j >> 1) * 0.12;
     });
-  } else {                                                           // dancinha / mortal / joelhos / giro / ondinha: duas fileiras de frente para a câmera
+  } else if (kind === 10) {                                          // selfie: o artilheiro na frente com o celular, o time espremido atrás dele
+    A.forEach((e, i) => {
+      if (i === 0) { e.tx = C.x - sd * 0.8; e.tz = C.z; e.fa = fc; return; }
+      const j = i - 1, row = j < 4 ? 0 : 1, k = row ? j - 4 : j, cnt = row ? Math.max(1, n - 5) : Math.min(4, n - 1);
+      e.tx = C.x + sd * (1.4 + row * 1.5); e.tz = C.z + (k - (cnt - 1) / 2) * 1.7 + (row ? 0.85 : 0); e.fa = fc;
+    });
+  } else {                                                           // padrão / líderes: duas fileiras de frente para a câmera
     A.forEach((e, i) => {
       const row = i % 2, col = seq(Math.floor(i / 2));
       e.tz = C.z + col * 3.1 + (row ? 1.55 : 0); e.tx = C.x + (row ? sd * 3.6 : 0); e.fa = fc;
@@ -2158,6 +2231,8 @@ function startCel() {
     if (d > 15) { e.p.x = e.tx + dx / d * 15; e.p.z = e.tz + dz / d * 15; }
     e.rot = Math.atan2(e.tx - e.p.x, e.tz - e.p.z); e.g.rotation.y = e.rot;
   }
+  if (kind === 10) { const ph = makePhone(); ph.scale.setScalar(1.3); ph.visible = false; A[0].ch.model.add(ph); cel.phone = ph; }
+  if (kind === 11) { const Q = squad(); cel.sq = Q; Q.forEach((m, j) => { m.tx = C.x + sd * 8; m.tz = C.z + (j - 2.5) * 2.3; m.sx = m.tx; m.sz = C.z + (j < 3 ? -26 : 26); m.p.set(m.sx, 0, m.sz); m.g.visible = true; m.g.rotation.set(0, 0, 0); m.rot = 0; m.fall = -1; }); }
   // rivais e juiz saem da área da comemoração
   const clear = kind === 1 ? 15 : 11;
   for (const e of B) {
@@ -2183,11 +2258,11 @@ function celPose(e, k, tm, i) {
     c.handL.position.set(-w, HAND_Y + a + Math.sin(tm * 12 + ph) * 0.2, 0.1);
     c.handR.position.set(w, HAND_Y + a + Math.sin(tm * 12 + ph + 2) * 0.2, 0.1);
   };
-  if (k === 0) {                                                     // roda: todos pulam de braços erguidos; o artilheiro gira
+  if (k === 0 || k === 9 || k === 11) {                                                     // roda: todos pulam de braços erguidos; o artilheiro gira
     const s = Math.sin(tm * 6.5), f = Math.abs(s);
     c.model.position.y = f * (e.center ? 1.5 : 1.1); up(1.9); c.head.rotation.x = -0.25;
     c.footL.position.z += s * 0.25; c.footR.position.z -= s * 0.25;
-    if (e.center) c.model.rotation.y = tm * 6;
+    if (e.center && k === 0) c.model.rotation.y = tm * 6;
   } else if (k === 2) {                                              // dancinha: todos no mesmo ritmo, braços alternados
     const s = Math.sin(tm * 6);
     e.p.z = e.tz + Math.sin(tm * 3) * 0.9;
@@ -2215,6 +2290,10 @@ function celPose(e, k, tm, i) {
   } else if (k === 7) {                                              // ondinha: o pulo passa de jogador em jogador, como na torcida
     const f = Math.max(0, Math.sin(tm * 5 - (e.tz - cel.C.z) * 0.45));
     c.model.position.y = f * 1.3; up(0.3 + 1.6 * f, 1.15); c.head.rotation.x = -0.25 * f;
+  } else if (k === 10) {                                             // selfie: braço esticado com o celular, os outros fazem V e se apertam
+    if (e.center) { c.model.position.y = Math.abs(Math.sin(tm * 4)) * 0.1; c.head.rotation.x = -0.1; c.handL.position.set(-1.3, HAND_Y + 1.9, 0.2); c.handR.position.set(0.9, HAND_Y + 2.0, 2.2);
+      if (cel.phone) { cel.phone.visible = true; cel.phone.position.set(0.9, HAND_Y + 2.7, 2.5); cel.phone.rotation.set(0, Math.sin(tm * 2) * 0.1, Math.sin(tm * 1.3) * 0.05); } }
+    else { const w = Math.sin(tm * 8 + ph) * 0.15; c.model.rotation.x = 0.12; c.model.position.y = Math.abs(Math.sin(tm * 5 + ph)) * 0.12; c.handL.position.set(-1.1, HAND_Y + 1.9 + w, 0.4); c.handR.position.set(1.1, HAND_Y + 1.9 - w, 0.4); }
   }
 }
 // corrida com pernas e braços (usada na corrida do artilheiro)
@@ -2351,6 +2430,8 @@ function endCel() {
     if (e.hm) e.hm.color.copy(e.hc);
   }
   for (const s of angerSpr) s.visible = false;
+  if (cel.phone) { if (cel.phone.parent) cel.phone.parent.remove(cel.phone); cel.phone = null; }
+  squadReset();
   for (const b of bubs) b.t = 0;
   cel.on = false; cel.A = []; cel.B = [];
   document.body.classList.remove('replay', 'celscene');
@@ -2361,19 +2442,25 @@ function endCel() {
 }
 function stepCel(dt) {
   cel.t += dt; cel.T += dt;
-  if (cel.ph === 0 && cel.t >= CEL_T0) { if (cel.B.length) celPhase1(); else { endCel(); return; } }
+  if (cel.ph === 0 && cel.t >= (cel.kind === 10 ? 5.2 : CEL_T0)) { if (cel.B.length) celPhase1(); else { endCel(); return; } }
   else if (cel.ph === 1 && cel.t >= CEL_T1) { endCel(); return; }
   const t = cel.t, sd = cel.sd, A = cel.A, B = cel.B;
   for (let i = 0; i < A.length; i++) celStepA(A[i], dt, i);
   for (let i = 0; i < B.length; i++) { if (cel.ph === 0) celDejected(B[i], dt); else celAngry(B[i], dt, i); }
   for (const K of keepers) updateKeeper(K, dt);
+  if (cel.kind === 11 && cel.ph === 0) stepSquadCel(dt);
+  if (cel.kind === 10 && cel.ph === 0) {                              // selfie: "Selfie!" → todos dizem X → flash → corte para o rival
+    if (!cel.s1 && cel.T > 1.2) { cel.s1 = 1; say(A[0].g, 'Selfie!', 1.6); }
+    if (cel.s1 === 1 && cel.T > 2.6) { cel.s1 = 2; A.forEach(e => say(e.g, 'X!', 2)); }
+    if (!cel.s2 && cel.T > 4.4) { cel.s2 = 1; flashNow(); }
+  }
   if (cel.ph === 0 && cel.st === 0 && (cel.burst += dt) > 2.6) { cel.burst = -99; burstConfetti(cel.C.x, 14, cel.C.z, 90, 14, true); }
 
   // ---- câmera de TV ----
   const pos = _v2, tgt = _v1;
   let fv;
   if (cel.ph === 0) {
-    const CLOSE_T = 3.4;
+    const CLOSE_T = cel.kind === 10 ? 99 : 3.4;
     if (t >= CLOSE_T && !cel.close) {                                // corte para o close no artilheiro, com o nome na tela
       cel.close = true; const r = A[0].ref, m = r.m || (r === U ? members[USER_SLOT] : null);
       rcapEl.textContent = 'GOL DE #' + r.num + (m && m.name ? ' ' + String(m.name).toUpperCase() : '');
@@ -2471,7 +2558,7 @@ function resetPlayerPose() {
   footR.position.set(SPEC.footR[4], SPEC.footR[5], SPEC.footR[6]);
 }
 
-function onGoal(home) { sfxCrowd(true);
+function onGoal(home) { sfxCrowd(true); if (LD.on) endLeaders();
   if (home) scoreHome++; else scoreAway++;
   if (!home && match.on && window.__prog) __prog.conc();
   if (home && match.on && window.__prog) __prog.goal();
@@ -5270,6 +5357,7 @@ function animate() {
   let sp = vel.length();
 
   // ---------- Carrinho ----------
+  stepLeaders(dt);
   if (slideT >= 0) {
     slideT += dt;
     const p = Math.min(slideT / 0.6, 1);
@@ -7192,13 +7280,16 @@ addEventListener('resize', () => {
   /* ---------- missões, avisos e texturas das bolas novas ---------- */
   const PK = 'futio_prog', getP = () => { try { return JSON.parse(LS.getItem(PK)) || {}; } catch (e) { return {}; } }, setP = p => LS.setItem(PK, JSON.stringify(p));
   const pOK = { lider: () => !!getP().lider, trai: () => !!getP().trai, mus: () => !!getP().eye, perd: () => !!getP().perd, troph: () => !!getP().troph, gold: () => !!getP().gold };
-  const HINT = { lider: () => '🔒 Missão: dê carrinho nas líderes de torcida (em breve)', trai: () => '🔒 Faça um gol contra', mus: () => '🔒 Faça um carrinho em alguém', perd: () => '🔒 Deixe o inimigo fazer 1 gol', troph: () => '🔒 Faça 5 gols no adversário (' + Math.min(5, getP().goals || 0) + '/5)', gold: () => '🔒 Faça 10 gols no adversário (' + Math.min(10, getP().goals || 0) + '/10)' };
+  const HINT = { lider: () => '🔒 Missão: dê carrinho nas líderes de torcida (elas entram em campo durante a partida)', trai: () => '🔒 Faça um gol contra', mus: () => '🔒 Faça um carrinho em alguém', perd: () => '🔒 Deixe o inimigo fazer 1 gol', troph: () => '🔒 Faça 5 gols no adversário (' + Math.min(5, getP().goals || 0) + '/5)', gold: () => '🔒 Faça 10 gols no adversário (' + Math.min(10, getP().goals || 0) + '/10)' };
   let kT = 0;
   const kToast = msg => { let t = document.getElementById('kToast');
     if (!t) { t = document.createElement('div'); t.id = 'kToast'; t.style.cssText = 'position:fixed;top:78px;left:50%;transform:translateX(-50%);z-index:200010;background:rgba(8,12,24,.94);color:#fff;border:2px solid #ffd54a;border-radius:14px;padding:12px 22px;font:700 15px system-ui;text-align:center;pointer-events:none;opacity:0;transition:opacity .4s;box-shadow:0 8px 30px #000a'; document.body.appendChild(t); }
     t.innerHTML = msg; t.style.opacity = 1; clearTimeout(kT); kT = setTimeout(() => t.style.opacity = 0, 5500); };
   const SUB = '<small style="display:block;font-weight:600;opacity:.75;font-size:12px">';
   window.__prog = {
+    lid() { return !!getP().lider; },
+    show() { kToast('💃 As <b>líderes de torcida</b> entraram em campo!' + SUB + 'Dê um carrinho nelas para desbloquear a comemoração.</small>'); },
+    lider() { const p = getP(); if (p.lider) return; p.lider = 1; setP(p); kToast('💃 Desbloqueou <b>Líderes de Torcida</b>!' + SUB + 'Equipe em Comemoração, no Vestiário.</small>'); },
     kick() {},
     slide() { const p = getP(); if (p.eye) return; p.eye = 1; setP(p); kToast('🟣 Desbloqueou o <b>Olho Roxo</b>!' + SUB + 'Você fez um carrinho em alguém. Veja em Acessórios, no Vestiário.</small>'); },
     own() { const p = getP(); if (p.trai) return; p.trai = 1; setP(p); kToast('🗡️ Desbloqueou o chapéu <b>Traidor</b>!' + SUB + 'Gol contra... Veja em Acessórios, no Vestiário.</small>'); },
@@ -7487,18 +7578,18 @@ addEventListener('resize', () => {
       upd = t => A.forEach((c, i) => { const ph = t * 5.6 + (i === 2 ? 0 : i * .35), jmp = Math.abs(Math.sin(ph)) * (i === 2 ? 1.15 : .85), w = Math.sin(ph * 2) * .2;
         pose(c, { jmp, hl: [-1.5, 3.05 + w, .15], hr: [1.5, 3.05 - w, .15], fl: jmp * .25, fr: jmp * .25, hx: -.1, hy: Math.sin(ph * .5 + i) * .25, rz: Math.sin(ph) * .05 }); c.g.rotation.y = -xs[i] * .05; });
     } else if (kind === 'login') {   // selfie: o artilheiro tira foto com o time (todos dizem X), flash, corta para o rival com raiva
-      T = 9; cam.position.set(0, 2.6, 15); cam.lookAt(0, 1.8, 0);
-      const xh = [-2.7, -1.35, 1.35, 2.7], HA = xh.map(x => mk(0xffffff, x, -.2, true)), S = mk(0xffffff, 0, 1, true), xr = [-3.2, -1.6, 0, 1.6, 3.2], RA = xr.map(x => mk(0xc62828, x, 0, false));
+      T = 9; cam.position.set(0, 2.8, 12.5); cam.lookAt(0, 2.3, 0);
+      const xh = [-2.7, -1.35, 1.35, 2.7], HA = xh.map(x => mk(0xffffff, x, -.9, true)), S = mk(0xffffff, 0, 1.2, true), xr = [-3.2, -1.6, 0, 1.6, 3.2], RA = xr.map(x => mk(0xc62828, x, 0, false));
       RA.forEach(r => r.head.children[0].material.color.setHex(0xff8a7a));
-      const ph = new THREE.Group(); ph.add(new THREE.Mesh(new THREE.BoxGeometry(.5, .9, .07), LM({ color: 0x202124 })));
-      const lens = new THREE.Mesh(new THREE.CylinderGeometry(.08, .08, .04, 16), LM({ color: 0x8a8f98 })); lens.rotation.x = Math.PI / 2; lens.position.set(-.12, .3, .05); ph.add(lens); S.model.add(ph);
+      const ph = makePhone(); ph.scale.setScalar(1.15); S.model.add(ph);
+      
       const flash = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 2.2), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthTest: false, depthWrite: false })); flash.position.z = -1; flash.renderOrder = 99; cam.add(flash);
       const X = [...HA, S].map(() => sprite('X', true)), AN = RA.map(() => sprite('💢', false)), XS = [...HA, S];
       const fl = (t, a, b, c, d) => t < a ? 0 : t < b ? (t - a) / (b - a) : t < c ? 1 : t < d ? 1 - (t - c) / (d - c) : 0;
       upd = t => {
         const rv = t > 2.7 && t < 8.7; HA.concat(S).forEach(c => c.g.visible = !rv); RA.forEach(c => c.g.visible = rv); flash.material.opacity = Math.max(fl(t, 2.3, 2.65, 2.7, 3.5), fl(t, 8.3, 8.65, 8.7, 9));
         HA.forEach((c, i) => { const x = xh[i], w = Math.sin(t * 6 + i) * .15; pose(c, { hl: [-1.4, 3 + w, .2], hr: [1.4, 3 - w, .2], jmp: Math.abs(Math.sin(t * 3 + i)) * .12, rz: x > 0 ? .1 : -.1, hy: x > 0 ? -.35 : .35 }); c.g.rotation.y = -x * .1; });
-        const sh = t > 2 && t < 2.65 ? Math.sin(t * 60) * .04 : 0; pose(S, { hl: [-1.4, 3.1, .2], hr: [1.1 + sh, 3.1, 1.5], jmp: Math.abs(Math.sin(t * 3)) * .1 }); ph.position.set(1.2, 3.4, 1.65);
+        const sh = t > 2 && t < 2.65 ? Math.sin(t * 60) * .04 : 0; pose(S, { hl: [-1.4, 3.1, .2], hr: [1 + sh, 3.2, 1.9], jmp: Math.abs(Math.sin(t * 3)) * .1 }); ph.position.set(1.1, 3.55, 2.1);
         XS.forEach((c, i) => { const sp = X[i], k = sm(cl((t - 1.3 - i * .06) / .25, 0, 1)); sp.visible = !rv && t > 1.3 && t < 2.65; sp.position.set(c.g.position.x, 3.9, c.g.position.z); sp.scale.setScalar(1.3 * k); });
         RA.forEach((c, i) => { const q = t * 14 + i; pose(c, { hl: [-1, 2.3 + .35 * Math.sin(q * 2.2), 1], hr: [1, 2.3 + .35 * Math.sin(q * 2.2 + 1.7), 1], jmp: .15 * Math.abs(Math.sin(q)), fl: Math.max(0, Math.sin(q)) * .35, fr: Math.max(0, -Math.sin(q)) * .35, hy: Math.sin(q * .9) * .45, hx: .15, rz: Math.sin(q * 1.7) * .07 });
           const a = AN[i]; a.visible = rv && t > 3.4; a.position.set(xr[i], 3.9, 0); a.scale.setScalar(1.2 + .25 * Math.sin(t * 12 + i)); });
@@ -7632,7 +7723,7 @@ addEventListener('resize', () => {
   $('wrPop').addEventListener('click', e => { if (e.target.id === 'wrPop') $('wrPop').classList.remove('on'); });
   $('wgOk').onclick = () => $('wrGift').classList.remove('on');
   new MutationObserver(() => { if ($('gLogin').classList.contains('on')) { try { if (!phoneD) phoneD = phoneCard(); } catch (err) { console.error(err); } start(); } }).observe($('gLogin'), { attributes: true, attributeFilter: ['class'] });
-  window.__wr = { gift() { tgt = null; applyAll(); if (!R1) R1 = mkRend(220, 220);
+  window.__wr = { cel: () => equipped().cel, gift() { tgt = null; applyAll(); if (!R1) R1 = mkRend(220, 220);
     drawables = [card3d('ball', 'nimbus', $('wgB')), card3d('hat', 'nimbus', $('wgH')), card3d('cleat', 'nimbus', $('wgC'))]; $('wrGift').classList.add('on'); start(); } };
   applyAll();
 })();
