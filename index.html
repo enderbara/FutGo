@@ -800,9 +800,9 @@ scene.fog = new THREE.Fog(SKY, 400, 1200);
 const hyp2 = (x, y) => Math.sqrt(x * x + y * y);   // Math.hypot é bem mais lento que sqrt direto
 const camera = new THREE.PerspectiveCamera(38, innerWidth / innerHeight, 0.5, 1500);
 const LOWEND = /Android|iPhone|iPod|Mobile/i.test(navigator.userAgent) || matchMedia("(pointer: coarse)").matches || (navigator.hardwareConcurrency || 8) <= 4;
-const renderer = new THREE.WebGLRenderer({ antialias: false, stencil: true, alpha: false, powerPreference: "high-performance", precision: LOWEND ? "mediump" : "highp" });
+const renderer = new THREE.WebGLRenderer({ antialias: true, stencil: true, alpha: false, powerPreference: "high-performance", precision: "highp" });
 renderer.setSize(innerWidth, innerHeight);
-renderer.setPixelRatio(LOWEND ? 0.65 : Math.min(devicePixelRatio, 1));   // começa leve; se a máquina aguentar, o ajuste automático sobe até 1.25
+renderer.setPixelRatio(Math.min(Math.max(devicePixelRatio, LOWEND ? 1 : 1.5), 2));   // nunca abaixo da resolução nativa + MSAA: sem serrilhado/pixel   // começa leve; se a máquina aguentar, o ajuste automático sobe até 1.25
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFShadowMap;            // bem mais barata que a "Soft" e quase igual no estilo toon
 document.body.appendChild(renderer.domElement);
@@ -5125,7 +5125,7 @@ function startBot() {
 loadSaved();
 
 let menuAcc = 0, menuFrame = 0, qPR = renderer.getPixelRatio(), qN = 0, qT = performance.now(), qWarm = 0;
-const qMax = LOWEND ? 0.9 : Math.min(devicePixelRatio, 1.25); let qPeak = 0, qGood = 0, qNoUp = false, shF = 0, dtSm = 1 / 60;
+const qMax = Math.min(Math.max(devicePixelRatio, LOWEND ? 1 : 1.5), 2); let qPeak = 0, qGood = 0, qNoUp = false, shF = 0, dtSm = 1 / 60;
 const fpsEl = document.getElementById('fps');
 addEventListener('keydown', e => { if (e.code === 'F3') { e.preventDefault(); fpsEl.style.display = fpsEl.style.display === 'block' ? 'none' : 'block'; } });
 const _pv = new THREE.Vector3();
@@ -5240,7 +5240,7 @@ function animate() {
     if (fps > qPeak && fps < 250) qPeak = fps;                                   // pico medido ≈ taxa de atualização da tela
     if (++qWarm > 3 && _n - qT < 2500 && menu.mode === 'play') {
       const low = Math.max(LOWEND ? 52 : 40, qPeak * 0.88);
-      if (fps < low && qPR > 0.45) { qPR = Math.max(0.45, qPR - 0.1); renderer.setPixelRatio(qPR); qGood = 0; if (qPR < qMax - 0.2) qNoUp = true; }
+      if (fps < low && qPR > 1) { qPR = Math.max(1, qPR - 0.1); renderer.setPixelRatio(qPR); qGood = 0; if (qPR < qMax - 0.2) qNoUp = true; }
       else if (fps >= qPeak * 0.95 && qPR < qMax && !qNoUp && ++qGood >= 10) { qPR = Math.min(qMax, qPR + 0.1); renderer.setPixelRatio(qPR); qGood = 0; }
       else if (fps < qPeak * 0.95) qGood = 0;
     }
@@ -7257,13 +7257,20 @@ addEventListener('resize', () => {
     fill.scale.set(sx, sy, sz); fill.renderOrder = 1; g.add(fill);
     if (hull) { const l = new THREE.Mesh(geo, charHull(id)); l.scale.set(sx + t, sy + t, sz + t); l.renderOrder = 2; g.add(l); }
     g.position.set(x, y, z); return g; };
-  const TCUP = new THREE.CylinderGeometry(1, .55, 1, 24), TTOR = new THREE.TorusGeometry(.5, .13, 8, 18);
-  function buildTrophy() {
-    const g = new THREE.Group(), idB = nextPid(), idC = nextPid(), Au = 0xffc928;
-    g.add(hp(CYL, Au, .5, .1, .5, 0, 1.0, 0, .06, idB, true));      // base
-    g.add(hp(CYL, 0xe0a410, .12, .24, .12, 0, 1.17, 0, 0, idB, false)); // haste
-    g.add(hp(TCUP, Au, .62, .55, .62, 0, 1.62, 0, .06, idC, true));  // taça
-    g.add(hp(TTOR, Au, .55, .55, .55, -.66, 1.66, 0, 0, idC, false)); g.add(hp(TTOR, Au, .55, .55, .55, .66, 1.66, 0, 0, idC, false)); // alças
+  const TPTS = [[0, 0], [.2, 0], [.3, .05], [.46, .2], [.7, .48], [.9, .76], [.99, .93], [1, 1], [0, 1]].map(p => new THREE.Vector2(p[0], p[1]));
+  const TCUP = new THREE.LatheGeometry(TPTS, 36), TRIM = new THREE.TorusGeometry(1, .075, 10, 40).rotateX(Math.PI / 2);
+  const THR = new THREE.TorusGeometry(.34, .075, 10, 20, Math.PI * 1.25).rotateZ(-Math.PI * .625), THL = new THREE.TorusGeometry(.34, .075, 10, 20, Math.PI * 1.25).rotateZ(Math.PI - Math.PI * .625);
+  function buildTrophy() {   // taça dourada: pedestal de madeira, haste com nó, bojo liso, borda e alças curvas
+    const g = new THREE.Group(), id = nextPid(), Au = 0xffc928, Du = 0xd9a010;
+    g.add(hp(CYL, 0x3b2a1c, .58, .13, .58, 0, 1.0, 0, .06, id, true));        // pedestal
+    g.add(hp(CYL, Du, .46, .06, .46, 0, 1.1, 0, .04, id, true));              // disco
+    g.add(hp(CYL, Au, .1, .24, .1, 0, 1.25, 0, .04, id, true));               // haste
+    g.add(hp(SPH3, Du, .17, .13, .17, 0, 1.33, 0, .04, id, true));            // nó
+    g.add(hp(TCUP, Au, .64, .82, .64, 0, 1.4, 0, .07, id, true));             // bojo
+    g.add(hp(CYL, 0x6b4300, .59, .03, .59, 0, 2.21, 0, 0, id, false));       // interior escuro
+    g.add(hp(TRIM, 0xffe066, .64, .64, .64, 0, 2.22, 0, 0, id, false));       // borda
+    g.add(hp(THR, Au, 1, 1, 1, .62, 1.9, 0, .05, id, true)); g.add(hp(THL, Au, 1, 1, 1, -.62, 1.9, 0, .05, id, true));   // alças
+    g.add(hp(SPH3, 0xfff2a8, .08, .3, .05, -.24, 1.8, .4, 0, id, false));    // reflexo
     return g;
   }
   function buildTraitor() {   // chapéu preto de espião com faixa vermelha e pena vermelha
