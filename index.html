@@ -2125,7 +2125,7 @@ function squad() {
   const PM = [0xff4f9a, 0xffd54a, 0x19d3f3], PG = new THREE.SphereGeometry(1, 8, 6);
   for (let i = 0; i < 6; i++) {
     const c = makeChar(60, i % 2 ? 0xffd54a : 0xff4f9a, 0xffffff); c.handL.scale.setScalar(1 / 1.35); c.handR.scale.setScalar(1 / 1.35);
-    [c.handL, c.handR].forEach((h, j) => { const p = new THREE.Mesh(PG, new THREE.MeshLambertMaterial({ color: PM[(i + j) % 3], flatShading: true })); p.scale.setScalar(.75); p.position.y = .25; h.add(p); });
+    [c.handL, c.handR].forEach((h, j) => { const p = new THREE.Mesh(PG, new THREE.MeshLambertMaterial({ color: PM[(i + j) % 3] })); p.scale.setScalar(.75); p.position.y = .25; h.add(p); });
     c.g.visible = false; const mat = c.head.children[0].material;
     SQ.push({ c, ch: c, g: c.g, p: c.g.position, mat, skin: mat.color.clone(), walkT: Math.random() * 6, rot: 0, fall: -1, an: null });
   }
@@ -7345,11 +7345,11 @@ addEventListener('resize', () => {
   const HINT = { lider: () => '🔒 Missão: dê carrinho nas líderes de torcida (elas entram em campo durante a partida)', trai: () => '🔒 Faça um gol contra', mus: () => '🔒 Faça um carrinho em alguém', perd: () => '🔒 Deixe o inimigo fazer 1 gol', troph: () => '🔒 Faça 5 gols no adversário (' + Math.min(5, getP().goals || 0) + '/5)', gold: () => '🔒 Faça 10 gols no adversário (' + Math.min(10, getP().goals || 0) + '/10)' };
   let KC = 0;
   const MIS = { cap: ['goals', 1], beanie: ['slides', 3], party: ['kicks', 40], top: ['goals', 25], viking: ['slides', 30], crown: ['goals', 60], halo: ['goals', 120],
-    cpink: ['kicks', 20], clime: ['goals', 2], cice: ['slides', 12], cfire: ['goals', 12], cdark: ['goals', 35], ccosmo: ['kicks', 400], bocean: ['kicks', 10], bneon: ['slides', 10], bfire: ['goals', 45], bgal: ['goals', 100], bsun: ['kicks', 100], bcryst: ['slides', 20], btoxic: ['goals', 60], bplasma: ['kicks', 600], brain: ['goals', 150], bvoid: ['slides', 150], shades: ['goals', 3], nose: ['kicks', 25], mustache: ['slides', 8], specs: ['goals', 20], hero: ['slides', 40], cyber: ['goals', 130], mmask: ['slides', 250], mball: ['kicks', 3000], mhat: ['goals', 300], mcleat: ['slides', 400], visor: ['kicks', 30], headband: ['goals', 4], wizard: ['slides', 8], samurai: ['slides', 22], wings: ['goals', 90], cdiam: ['goals', 80], cphx: ['slides', 100] };
+    cpink: ['kicks', 20], clime: ['goals', 2], cice: ['slides', 12], cfire: ['goals', 12], cdark: ['goals', 35], ccosmo: ['kicks', 400], bocean: ['kicks', 10], bneon: ['slides', 10], bfire: ['goals', 45], bgal: ['goals', 100], bsun: ['kicks', 100], bcryst: ['slides', 20], btoxic: ['goals', 60], bplasma: ['kicks', 600], brain: ['goals', 150], bvoid: ['slides', 150], shades: ['goals', 3], nose: ['kicks', 25], mustache: ['slides', 8], specs: ['goals', 20], hero: ['slides', 40], cyber: ['goals', 130], mmask: ['slides', 250], mball: ['kicks', 3000], mhat: ['goals', 300], mcleat: ['slides', 400], mdrag: ['goals', 500], mgalax: ['kicks', 6000], mice: ['slides', 600], mflame: ['goals', 650], mnova: ['goals', 800], visor: ['kicks', 30], headband: ['goals', 4], wizard: ['slides', 8], samurai: ['slides', 22], wings: ['goals', 90], cdiam: ['goals', 80], cphx: ['slides', 100] };
   const MTX = { goals: n => 'faça ' + n + (n > 1 ? ' gols' : ' gol') + ' no adversário', slides: n => 'dê ' + n + ' carrinhos', kicks: n => 'dê ' + n + ' chutes' };
   for (const k in MIS) { const [c, n] = MIS[k]; pOK[k] = () => (getP()[c] || 0) >= n; HINT[k] = () => '🔒 Missão: ' + MTX[c](n) + ' (' + Math.min(n, getP()[c] || 0) + '/' + n + ')'; }
   const VIP = () => { try { return /enderbara/i.test(String((JSON.parse(LS.getItem('gsave_sess')) || {}).name || '')); } catch (_) { return false; } };
-  ['mball', 'mhat', 'mcleat', 'mmask'].forEach(k => { const f = pOK[k]; pOK[k] = () => VIP() || (f && f()); });
+  ['mball', 'mhat', 'mcleat', 'mmask', 'mdrag', 'mgalax', 'mice', 'mflame', 'mnova'].forEach(k => { const f = pOK[k]; pOK[k] = () => VIP() || (f && f()); });
   const misToast = (c, a, b) => { for (const k in MIS) if (MIS[k][0] === c && a < MIS[k][1] && b >= MIS[k][1]) { const it = ITEMS.hat.concat(ITEMS.cleat, ITEMS.ball).find(x => x.id === k); kToast('🎉 Desbloqueou <b>' + (it ? it.n : k) + '</b>!' + SUB + 'Veja no Vestiário.</small>'); } };
   let kT = 0;
   const kToast = msg => { let t = document.getElementById('kToast');
@@ -7416,16 +7416,28 @@ addEventListener('resize', () => {
     bvoid: (p, S) => { p.fillStyle = '#020006'; p.fillRect(0, 0, S, S); hexg(p, S, 'rgba(120,60,200,.3)', null); p.shadowColor = '#b388ff'; p.shadowBlur = 14; p.lineCap = 'round';
       for (let k = 0; k < 4; k++) { p.strokeStyle = k % 2 ? '#e1bee7' : '#7c4dff'; p.lineWidth = 5; p.beginPath(); for (let t = 0; t < 5.5; t += .1) { const r = 8 + t * 18, a = t + k * Math.PI / 2; p[t ? 'lineTo' : 'moveTo'](S / 2 + Math.cos(a) * r, S / 2 + Math.sin(a) * r); } p.stroke(); }
       p.fillStyle = '#000'; p.strokeStyle = '#fff'; p.lineWidth = 6; p.beginPath(); p.arc(S / 2, S / 2, 20, 0, 7); p.fill(); p.stroke(); p.shadowBlur = 0; } };
+
+  const kb = (c0, c1, pt, ln, gl, rain) => (p, S) => { let g; if (rain) { g = p.createLinearGradient(0, 0, S, S); ['#ff1744', '#ff9100', '#ffea00', '#00e676', '#00b0ff', '#d500f9'].forEach((c, i) => g.addColorStop(i / 5, c)); }
+    else { g = p.createRadialGradient(S * .38, S * .32, 10, S / 2, S / 2, S * .78); g.addColorStop(0, c0); g.addColorStop(1, c1); } p.fillStyle = g; p.fillRect(0, 0, S, S);
+    const pent = (cx, cy, r, rot) => { p.beginPath(); for (let i = 0; i < 5; i++) { const a = rot + i * Math.PI * 2 / 5; p[i ? 'lineTo' : 'moveTo'](cx + r * Math.cos(a), cy + r * Math.sin(a)); } p.closePath(); };
+    p.save(); p.beginPath(); p.arc(128, 128, 126, 0, 7); p.clip(); p.lineJoin = 'round'; p.lineCap = 'round'; p.strokeStyle = ln; p.fillStyle = pt; p.lineWidth = 5; if (gl) { p.shadowColor = gl; p.shadowBlur = 10; }
+    pent(128, 128, 40, -Math.PI / 2); p.fill(); p.stroke();
+    for (let i = 0; i < 5; i++) { const a = -Math.PI / 2 + i * Math.PI * 2 / 5; p.beginPath(); p.moveTo(128 + 40 * Math.cos(a), 128 + 40 * Math.sin(a)); p.lineTo(128 + 76 * Math.cos(a), 128 + 76 * Math.sin(a)); p.stroke(); pent(128 + 120 * Math.cos(a + Math.PI / 5), 128 + 120 * Math.sin(a + Math.PI / 5), 46, a + Math.PI / 5 + Math.PI); p.fill(); p.stroke(); }
+    p.restore(); shine(p, S); };
+  Object.assign(BXD, { gold: kb('#fff6b0', '#d99a0b', '#8a5400', '#5e3a00'), bocean: kb('#e1f5fe', '#0288d1', '#01579b', '#012a4a'), bneon: kb('#16222a', '#04070a', '#39ff14', '#39ff14', '#39ff14'),
+    bfire: kb('#ffe082', '#ff3d00', '#7f1d00', '#3a0a00', '#ffab00'), bgal: kb('#3b1286', '#07021a', '#ff4081', '#e0b3ff', '#ff80ff'), bsun: kb('#fff9c4', '#ff9800', '#e65100', '#7a2c00'),
+    bcryst: kb('#ffffff', '#4fc3f7', '#0277bd', '#e1f5fe', '#ffffff'), btoxic: kb('#2e5a1a', '#071207', '#b6ff00', '#b6ff00', '#b6ff00'), bplasma: kb('#7c4dff', '#0d0030', '#00e5ff', '#e0f7fa', '#00e5ff'),
+    brain: kb(0, 0, '#ffffff', 'rgba(0,0,0,.45)', 0, 1), mnova: kb('#fff1c4', '#ff2d7a', '#2a0a5e', '#ffe082', '#ff80d0'), bvoid: kb('#2a0050', '#000000', '#050008', '#b388ff', '#b388ff') });
   const BXC = {}, BX = k => BXD[k] ? (BXC[k] = BXC[k] || ballTex(BXD[k])) : null;
   const BTEX = k => k === 'nimbus' ? nimTex() : k === 'perd' ? (_pt = _pt || ballTex((p, S) => {   // Perdedor: bola vermelha com L amarelo no centro
       p.fillStyle = '#d32f2f'; p.fillRect(0, 0, S, S); p.font = '900 190px "Arial Black",Impact,sans-serif'; p.textAlign = 'center'; p.textBaseline = 'middle';
       p.lineJoin = 'round'; p.lineWidth = 12; p.strokeStyle = '#232323'; p.strokeText('L', S / 2, S / 2 + 8); p.fillStyle = '#ffd54a'; p.fillText('L', S / 2, S / 2 + 8); }))
-    : k === 'gold' ? (_mt = _mt || ballTex((p, S) => { const g = p.createRadialGradient(S * .35, S * .3, 10, S / 2, S / 2, S * .75); g.addColorStop(0, '#fff3a0'); g.addColorStop(.45, '#ffc928'); g.addColorStop(1, '#b8780a'); p.fillStyle = g; p.fillRect(0, 0, S, S);   // Bola de Ouro
+    : k === 'gold' && !BXD.gold ? (_mt = _mt || ballTex((p, S) => { const g = p.createRadialGradient(S * .35, S * .3, 10, S / 2, S / 2, S * .75); g.addColorStop(0, '#fff3a0'); g.addColorStop(.45, '#ffc928'); g.addColorStop(1, '#b8780a'); p.fillStyle = g; p.fillRect(0, 0, S, S);   // Bola de Ouro
       p.lineJoin = 'round'; p.lineWidth = 8; p.strokeStyle = '#7a4a05'; p.fillStyle = '#e8a812'; p.beginPath(); for (let i = 0; i < 5; i++) { const a = -Math.PI / 2 + i * Math.PI * 2 / 5; p[i ? 'lineTo' : 'moveTo'](S / 2 + 50 * Math.cos(a), S / 2 + 50 * Math.sin(a)); } p.closePath(); p.fill(); p.stroke(); })) : BX(k);
-  const NH = ['troph', 'trai','cap','beanie','party','top','viking','crown','halo','visor','headband','wizard','samurai','wings','mhat'], NCL = ['gold','mcleat','cpink','clime','cice','cfire','cdark','ccosmo','cdiam','cphx'];
-  const ITEMS = { ball: [{ id: 'classic', n: 'Bola Clássica' }, { id: 'perd', n: 'Perdedor', rar: 'c', req: 'perd' }, { id: 'gold', n: 'Bola de Ouro', rar: 'u', req: 'gold' }, { id: 'nimbus', n: 'Bola de Login', lock: 1, rar: 'r' }, { id: 'bocean', n: 'Bola Oceano', rar: 'c', req: 'bocean' },{ id: 'bneon', n: 'Bola Neon', rar: 'u', req: 'bneon' },{ id: 'bfire', n: 'Bola Chama', rar: 'r', req: 'bfire' },{ id: 'bgal', n: 'Bola Galáxia', rar: 'l', req: 'bgal' }, { id: 'bsun', n: 'Bola Solar', rar: 'u', req: 'bsun' }, { id: 'bcryst', n: 'Bola Cristal', rar: 'u', req: 'bcryst' }, { id: 'btoxic', n: 'Bola Tóxica', rar: 'r', req: 'btoxic' }, { id: 'bplasma', n: 'Bola Plasma', rar: 'r', req: 'bplasma' }, { id: 'brain', n: 'Bola Arco-Íris', rar: 'l', req: 'brain' }, { id: 'bvoid', n: 'Bola do Vazio', rar: 'l', req: 'bvoid' }, { id: 'mball', n: 'Orbe Celestial', rar: 'm', req: 'mball' }],
-                  hat: [{ id: null, n: 'Sem acessório' }, { id: 'nimbus', slot: 'hat', n: 'Chapéu Cowboy', lock: 1, rar: 'u' }, { id: 'troph', slot: 'hat', n: 'Chapéu de Troféu', rar: 'u', req: 'troph', solo: 1 }, { id: 'trai', slot: 'hat', n: 'Traidor', rar: 'r', req: 'trai', solo: 1 }, { id: 'mus', slot: 'mus', n: 'Olho Roxo', rar: 'c', req: 'mus' }, { id: 'shades', slot: 'mus', n: 'Óculos Escuros', rar: 'c', req: 'shades', solo: 1 }, { id: 'nose', slot: 'mus', n: 'Nariz de Palhaço', rar: 'c', req: 'nose', solo: 1 }, { id: 'mustache', slot: 'mus', n: 'Bigode', rar: 'u', req: 'mustache', solo: 1 }, { id: 'specs', slot: 'mus', n: 'Óculos de Sábio', rar: 'u', req: 'specs', solo: 1 }, { id: 'hero', slot: 'mus', n: 'Máscara de Herói', rar: 'r', req: 'hero', solo: 1 }, { id: 'cyber', slot: 'mus', n: 'Visor Cyber', rar: 'l', req: 'cyber', solo: 1 }, { id: 'mmask', slot: 'mus', n: 'Máscara Arcana', rar: 'm', req: 'mmask', solo: 1 }, { id: 'cap', slot: 'hat', n: 'Boné', rar: 'c', req: 'cap', solo: 1 },{ id: 'beanie', slot: 'hat', n: 'Gorro', rar: 'c', req: 'beanie', solo: 1 },{ id: 'party', slot: 'hat', n: 'Chapéu de Festa', rar: 'u', req: 'party', solo: 1 },{ id: 'top', slot: 'hat', n: 'Cartola', rar: 'r', req: 'top', solo: 1 },{ id: 'viking', slot: 'hat', n: 'Capacete Viking', rar: 'r', req: 'viking', solo: 1 },{ id: 'crown', slot: 'hat', n: 'Coroa Real', rar: 'l', req: 'crown', solo: 1 },{ id: 'halo', slot: 'hat', n: 'Auréola Divina', rar: 'l', req: 'halo', solo: 1 }, { id: 'visor', slot: 'hat', n: 'Viseira', rar: 'c', req: 'visor', solo: 1 }, { id: 'headband', slot: 'hat', n: 'Faixa de Craque', rar: 'c', req: 'headband', solo: 1 }, { id: 'wizard', slot: 'hat', n: 'Chapéu de Mago', rar: 'u', req: 'wizard', solo: 1 }, { id: 'samurai', slot: 'hat', n: 'Elmo Samurai', rar: 'r', req: 'samurai', solo: 1 }, { id: 'wings', slot: 'hat', n: 'Asas Douradas', rar: 'l', req: 'wings', solo: 1 }, { id: 'mhat', slot: 'hat', n: 'Diadema Estelar', rar: 'm', req: 'mhat', solo: 1 }],
-                  cleat: [{ id: null, n: 'Chuteira Clássica' }, { id: 'nimbus', n: 'Chuteira Nuvem', lock: 1, rar: 'c' }, { id: 'gold', n: 'Chuteira de Ouro', rar: 'u', req: 'gold', solo: 1 }, { id: 'cpink', n: 'Chuteira Rosa Chiclete', rar: 'c', req: 'cpink', solo: 1 },{ id: 'clime', n: 'Chuteira Limão', rar: 'c', req: 'clime', solo: 1 },{ id: 'cice', n: 'Chuteira Gelo', rar: 'u', req: 'cice', solo: 1 },{ id: 'cfire', n: 'Chuteira Fogo', rar: 'u', req: 'cfire', solo: 1 },{ id: 'cdark', n: 'Chuteira Sombra', rar: 'r', req: 'cdark', solo: 1 },{ id: 'ccosmo', n: 'Chuteira Cósmica', rar: 'r', req: 'ccosmo', solo: 1 },{ id: 'cdiam', n: 'Chuteira Diamante', rar: 'l', req: 'cdiam', solo: 1 },{ id: 'cphx', n: 'Chuteira Fênix', rar: 'l', req: 'cphx', solo: 1 }, { id: 'mcleat', n: 'Chuteira Aurora', rar: 'm', req: 'mcleat', solo: 1 }],
+  const NH = ['troph', 'trai','cap','beanie','party','top','viking','crown','halo','visor','headband','wizard','samurai','wings','mhat','mdrag','mgalax','mice'], NCL = ['gold','mcleat','cpink','clime','cice','cfire','cdark','ccosmo','cdiam','cphx','mflame'];
+  const ITEMS = { ball: [{ id: 'classic', n: 'Bola Clássica' }, { id: 'perd', n: 'Perdedor', rar: 'c', req: 'perd' }, { id: 'gold', n: 'Bola de Ouro', rar: 'u', req: 'gold' }, { id: 'nimbus', n: 'Bola de Login', lock: 1, rar: 'r' }, { id: 'bocean', n: 'Bola Oceano', rar: 'c', req: 'bocean' },{ id: 'bneon', n: 'Bola Neon', rar: 'u', req: 'bneon' },{ id: 'bfire', n: 'Bola Chama', rar: 'r', req: 'bfire' },{ id: 'bgal', n: 'Bola Galáxia', rar: 'l', req: 'bgal' }, { id: 'bsun', n: 'Bola Solar', rar: 'u', req: 'bsun' }, { id: 'bcryst', n: 'Bola Cristal', rar: 'u', req: 'bcryst' }, { id: 'btoxic', n: 'Bola Tóxica', rar: 'r', req: 'btoxic' }, { id: 'bplasma', n: 'Bola Plasma', rar: 'r', req: 'bplasma' }, { id: 'brain', n: 'Bola Arco-Íris', rar: 'l', req: 'brain' }, { id: 'bvoid', n: 'Bola do Vazio', rar: 'l', req: 'bvoid' }, { id: 'mball', n: 'Orbe Celestial', rar: 'm', req: 'mball' }, { id: 'mnova', n: 'Supernova', rar: 'm', req: 'mnova' }],
+                  hat: [{ id: null, n: 'Sem acessório' }, { id: 'nimbus', slot: 'hat', n: 'Chapéu Cowboy', lock: 1, rar: 'u' }, { id: 'troph', slot: 'hat', n: 'Chapéu de Troféu', rar: 'u', req: 'troph', solo: 1 }, { id: 'trai', slot: 'hat', n: 'Traidor', rar: 'r', req: 'trai', solo: 1 }, { id: 'mus', slot: 'mus', n: 'Olho Roxo', rar: 'c', req: 'mus' }, { id: 'shades', slot: 'mus', n: 'Óculos Escuros', rar: 'c', req: 'shades', solo: 1 }, { id: 'nose', slot: 'mus', n: 'Nariz de Palhaço', rar: 'c', req: 'nose', solo: 1 }, { id: 'mustache', slot: 'mus', n: 'Bigode', rar: 'u', req: 'mustache', solo: 1 }, { id: 'specs', slot: 'mus', n: 'Óculos de Sábio', rar: 'u', req: 'specs', solo: 1 }, { id: 'hero', slot: 'mus', n: 'Máscara de Herói', rar: 'r', req: 'hero', solo: 1 }, { id: 'cyber', slot: 'mus', n: 'Visor Cyber', rar: 'l', req: 'cyber', solo: 1 }, { id: 'mmask', slot: 'mus', n: 'Máscara Arcana', rar: 'm', req: 'mmask', solo: 1 }, { id: 'cap', slot: 'hat', n: 'Boné', rar: 'c', req: 'cap', solo: 1 },{ id: 'beanie', slot: 'hat', n: 'Gorro', rar: 'c', req: 'beanie', solo: 1 },{ id: 'party', slot: 'hat', n: 'Chapéu de Festa', rar: 'u', req: 'party', solo: 1 },{ id: 'top', slot: 'hat', n: 'Cartola', rar: 'r', req: 'top', solo: 1 },{ id: 'viking', slot: 'hat', n: 'Capacete Viking', rar: 'r', req: 'viking', solo: 1 },{ id: 'crown', slot: 'hat', n: 'Coroa Real', rar: 'l', req: 'crown', solo: 1 },{ id: 'halo', slot: 'hat', n: 'Auréola Divina', rar: 'l', req: 'halo', solo: 1 }, { id: 'visor', slot: 'hat', n: 'Viseira', rar: 'c', req: 'visor', solo: 1 }, { id: 'headband', slot: 'hat', n: 'Faixa de Craque', rar: 'c', req: 'headband', solo: 1 }, { id: 'wizard', slot: 'hat', n: 'Chapéu de Mago', rar: 'u', req: 'wizard', solo: 1 }, { id: 'samurai', slot: 'hat', n: 'Elmo Samurai', rar: 'r', req: 'samurai', solo: 1 }, { id: 'wings', slot: 'hat', n: 'Asas Douradas', rar: 'l', req: 'wings', solo: 1 }, { id: 'mhat', slot: 'hat', n: 'Diadema Estelar', rar: 'm', req: 'mhat', solo: 1 }, { id: 'mdrag', slot: 'hat', n: 'Elmo do Dragão', rar: 'm', req: 'mdrag', solo: 1 }, { id: 'mgalax', slot: 'hat', n: 'Chapéu Galáctico', rar: 'm', req: 'mgalax', solo: 1 }, { id: 'mice', slot: 'hat', n: 'Coroa de Gelo Eterno', rar: 'm', req: 'mice', solo: 1 }],
+                  cleat: [{ id: null, n: 'Chuteira Clássica' }, { id: 'nimbus', n: 'Chuteira Nuvem', lock: 1, rar: 'c' }, { id: 'gold', n: 'Chuteira de Ouro', rar: 'u', req: 'gold', solo: 1 }, { id: 'cpink', n: 'Chuteira Rosa Chiclete', rar: 'c', req: 'cpink', solo: 1 },{ id: 'clime', n: 'Chuteira Limão', rar: 'c', req: 'clime', solo: 1 },{ id: 'cice', n: 'Chuteira Gelo', rar: 'u', req: 'cice', solo: 1 },{ id: 'cfire', n: 'Chuteira Fogo', rar: 'u', req: 'cfire', solo: 1 },{ id: 'cdark', n: 'Chuteira Sombra', rar: 'r', req: 'cdark', solo: 1 },{ id: 'ccosmo', n: 'Chuteira Cósmica', rar: 'r', req: 'ccosmo', solo: 1 },{ id: 'cdiam', n: 'Chuteira Diamante', rar: 'l', req: 'cdiam', solo: 1 },{ id: 'cphx', n: 'Chuteira Fênix', rar: 'l', req: 'cphx', solo: 1 }, { id: 'mcleat', n: 'Chuteira Aurora', rar: 'm', req: 'mcleat', solo: 1 }, { id: 'mflame', n: 'Chuteira Dragão', rar: 'm', req: 'mflame', solo: 1 }],
     cel: [{ id: 'pad', n: 'Padrão', rar: 'c' }, { id: 'login', n: 'Selfie do Login', lock: 1, rar: 'r' }, { id: 'lider', n: 'Líderes de Torcida', rar: 'u', req: 'lider' }] };
   function emblem(c, cx, cy, r) {   // emblema próprio: estrela de 4 pontas + faísca
     const k = r / 92, star = (x, y, ro) => { c.beginPath(); c.moveTo(x, y - ro); c.quadraticCurveTo(x, y, x + ro, y); c.quadraticCurveTo(x, y, x, y + ro); c.quadraticCurveTo(x, y, x - ro, y); c.quadraticCurveTo(x, y, x, y - ro); c.fill(); };
@@ -7577,7 +7589,165 @@ addEventListener('resize', () => {
   HB.wings = () => { const g = new THREE.Group(), a = nextPid(), WG = []; g.add(hp(PATCH(1.05, -Math.PI, Math.PI, .98, 1.2), 0xffe082, 1, 1, 1, 0, 0, 0, .04, a, true)); g.add(hp(SPH3, 0x80d8ff, .13, .13, .06, 0, .4, .97, 0, a, false));
     [-1, 1].forEach(sd => { const wg = new THREE.Group(); wg.position.set(sd * 1.0, .45, 0); for (let i = 0; i < 5; i++) { const an = .05 + i * .3, len = .95 - .08 * i, f = hp(SPH3, i % 2 ? 0xffe082 : 0xffffff, len / 2, .07, .2, sd * Math.cos(an) * len / 2, Math.sin(an) * len / 2, 0, .03, a, true); f.rotation.z = sd * an; wg.add(f); } g.add(wg); WG.push([wg, sd]); });
     g.userData.anim = t => WG.forEach(([w, sd]) => w.rotation.z = sd * Math.sin(t * 3) * .15); return g; };
+
+  /* ===== v3: chapéus refeitos (exceto Viking e místicos) ===== */
+  const DM = (c, r, t1, id) => hp(CAPG(r, t1), c, 1, 1, 1, 0, 0, 0, .05, id, true);
+  HB.nimbus = () => { const g = new THREE.Group(), a = nextPid(), b = nextPid(), Br = 0xc9944f, Cr = 0xb8803f;
+    g.add(hp(SPH3, Br, 1.7, .09, 1.6, 0, .6, 0, .06, a, true));
+    [-1, 1].forEach(sd => { const w = hp(SPH3, Br, .55, .09, 1.1, sd * 1.35, .74, 0, .05, a, true); w.rotation.z = -sd * .5; g.add(w); });
+    g.add(hp(CYL, Cr, .86, .75, .9, 0, 1.0, 0, .06, b, true));
+    g.add(hp(SPH3, Cr, .86, .22, .9, 0, 1.38, 0, .06, b, true));
+    g.add(hp(SPH3, 0x9a6a30, .5, .07, .62, 0, 1.55, 0, 0, b, false));
+    g.add(hp(CYL, 0x4a2e1a, .875, .16, .915, 0, .78, 0, 0, b, false));
+    g.add(hp(BOX, 0xffd54a, .2, .2, .05, 0, .78, .93, 0, b, true)); return g; };
+  HB.trai = () => { const g = new THREE.Group(), a = nextPid(), b = nextPid();
+    g.add(hp(SPH3, 0x1c1c22, 1.55, .08, 1.5, 0, .62, 0, .06, a, true));
+    g.add(hp(CYL, 0x26262e, .86, .6, .9, 0, 1.0, 0, .06, b, true)); g.add(hp(SPH3, 0x26262e, .86, .12, .9, 0, 1.3, 0, .05, b, true));
+    g.add(hp(SPH3, 0x0e0e12, .5, .06, .66, 0, 1.42, 0, 0, b, false));
+    g.add(hp(CYL, 0xc62828, .875, .17, .915, 0, .8, 0, 0, b, false));
+    g.add(spike(0xc62828, .08, .75, .7, .9, -.1, .8, 1, -.5, .04)); return g; };
+  HB.cap = () => { const g = new THREE.Group(), a = nextPid(), b = nextPid();
+    g.add(DM(0xd32f2f, 1.1, 1.32, a)); g.add(hp(PATCH(1.115, -.8, .8, .1, 1.3), 0xffffff, 1, 1, 1, 0, 0, 0, 0, a, false));
+    g.add(hp(TORH(1.07, .05), 0x9e1c1c, 1, 1, 1, 0, .26, 0, 0, a, false));
+    const v = hp(SPH3, 0xb71c1c, .66, .05, .7, 0, .27, 1.16, .04, b, true); v.rotation.x = .3; g.add(v);
+    g.add(hp(SPH3, 0x9e1c1c, .09, .09, .09, 0, 1.1, 0, .03, a, true)); return g; };
+  HB.beanie = () => { const g = new THREE.Group(), a = nextPid();
+    g.add(DM(0x1e88e5, 1.12, 1.5, a)); g.add(hp(PATCH(1.125, -Math.PI, Math.PI, .55, .8), 0xffffff, 1, 1, 1, 0, 0, 0, 0, a, false));
+    g.add(hp(TORH(1.08, .17), 0x1565c0, 1, 1, 1, 0, .1, 0, .04, a, true));
+    g.add(hp(SPH3, 0xffffff, .28, .26, .28, 0, 1.25, 0, .04, a, true)); ring(g, 6, .2, 1.27, (x, y, z) => hp(SPH3, 0xf5f5f5, .16, .16, .16, x, y, z, .03, a, true)); return g; };
+  HB.top = () => { const g = new THREE.Group(), a = nextPid(), b = nextPid();
+    g.add(hp(CYL, 0x15151a, 1.42, .07, 1.42, 0, .62, 0, .06, a, true)); g.add(hp(CYL, 0x1c1c22, .92, .68, .92, 0, 1.28, 0, .06, b, true));
+    g.add(hp(TORH(.92, .05), 0x2a2a33, 1, 1, 1, 0, 1.96, 0, 0, b, false));
+    g.add(hp(CYL, 0xb71c1c, .935, .2, .935, 0, .8, 0, 0, b, false)); g.add(hp(BOX, 0xffc928, .22, .22, .05, 0, .8, .94, 0, b, true)); return g; };
+  HB.crown = () => { const g = new THREE.Group(), a = nextPid(), tips = [];
+    g.add(hp(CYL, 0xffc928, .92, .3, .92, 0, .74, 0, .06, a, true)); g.add(hp(CYL, 0xb71c1c, .88, .09, .88, 0, .93, 0, 0, a, false));
+    for (let i = 0; i < 6; i++) { const t = i * Math.PI / 3, x = Math.cos(t) * .8, z = Math.sin(t) * .8, h = i % 2 ? .45 : .7;
+      g.add(spike(0xffc928, .2, h, x, .86, z, x * .12, 1, z * .12, .04)); const tb = hp(SPH3, 0xfff3b0, .09, .09, .09, x * 1.02, .86 + h + .04, z * 1.02, 0, a, false); tips.push(tb); g.add(tb); }
+    ring(g, 12, .93, .74, (x, y, z, i) => hp(SPH3, i % 2 ? 0x29b6f6 : 0xe53935, .07, .07, .07, x, y, z, 0, a, false));
+    g.userData.anim = t => tips.forEach((m, i) => m.scale.setScalar(.75 + .45 * Math.max(0, Math.sin(t * 4 + i * 1.05)))); return g; };
+  HB.visor = () => { const g = new THREE.Group(), a = nextPid(), b = nextPid();
+    g.add(hp(PATCH(1.07, -Math.PI, Math.PI, .9, 1.25), 0xffffff, 1, 1, 1, 0, 0, 0, .04, a, true));
+    const v = hp(SPH3, 0x1e88e5, .74, .05, .8, 0, .42, 1.18, .04, b, true); v.rotation.x = .22; g.add(v); return g; };
+  HB.headband = () => { const g = new THREE.Group(), a = nextPid(), T = [];
+    g.add(hp(PATCH(1.05, -Math.PI, Math.PI, 1.0, 1.3), 0xe53935, 1, 1, 1, 0, 0, 0, .04, a, true));
+    g.add(hp(PATCH(1.06, -Math.PI, Math.PI, 1.12, 1.18), 0xffffff, 1, 1, 1, 0, 0, 0, 0, a, false));
+    g.add(hp(SPH3, 0xffffff, .15, .15, .05, 0, .4, .97, 0, a, false));
+    g.add(hp(SPH3, 0xb71c1c, .14, .14, .12, 0, .4, -.99, .03, a, true));
+    [-1, 1].forEach(sd => { const t = hp(SPH3, 0xe53935, .07, .38, .04, sd * .11, .12, -1.02, .03, a, true); t.rotation.z = sd * .2; g.add(t); T.push([t, sd]); });
+    g.userData.anim = t => T.forEach(([m, sd]) => m.rotation.z = sd * (.2 + Math.sin(t * 4 + sd) * .12)); return g; };
+  HB.samurai = () => { const g = new THREE.Group(), a = nextPid();
+    g.add(DM(0x7f1d1d, 1.1, 1.5, a)); g.add(hp(TORH(1.04, .07), 0xffc928, 1, 1, 1, 0, .3, 0, 0, a, false));
+    const br = hp(SPH3, 0x5a1313, .75, .06, .5, 0, .32, 1.1, .05, a, true); br.rotation.x = .2; g.add(br);
+    const nk = hp(SPH3, 0x5a1313, 1.2, .07, .8, 0, .12, -.7, .05, a, true); nk.rotation.x = .45; g.add(nk);
+    g.add(hp(CRES, 0xffc928, 1.4, 1.4, 1.6, 0, 1.0, .55, .04, a, true)); g.add(hp(SPH3, 0xffc928, .1, .1, .1, 0, .58, 1.02, 0, a, false)); return g; };
+  HB.wings = () => { const g = new THREE.Group(), a = nextPid(), WG = [];
+    g.add(hp(PATCH(1.05, -Math.PI, Math.PI, 1.0, 1.22), 0xffe082, 1, 1, 1, 0, 0, 0, .04, a, true)); g.add(hp(SPH3, 0x80d8ff, .13, .13, .06, 0, .38, .98, 0, a, false));
+    [-1, 1].forEach(sd => { const wg = new THREE.Group(); wg.position.set(sd * 1.02, .42, 0);
+      for (let i = 0; i < 5; i++) { const an = .1 + i * .28, len = 1.0 - .09 * i, f = hp(SPH3, i % 2 ? 0xffe082 : 0xffffff, len / 2, .08, .2, sd * Math.cos(an) * len / 2, Math.sin(an) * len / 2, 0, .03, a, true); f.rotation.z = sd * an; wg.add(f); }
+      g.add(wg); WG.push([wg, sd]); });
+    g.userData.anim = t => WG.forEach(([w, sd]) => w.rotation.z = sd * Math.sin(t * 3) * .15); return g; };
+
+  /* ===== v4: chapéus cartoon (gordinhos, redondos, coloridos) + novos místicos ===== */
+  const GL = (g, a, x, y, z, w, h) => { const m = hp(SPH3, 0xffffff, w, h, .03, x, y, z, 0, a, false); m.rotation.z = -.5; g.add(m); };
+  const STARS = (g, a, pts, col) => pts.forEach(([x, y, z, s]) => g.add(hp(SPH3, col || 0xffe066, s, s, s * .5, x, y, z, 0, a, false)));
+  HB.nimbus = () => { const g = new THREE.Group(), a = nextPid(), b = nextPid(), Br = 0xe9a857, Cr = 0xd98d3a;
+    g.add(hp(SPH3, Br, 1.75, .13, 1.65, 0, .6, 0, .08, a, true));
+    [-1, 1].forEach(sd => { const w = hp(SPH3, Br, .6, .13, 1.15, sd * 1.38, .8, 0, .07, a, true); w.rotation.z = -sd * .55; g.add(w); });
+    g.add(hp(SPH3, Cr, .9, .78, .95, 0, 1.06, 0, .08, b, true));
+    g.add(hp(SPH3, 0xb9701f, .16, .1, .6, 0, 1.78, 0, 0, b, false));
+    g.add(hp(TORH(1, .1), 0x7a4a22, .86, 1, .91, 0, .84, 0, 0, b, false));
+    g.add(hp(SPH3, 0xffd54a, .2, .2, .06, 0, .84, .93, 0, b, true)); GL(g, b, -.45, 1.35, .72, .09, .24); return g; };
+  HB.troph = () => { const g = new THREE.Group(), t = buildTrophy(); t.position.y = -.08; t.scale.setScalar(1.08); g.add(t); return g; };
+  HB.trai = () => { const g = new THREE.Group(), a = nextPid(), b = nextPid();
+    g.add(hp(SPH3, 0x2a2a35, 1.6, .12, 1.55, 0, .6, 0, .08, a, true));
+    g.add(hp(SPH3, 0x34343f, .9, .8, .95, 0, 1.06, 0, .08, b, true)); g.add(hp(SPH3, 0x15151b, .16, .1, .6, 0, 1.78, 0, 0, b, false));
+    g.add(hp(TORH(1, .11), 0xe53935, .87, 1, .92, 0, .82, 0, 0, b, false));
+    [0, 1, 2].forEach(i => g.add(hp(SPH3, 0xe53935, .1, .1 + i * .02, .1, .78 + i * .06, .95 + i * .22, -.1 - i * .14, .03, b, true))); return g; };
+  HB.cap = () => { const g = new THREE.Group(), a = nextPid(), b = nextPid();
+    g.add(DM(0xff3d4a, 1.12, 1.4, a)); g.add(hp(PATCH(1.125, -.85, .85, .1, 1.38), 0xffffff, 1, 1, 1, 0, 0, 0, 0, a, false));
+    g.add(hp(TORH(1.08, .08), 0xc62833, 1, 1, 1, 0, .2, 0, 0, a, false));
+    const v = hp(SPH3, 0xc62833, .75, .09, .82, 0, .24, 1.2, .06, b, true); v.rotation.x = .3; g.add(v);
+    g.add(hp(SPH3, 0xffd54a, .2, .2, .06, 0, .78, .9, 0, a, false)); g.add(hp(SPH3, 0xc62833, .13, .13, .13, 0, 1.12, 0, .05, a, true)); GL(g, a, -.4, .85, .75, .08, .22); return g; };
+  HB.beanie = () => { const g = new THREE.Group(), a = nextPid();
+    g.add(DM(0x29b6f6, 1.13, 1.5, a)); g.add(hp(PATCH(1.14, -Math.PI, Math.PI, .6, .85), 0xffffff, 1, 1, 1, 0, 0, 0, 0, a, false));
+    g.add(hp(TORH(1.08, .22), 0xffffff, 1, 1, 1, 0, .08, 0, .06, a, true));
+    g.add(hp(SPH3, 0xffffff, .34, .32, .34, 0, 1.28, 0, .06, a, true)); ring(g, 6, .26, 1.3, (x, y, z) => hp(SPH3, 0xffffff, .2, .2, .2, x, y, z, .05, a, true)); GL(g, a, -.5, .9, .7, .08, .25); return g; };
+  HB.party = () => { const g = new THREE.Group(), a = nextPid(), CH = 1.6, Y0 = .7;
+    g.add(spike(0xff5aa5, .72, CH, 0, Y0, 0, 0, 1, 0, .07));
+    [.3, .65, 1.0, 1.3].forEach((h, i) => { const r = .72 * (1 - h / CH) * 1.03; g.add(hp(TORH(1, .06), i % 2 ? 0x19d3f3 : 0xffd54a, r, 1, r, 0, Y0 + h, 0, 0, a, false)); });
+    g.add(hp(TORH(1, .08), 0xffd54a, .72, 1, .72, 0, Y0 + .03, 0, 0, a, false));
+    const pg = new THREE.Group(); ring(pg, 8, .2, 0, (x, y, z, i) => hp(SPH3, [0xffd54a, 0x19d3f3, 0xff5aa5, 0xffffff][i % 4], .12, .12, .12, x, y + Math.sin(i) * .1, z, .04, a, true)); pg.add(hp(SPH3, 0xffffff, .18, .18, .18, 0, 0, 0, .04, a, true)); g.add(pg);
+    g.userData.anim = t => { pg.position.y = Y0 + CH + .02 + Math.abs(Math.sin(t * 4)) * .08; pg.rotation.y = t * 3; }; return g; };
+  HB.top = () => { const g = new THREE.Group(), a = nextPid(), b = nextPid();
+    g.add(hp(CYL, 0x23232b, 1.45, .1, 1.45, 0, .6, 0, .08, a, true)); g.add(hp(CYL, 0x2e2e38, .95, .7, .95, 0, 1.3, 0, .08, b, true)); g.add(hp(SPH3, 0x2e2e38, .95, .18, .95, 0, 2.0, 0, .08, b, true));
+    g.add(hp(CYL, 0xe53935, .97, .22, .97, 0, .84, 0, 0, b, false)); g.add(hp(SPH3, 0xffd54a, .24, .24, .07, 0, .84, .97, .03, b, true)); GL(g, b, -.55, 1.5, .8, .09, .45);
+    STARS(g, b, [[.75, 1.45, .6, .09], [.9, 1.1, .3, .07]], 0xffffff); return g; };
+  HB.crown = () => { const g = new THREE.Group(), a = nextPid(), tips = [];
+    g.add(hp(CYL, 0xffc928, .95, .32, .95, 0, .74, 0, .08, a, true)); g.add(hp(TORH(1, .09), 0xffe066, .95, 1, .95, 0, 1.02, 0, 0, a, false)); g.add(hp(CYL, 0xd32f2f, .9, .1, .9, 0, .9, 0, 0, a, false));
+    for (let i = 0; i < 5; i++) { const t = i * Math.PI * 2 / 5, x = Math.cos(t) * .8, z = Math.sin(t) * .8;
+      g.add(spike(0xffc928, .28, .85, x, .95, z, x * .1, 1, z * .1, .06)); const tb = hp(SPH3, i % 2 ? 0x29b6f6 : 0xff4f9a, .15, .15, .15, x * 1.03, 1.82, z * 1.03, .04, a, true); tips.push(tb); g.add(tb); }
+    g.add(hp(SPH3, 0xe53935, .17, .22, .08, 0, .74, .96, .03, a, true));
+    g.userData.anim = t => tips.forEach((m, i) => m.scale.setScalar(.9 + .22 * Math.sin(t * 4 + i * 1.26))); return g; };
+  HB.halo = () => { const g = new THREE.Group(), a = nextPid(), tl = new THREE.Group(), sp = new THREE.Group(); tl.position.y = 1.5; tl.rotation.x = .25; g.add(tl);
+    tl.add(hp(TORH(.72, .14), 0xffe066, 1, 1, 1, 0, 0, 0, .05, a, true)); tl.add(hp(TORH(.72, .05), 0xfffbe0, 1, 1, 1, 0, .08, 0, 0, a, false));
+    ring(sp, 5, .72, 0, (x, y, z, i) => hp(SPH3, 0xffffff, .09, .09, .09, x, y + .16, z, 0, a, false)); tl.add(sp);
+    g.userData.anim = t => { tl.position.y = 1.5 + Math.sin(t * 2) * .06; sp.rotation.y = t * 1.6; }; return g; };
+  HB.visor = () => { const g = new THREE.Group(), a = nextPid(), b = nextPid();
+    g.add(hp(TORH(1.07, .16), 0xffffff, 1, 1, 1, 0, .55, 0, .06, a, true)); g.add(hp(TORH(1.06, .1), 0xffd54a, 1, 1, 1, 0, .38, 0, 0, a, false));
+    const v = hp(SPH3, 0x1e88e5, .8, .09, .95, 0, .4, 1.2, .06, b, true); v.rotation.x = .25; g.add(v); GL(g, b, -.3, .42, 1.55, .08, .04); return g; };
+  HB.headband = () => { const g = new THREE.Group(), a = nextPid(), T = [];
+    g.add(hp(TORH(1.04, .17), 0xff3d4a, 1, 1, 1, 0, .5, 0, .06, a, true)); g.add(hp(TORH(1.05, .06), 0xffffff, 1, 1, 1, 0, .5, 0, 0, a, false));
+    g.add(hp(SPH3, 0xffffff, .2, .2, .06, 0, .5, 1.08, 0, a, false)); g.add(hp(SPH3, 0xc62833, .2, .2, .17, 0, .5, -1.05, .05, a, true));
+    [-1, 1].forEach(sd => { const t = hp(SPH3, 0xff3d4a, .1, .5, .05, sd * .13, .22, -1.1, .05, a, true); t.rotation.z = sd * .2; g.add(t); T.push([t, sd]); });
+    g.userData.anim = t => T.forEach(([m, sd]) => m.rotation.z = sd * (.2 + Math.sin(t * 4 + sd) * .12)); return g; };
+  HB.wizard = () => { const g = new THREE.Group(), a = nextPid(); g.add(hp(SPH3, 0x4527a0, 1.6, .13, 1.6, 0, .58, 0, .08, a, true)); let y = .62;
+    [[.95, .72, .55, 0], [.72, .52, .5, .05], [.52, .34, .5, .14], [.34, .2, .45, .3], [.2, .05, .4, .55]].forEach(([rb, rt, h, dx], i) => { g.add(hp(new THREE.CylinderGeometry(rt, rb, 1, 22), i % 2 ? 0x5e35b1 : 0x4527a0, 1, h, 1, dx, y + h / 2, 0, .07, a, true)); y += h; });
+    g.add(hp(TORH(1, .1), 0xffc928, .96, 1, .96, 0, .7, 0, 0, a, false)); g.add(hp(SPH3, 0xffd54a, .22, .22, .06, 0, .7, .97, .03, a, true));
+    STARS(g, a, [[0, 1.1, .8, .12], [.25, 1.55, .52, .1], [-.5, 1.2, .5, .1], [.55, 1.1, .5, .08], [.7, 2.05, .1, .15]]); return g; };
+  HB.samurai = () => { const g = new THREE.Group(), a = nextPid();
+    g.add(DM(0xc62833, 1.12, 1.5, a)); g.add(hp(TORH(1.06, .1), 0xffc928, 1, 1, 1, 0, .3, 0, 0, a, true));
+    const br = hp(SPH3, 0x8e1b24, .8, .09, .55, 0, .34, 1.12, .06, a, true); br.rotation.x = .2; g.add(br);
+    [-1, 1].forEach(sd => { const f = hp(SPH3, 0x8e1b24, .45, .3, .12, sd * 1.0, .1, -.2, .06, a, true); f.rotation.y = sd * .7; g.add(f); });
+    [-1, 1].forEach(sd => g.add(spike(0xffc928, .13, 1.0, sd * .2, 1.05, .55, sd * .7, 1, .2, .05)));
+    g.add(hp(SPH3, 0xffd54a, .2, .2, .08, 0, .75, 1.05, .04, a, true)); return g; };
+  HB.wings = () => { const g = new THREE.Group(), a = nextPid(), WG = [];
+    g.add(DM(0xfff3c4, 1.1, 1.4, a)); g.add(hp(TORH(1.07, .08), 0xffd54a, 1, 1, 1, 0, .22, 0, 0, a, false)); g.add(hp(SPH3, 0x80d8ff, .17, .17, .06, 0, .7, .92, 0, a, true));
+    [-1, 1].forEach(sd => { const wg = new THREE.Group(); wg.position.set(sd * 1.05, .55, -.05);
+      for (let i = 0; i < 4; i++) { const an = .15 + i * .32, len = 1.1 - .12 * i, f = hp(SPH3, i % 2 ? 0xffffff : 0xfff3c4, len / 2, .15, .24, sd * Math.cos(an) * len / 2, Math.sin(an) * len / 2, 0, .05, a, true); f.rotation.z = sd * an; wg.add(f); }
+      g.add(wg); WG.push([wg, sd]); });
+    g.userData.anim = t => WG.forEach(([w, sd]) => w.rotation.z = sd * Math.sin(t * 3) * .15); return g; };
+  /* ===== místicos novos ===== */
+  HB.mdrag = () => { const g = new THREE.Group(), a = nextPid(), sp = [], em = [], tx = haloTex('255,150,40');
+    g.add(DM(0x9a1020, 1.14, 1.5, a)); g.add(hp(TORH(1.1, .12), 0xffc928, 1, 1, 1, 0, .25, 0, .05, a, true));
+    for (let i = 0; i < 7; i++) { const t = -1.0 + i * .33, k = Math.abs(i - 3), h = spike(0xffb300, .22 - .02 * k, .62 - .07 * k, 0, Math.cos(t) * 1.12, Math.sin(t) * 1.12, 0, Math.cos(t), Math.sin(t), .05); g.add(h); sp.push(h); }
+    [-1, 1].forEach(sd => { for (let i = 0; i <= 8; i++) { const t = i / 8, r = .24 * (1 - .78 * t) + .03; g.add(hp(SPH3, i > 6 ? 0xfff3d0 : i > 3 ? 0xe6d3a8 : 0x3a1010, r, r, r, sd * (.95 + .7 * Math.sin(t * 1.6)), .5 + 1.15 * t - .1 * t * t, .15 + .2 * t, .05, a, true)); } });
+    [-1, 1].forEach(sd => { const e = spr(g, tx, .55); e.position.set(sd * .38, .78, 1.05); });
+    const gl = spr(g, haloTex('255,70,30'), 3.6); gl.position.y = 1.2; for (let i = 0; i < 12; i++) em.push(spr(g, tx, .22));
+    g.userData.anim = t => { sp.forEach((h, i) => h.scale.set(1, .88 + .2 * Math.sin(t * 5 + i * .9), 1)); gl.scale.setScalar(3.4 + Math.sin(t * 3) * .35);
+      em.forEach((p, i) => { const u = (t * .45 + i / 12) % 1, an = i * 2.1; p.position.set(Math.cos(an) * (.5 + .3 * u), 1.1 + u * 1.7, Math.sin(an) * (.5 + .3 * u)); p.scale.setScalar(.3 * (1 - u) + .04); p.material.color.setHSL(.05 + .08 * (1 - u), 1, .6); }); }; return g; };
+  HB.mgalax = () => { const g = new THREE.Group(), a = nextPid(), tx = haloTex('190,150,255'), tl = new THREE.Group(), pl = new THREE.Group(), sp = [], WIZ = new THREE.Group(); WIZ.scale.setScalar(.92); g.add(WIZ);
+    WIZ.add(hp(SPH3, 0x2a1466, 1.65, .13, 1.65, 0, .58, 0, .08, a, true)); WIZ.add(hp(TORH(1, .09), 0xffd54a, 1.62, 1, 1.62, 0, .6, 0, 0, a, false)); let y = .62;
+    [[1.0, .76, .55, 0, 0x2a1466], [.76, .55, .5, .05, 0x3d1d8f], [.55, .36, .5, .15, 0x2a1466], [.36, .2, .45, .32, 0x3d1d8f], [.2, .05, .42, .58, 0x2a1466]].forEach(([rb, rt, h, dx, c]) => { WIZ.add(hp(new THREE.CylinderGeometry(rt, rb, 1, 22), c, 1, h, 1, dx, y + h / 2, 0, .07, a, true)); y += h; });
+    STARS(WIZ, a, [[0, 1.05, .82, .14], [.3, 1.55, .5, .11], [-.55, 1.2, .55, .1], [.6, 1.15, .5, .09], [-.2, 1.9, .3, .08]], 0xffffff);
+    WIZ.add(hp(TORH(1, .1), 0xff80ff, .95, 1, .95, 0, .72, 0, 0, a, false));
+    const moon = hp(CRES, 0xffe082, 1, 1, 1, .6, 2.7, 0, .05, a, true); moon.scale.set(.4, .4, 1); WIZ.add(moon);
+    tl.position.y = 1.5; tl.rotation.set(.35, 0, .25); WIZ.add(tl); tl.add(hp(TORH(1.45, .03), 0xb388ff, 1, 1, 1, 0, 0, 0, 0, a, false));
+    const pn = hp(SPH3, 0x4fc3f7, .17, .17, .17, 1.45, 0, 0, .04, a, true); pl.add(pn); pl.add(hp(TORH(.26, .03), 0xffe082, 1, 1, 1, 1.45, 0, 0, 0, a, false)); tl.add(pl);
+    const gl = spr(WIZ, tx, 3.2); gl.position.set(.6, 2.7, 0); for (let i = 0; i < 14; i++) sp.push(spr(WIZ, tx, .2));
+    g.userData.anim = t => { pl.rotation.y = -t * 1.2; tl.rotation.y = t * .5; gl.material.color.setHSL((t * .06) % 1, 1, .7); gl.scale.setScalar(2.8 + Math.sin(t * 3) * .4);
+      sp.forEach((p, i) => { const u = (t * .3 + i / 14) % 1, an = i * 2.4 + t; p.position.set(Math.cos(an) * (1.1 - u * .5), .7 + u * 2.2, Math.sin(an) * (1.1 - u * .5)); p.material.color.setHSL((u * .5 + .7) % 1, 1, .75); p.scale.setScalar(.28 * Math.sin(u * 3.14) + .03); }); }; return g; };
+  HB.mice = () => { const g = new THREE.Group(), a = nextPid(), tx = haloTex('160,230,255'), tips = [], sh = [], sn = [];
+    g.add(hp(CYL, 0xbff0ff, .96, .3, .96, 0, .74, 0, .08, a, true)); g.add(hp(TORH(1, .1), 0xffffff, .96, 1, .96, 0, .98, 0, 0, a, false)); g.add(hp(TORH(1, .07), 0x4fc3f7, .96, 1, .96, 0, .52, 0, 0, a, false));
+    for (let i = 0; i < 7; i++) { const t = i * Math.PI * 2 / 7, x = Math.cos(t) * .82, z = Math.sin(t) * .82, h = i % 2 ? .75 : 1.1;
+      g.add(spike(0x8fe3ff, .24, h, x, .95, z, x * .08, 1, z * .08, .06)); g.add(spike(0xe6faff, .12, h * .7, x * .97, .98, z * .97, x * .08, 1, z * .08, 0)); const tb = hp(SPH3, 0xffffff, .1, .1, .1, x, .95 + h + .05, z, 0, a, false); tips.push(tb); g.add(tb); }
+    g.add(hp(SPH3, 0x29b6f6, .2, .26, .09, 0, .76, .97, .04, a, true));
+    for (let i = 0; i < 3; i++) { const o = new THREE.Group(); o.add(spike(0xb3ecff, .1, .32, 0, 0, 0, 0, 1, 0, .04), spike(0x4fc3f7, .1, .32, 0, 0, 0, 0, -1, 0, .04)); sh.push(o); g.add(o); }
+    const gl = spr(g, tx, 3.8); gl.position.y = 1.4; for (let i = 0; i < 16; i++) sn.push(spr(g, haloTex('255,255,255'), .2));
+    g.userData.anim = t => { gl.scale.setScalar(3.5 + Math.sin(t * 2.5) * .3); tips.forEach((m, i) => m.scale.setScalar(.8 + .6 * Math.max(0, Math.sin(t * 3 + i * .9))));
+      sh.forEach((o, i) => { const an = t * 1.3 + i * 2.094; o.position.set(Math.cos(an) * 1.25, 1.55 + Math.sin(t * 2 + i) * .15, Math.sin(an) * 1.25); o.rotation.y = t * 2; });
+      sn.forEach((p, i) => { const u = (t * .25 + i / 16) % 1, an = i * 2.3; p.position.set(Math.cos(an) * (.4 + .9 * u), 2.6 - u * 2.4, Math.sin(an) * (.4 + .9 * u)); p.scale.setScalar(.2 * Math.sin(u * 3.14) + .02); }); }; return g; };
   function buildHat(id) {
+    id = id || 'nimbus';
     if (HB[id]) { const g = HB[id](); if (g.userData.anim) { g.userData.idle = 0; HANIM.push(g); } return g; }
     if (id === 'troph') return buildTrophy();
     if (id === 'trai') return buildTraitor();
@@ -7610,7 +7780,7 @@ addEventListener('resize', () => {
       g.userData.anim = t => { dot.rotation.y = bs + Math.sin(t * 3) * .5; sc.material.opacity = .6 + .3 * Math.sin(t * 5); }; }
     else if (id === 'mmask') { const sp = [], gm = new THREE.Group(), tx = haloTex('255,60,90'), spk = [];
       eachEye((o, sd) => { o.add(fm(FTOR(.27, .035), 0xff2d55, 1, 1, 1, 0, 0, 0, AD)); const r2 = fm(FTOR(.2, .015), 0xffd54a, 1, 1, 1, 0, 0, .01, AD); o.add(r2); sp.push(r2); o.add(fm(BOX, 0xff2d55, .05, .22, .02, sd * .1, -.32, 0, AD)); });
-      gm.position.copy(FN(FC, .55)).multiplyScalar(1.3); const gem = fm(FOCT, 0xff2d55, .17, .26, .17); gem.material = new THREE.MeshLambertMaterial({ color: 0xff2d55, emissive: 0x80102a, flatShading: true }); gm.add(gem);
+      gm.position.copy(FN(FC, .55)).multiplyScalar(1.3); const gem = fm(FOCT, 0xff2d55, .17, .26, .17); gem.material = new THREE.MeshLambertMaterial({ color: 0xff2d55, emissive: 0x80102a }); gm.add(gem);
       const sh = fm(FOCT, 0xffd54a, .27, .4, .27, 0, 0, 0, Object.assign({ wireframe: true, opacity: .85 }, AD)); gm.add(sh); spr(gm, tx, 1.1);
       for (let i = 0; i < 6; i++) spk.push(spr(gm, tx, .16)); g.add(gm);
       g.userData.anim = t => { gem.rotation.y = t * 1.5; sh.rotation.y = -t; gm.position.y = FN(FC, .55).y * 1.3 + Math.sin(t * 2) * .05; sp.forEach(r => r.rotation.z = t * 2);
@@ -7639,7 +7809,7 @@ addEventListener('resize', () => {
     return _bi = new THREE.CanvasTexture(cv); };
   const CPAL = { gold: [0xfff2a8, 0xffc928, 0xffc928, 0xb8860b, 0], cpink: [0xffffff, 0xff4f9a, 0xffb3d1, 0xc2185b, 0], clime: [0xf2fff0, 0x76ff03, 0xb2ff59, 0x2e7d32, 0],
     cice: [0xffffff, 0x29b6f6, 0xb3e5fc, 0x0277bd, 0x001a33], cfire: [0xfff3c4, 0xff3d00, 0xffb300, 0x7f1d00, 0x330800], cdark: [0xcfd8dc, 0x212121, 0x90a4ae, 0x0b0b0e, 0],
-    ccosmo: [0xe1bee7, 0x4a148c, 0x00e5ff, 0x1a0033, 0x200040], cdiam: [0xffffff, 0x80deea, 0xe0f7fa, 0x00838f, 0x0a4048], mcleat: [0xffffff, 0x7c4dff, 0x00e5ff, 0x1a0050, 0x3a1a99], cphx: [0xfff59d, 0xff6d00, 0xd50000, 0x4e0000, 0x661a00] };
+    ccosmo: [0xe1bee7, 0x4a148c, 0x00e5ff, 0x1a0033, 0x200040], cdiam: [0xffffff, 0x80deea, 0xe0f7fa, 0x00838f, 0x0a4048], mcleat: [0xffffff, 0x7c4dff, 0x00e5ff, 0x1a0050, 0x3a1a99], mflame: [0xfff3c4, 0x9a0f10, 0xffb300, 0x2a0000, 0x661100], cphx: [0xfff59d, 0xff6d00, 0xd50000, 0x4e0000, 0x661a00] };
   function cleatKit(fl, fr) {   // chuteira Nuvem: pé violeta, bico ciano, calcanhar rosa, placa branca, travas e emblema
     const ID = 201, mk = side => { const g = new THREE.Group();
       g.add(pieceT(0xf2f2f2, .32, .055, .41, 0, -.17, .02, ID, .05));
@@ -7650,16 +7820,17 @@ addEventListener('resize', () => {
       const em = new THREE.Mesh(new THREE.CircleGeometry(.14, 28), new THREE.MeshBasicMaterial({ map: ballIcon(), transparent: true, polygonOffset: true, polygonOffsetFactor: -2 }));
       em.rotation.y = side * Math.PI / 2; em.position.set(side * .3, .03, 0); g.add(em);
       [[-.13, .16], [.13, .16], [-.13, -.14], [.13, -.14]].forEach(([x, z]) => { const st = new THREE.Mesh(new THREE.CylinderGeometry(.04, .055, .11, 8), LM({ color: 0x4a4d5a })); st.position.set(x, -.27, z); g.add(st); });
-      (g.userData.ex = g.userData.ex || {}).cpink = (() => { const q = new THREE.Group(); q.add(pieceT(0xffffff, 0.4, 0.12, 0.5, 0 * side, -0.2, 0, ID, .04)); q.add(pieceT(0x5a5e70, 0.1, 0.1, 0.08, 0.1 * side, 0.22, 0.1, ID, .04)); q.add(pieceT(0x5a5e70, 0.1, 0.1, 0.08, -0.1 * side, 0.22, 0.1, ID, .04)); q.add(pieceT(0x3a3d4c, 0.06, 0.06, 0.06, 0 * side, 0.22, 0.1, ID, .04)); q.visible = false; g.add(q); return q; })();
-      (g.userData.ex = g.userData.ex || {}).clime = (() => { const q = new THREE.Group(); q.add(pieceT(0x3a3d4c, 0.19, 0.12, 0.17, 0 * side, 0.22, -0.18, ID, .04)); q.add(pieceT(0xffffff, 0.2, 0.04, 0.18, 0 * side, 0.13, -0.18, ID, .04)); q.add(pieceT(0x5a5e70, 0.2, 0.03, 0.18, 0 * side, 0.35, -0.18, ID, .04)); q.visible = false; g.add(q); return q; })();
-      (g.userData.ex = g.userData.ex || {}).cice = (() => { const q = new THREE.Group(); q.add(pieceT(0x5a5e70, 0.1, 0.07, 0.3, 0 * side, -0.02, 0.52, ID, .04)); q.add(pieceT(0xffffff, 0.04, 0.1, 0.04, 0.1 * side, 0.22, 0.1, ID, .04)); q.add(pieceT(0xffffff, 0.04, 0.14, 0.04, 0 * side, 0.24, 0, ID, .04)); q.add(pieceT(0xffffff, 0.04, 0.09, 0.04, -0.1 * side, 0.2, -0.1, ID, .04)); q.add(pieceT(0x3a3d4c, 0.05, 0.08, 0.22, 0 * side, 0.04, 0.4, ID, .04)); q.visible = false; g.add(q); return q; })();
-      (g.userData.ex = g.userData.ex || {}).cfire = (() => { const q = new THREE.Group(); q.add(pieceT(0x5a5e70, 0.16, 0.08, 0.1, 0 * side, 0.2, -0.32, ID, .04)); q.add(pieceT(0x3a3d4c, 0.11, 0.1, 0.08, 0 * side, 0.3, -0.34, ID, .04)); q.add(pieceT(0xffffff, 0.06, 0.1, 0.06, 0 * side, 0.4, -0.36, ID, .04)); q.add(pieceT(0x5a5e70, 0.04, 0.12, 0.3, 0.28 * side, 0.05, 0, ID, .04)); q.add(pieceT(0x3a3d4c, 0.03, 0.1, 0.2, 0.3 * side, 0.16, 0.05, ID, .04)); q.visible = false; g.add(q); return q; })();
-      (g.userData.ex = g.userData.ex || {}).cdark = (() => { const q = new THREE.Group(); q.add(pieceT(0x3a3d4c, 0.23, 0.14, 0.2, 0 * side, 0.24, -0.14, ID, .04)); q.add(pieceT(0xffffff, 0.24, 0.03, 0.22, 0 * side, 0.2, -0.14, ID, .04)); q.add(pieceT(0xffffff, 0.24, 0.03, 0.22, 0 * side, 0.32, -0.14, ID, .04)); q.visible = false; g.add(q); return q; })();
-      (g.userData.ex = g.userData.ex || {}).ccosmo = (() => { const q = new THREE.Group(); q.add(pieceT(0x5a5e70, 0.04, 0.2, 0.28, 0.3 * side, 0.12, -0.1, ID, .04)); q.add(pieceT(0x5a5e70, 0.04, 0.12, 0.2, 0.32 * side, 0.26, -0.1, ID, .04)); q.add(pieceT(0xffffff, 0.07, 0.07, 0.07, 0 * side, 0.28, 0.1, ID, .04)); q.add(pieceT(0x5a5e70, 0.06, 0.06, 0.06, 0 * side, 0.3, -0.2, ID, .04)); q.add(pieceT(0x3a3d4c, 0.14, 0.04, 0.14, 0 * side, -0.1, 0.4, ID, .04)); q.visible = false; g.add(q); return q; })();
-      (g.userData.ex = g.userData.ex || {}).cdiam = (() => { const q = new THREE.Group(); q.add(pieceT(0xffffff, 0.07, 0.12, 0.07, 0 * side, 0.22, 0.15, ID, .04)); q.add(pieceT(0xffffff, 0.05, 0.16, 0.05, 0.1 * side, 0.22, -0.05, ID, .04)); q.add(pieceT(0xffffff, 0.05, 0.14, 0.05, -0.1 * side, 0.2, -0.1, ID, .04)); q.add(pieceT(0x5a5e70, 0.18, 0.04, 0.3, 0 * side, 0.2, 0, ID, .04)); q.visible = false; g.add(q); return q; })();
-      (g.userData.ex = g.userData.ex || {}).cphx = (() => { const q = new THREE.Group(); q.add(pieceT(0x5a5e70, 0.03, 0.18, 0.24, 0.28 * side, 0.2, -0.3, ID, .04)); q.add(pieceT(0x3a3d4c, 0.03, 0.14, 0.2, 0.3 * side, 0.34, -0.32, ID, .04)); q.add(pieceT(0xffffff, 0.03, 0.1, 0.14, 0.32 * side, 0.44, -0.34, ID, .04)); q.add(pieceT(0x5a5e70, 0.12, 0.1, 0.1, 0 * side, 0.2, -0.42, ID, .04)); q.add(pieceT(0x3a3d4c, 0.08, 0.12, 0.08, 0 * side, 0.3, -0.5, ID, .04)); q.visible = false; g.add(q); return q; })();
+      (g.userData.ex = g.userData.ex || {}).cpink = (() => { const q = new THREE.Group(); q.add(pieceT(0xffffff,0.36,0.1,0.46,0,-0.2,0.01,ID,.04)); q.add(pieceT(0x5a5e70,0.09,0.07,0.06,-.09*side,.25,.22,ID,.04)); q.add(pieceT(0x5a5e70,0.09,0.07,0.06,.09*side,.25,.22,ID,.04)); q.add(pieceT(0x3a3d4c,0.05,0.05,0.05,0,0.25,0.22,ID,.04)); q.visible = false; g.add(q); return q; })();
+      (g.userData.ex = g.userData.ex || {}).clime = (() => { const q = new THREE.Group(); q.add(pieceT(0xffffff,0.025,0.05,0.3,.23*side,0.03,0.02,ID,.04)); q.add(pieceT(0x5a5e70,0.025,0.04,0.2,.235*side,0.14,0.0,ID,.04)); q.add(pieceT(0xffffff,0.09,0.1,0.04,0,0.2,-0.4,ID,.04)); q.visible = false; g.add(q); return q; })();
+      (g.userData.ex = g.userData.ex || {}).cice = (() => { const q = new THREE.Group(); q.add(spike(0xffffff,0.07,0.32,0,0.2,0.14,0,1,0.3,.035)); q.add(spike(0x5a5e70,0.06,0.26,.09*side,0.2,-0.1,.2*side,1,-0.3,.035)); q.add(spike(0x5a5e70,0.06,0.26,-.09*side,0.2,-0.1,-.2*side,1,-0.3,.035)); q.add(spike(0xffffff,0.08,0.34,0,0.2,-0.36,0,0.6,-1,.035)); q.visible = false; g.add(q); return q; })();
+      (g.userData.ex = g.userData.ex || {}).cfire = (() => { const q = new THREE.Group(); q.add(spike(0x3a3d4c,0.11,0.55,0,0.2,-0.3,0,1,-0.6,.035)); q.add(spike(0x3a3d4c,0.08,0.4,.1*side,0.2,-0.28,.35*side,1,-0.8,.035)); q.add(spike(0x3a3d4c,0.08,0.4,-.1*side,0.2,-0.28,-.35*side,1,-0.8,.035)); q.add(spike(0x5a5e70,0.07,0.38,0,0.2,-0.32,0,1,-0.6,.035)); q.add(spike(0xffffff,0.04,0.24,0,0.2,-0.34,0,1,-0.6,.035)); q.add(spike(0x5a5e70,0.05,0.3,.22*side,0.0,0.2,.4*side,0.5,1,.035)); q.visible = false; g.add(q); return q; })();
+      (g.userData.ex = g.userData.ex || {}).cdark = (() => { const q = new THREE.Group(); q.add(pieceT(0x3a3d4c,0.23,0.07,0.23,0,0.22,-0.2,ID,.04)); q.add(spike(0x3a3d4c,0.07,0.4,0,0.2,-0.4,0,0.3,-1,.035)); q.add(spike(0x3a3d4c,0.06,0.32,.1*side,0.18,-0.4,.4*side,0.3,-1,.035)); q.add(spike(0x3a3d4c,0.06,0.32,-.1*side,0.18,-0.4,-.4*side,0.3,-1,.035)); q.visible = false; g.add(q); return q; })();
+      (g.userData.ex = g.userData.ex || {}).ccosmo = (() => { const q = new THREE.Group(); q.add(pieceT(0x5a5e70,0.23,0.04,0.23,0,0.24,-0.2,ID,.04)); q.add(pieceT(0xffffff,0.05,0.05,0.05,0.200*side,0.27,-0.200,ID,.04)); q.add(pieceT(0xffffff,0.05,0.05,0.05,0.062*side,0.27,-0.010,ID,.04)); q.add(pieceT(0xffffff,0.05,0.05,0.05,-0.162*side,0.27,-0.082,ID,.04)); q.add(pieceT(0xffffff,0.05,0.05,0.05,-0.162*side,0.27,-0.318,ID,.04)); q.add(pieceT(0xffffff,0.05,0.05,0.05,0.062*side,0.27,-0.390,ID,.04)); q.add(pieceT(0xffffff,0.06,0.06,0.06,0,0.3,0.15,ID,.04)); q.visible = false; g.add(q); return q; })();
+      (g.userData.ex = g.userData.ex || {}).cdiam = (() => { const q = new THREE.Group(); q.add(spike(0xffffff,0.08,0.18,0,0.2,0.15,0,1,0,.035)); q.add(spike(0x5a5e70,0.08,0.12,0,0.2,0.15,0,-1,0,.035)); q.add(spike(0xffffff,0.07,0.16,.12*side,0.2,-0.08,0,1,0,.035)); q.add(spike(0xffffff,0.07,0.16,-.12*side,0.2,-0.08,0,1,0,.035)); q.add(spike(0x5a5e70,0.09,0.2,0,0.2,-0.36,0,1,-0.4,.035)); q.visible = false; g.add(q); return q; })();
+      (g.userData.ex = g.userData.ex || {}).cphx = (() => { const q = new THREE.Group(); q.add(spike(0x3a3d4c,0.07,0.5,0,0.2,-0.32,0,1,-0.5,.035)); q.add(spike(0x5a5e70,0.07,0.42,.1*side,0.2,-0.3,.4*side,1,-0.5,.035)); q.add(spike(0x5a5e70,0.07,0.42,-.1*side,0.2,-0.3,-.4*side,1,-0.5,.035)); q.add(spike(0xffffff,0.05,0.3,.18*side,0.2,-0.3,.8*side,1,-0.5,.035)); q.add(spike(0xffffff,0.05,0.3,-.18*side,0.2,-0.3,-.8*side,1,-0.5,.035)); q.add(spike(0x5a5e70,0.07,0.4,.26*side,0.1,0,.9*side,0.7,-0.4,.035)); q.add(spike(0x3a3d4c,0.06,0.32,.28*side,0.0,0.1,.9*side,0.5,-0.1,.035)); q.visible = false; g.add(q); return q; })();
       (g.userData.ex = g.userData.ex || {}).mcleat = (() => { const q = new THREE.Group(); q.add(pieceT(0x5a5e70, 0.36, 0.03, 0.45, 0 * side, -0.12, 0.02, ID, .04)); q.add(pieceT(0x5a5e70, 0.03, 0.18, 0.26, 0.3 * side, 0.14, -0.12, ID, .04)); q.add(pieceT(0x5a5e70, 0.03, 0.14, 0.2, 0.34 * side, 0.28, -0.14, ID, .04)); q.add(pieceT(0xffffff, 0.03, 0.1, 0.14, 0.36 * side, 0.38, -0.16, ID, .04)); q.add(pieceT(0xffffff, 0.06, 0.12, 0.06, 0 * side, 0.22, 0.3, ID, .04)); q.add(pieceT(0x3a3d4c, 0.12, 0.03, 0.12, 0 * side, 0.18, 0.3, ID, .04)); const W = [q.children[1], q.children[2], q.children[3]], by = W.map(w => w.position.y), rg = new THREE.Mesh(new THREE.TorusGeometry(.3, .025, 6, 24).rotateX(Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x7c4dff, transparent: true, opacity: .85, blending: THREE.AdditiveBlending, depthWrite: false })); rg.position.y = -.3; q.add(rg);
         q.userData.idle = 0; q.userData.anim = t => { W.forEach((w, k) => { w.rotation.z = side * Math.sin(t * 6 + k * .6) * .3; w.position.y = by[k] + Math.sin(t * 6 + k * .6) * .03; }); const sc = 1 + .25 * Math.sin(t * 4); rg.scale.set(sc, 1, sc); rg.rotation.y = t * 2; rg.material.color.setHSL((t * .2) % 1, 1, .6); }; HANIM.push(q); q.visible = false; g.add(q); return q; })();
+      (g.userData.ex = g.userData.ex || {}).mflame = (() => { const q = new THREE.Group(), F = []; q.add(pieceT(0x5a5e70, .36, .04, .45, 0, -.13, .02, ID, .04)); F.push(spike(0xffffff,.09,.5,-0.1*side,.2,-.3,-0.30000000000000004*side,1,-.6,.035)); F.push(spike(0xffffff,.09,.5,0*side,.2,-.3,0*side,1,-.6,.035)); F.push(spike(0xffffff,.09,.5,0.1*side,.2,-.3,0.30000000000000004*side,1,-.6,.035)); F.forEach(f => q.add(f)); [-1, 1].forEach(sd => { q.add(spike(0x5a5e70, .08, .45, side * .26, .08, -.05 + sd * .12, side * .9, .5, sd * .5, .035)); }); q.add(spike(0x3a3d4c, .1, .3, 0, .2, .3, 0, 1, .5, .035)); q.userData.idle = 0; q.userData.anim = t => F.forEach((f, i) => f.scale.set(1, .85 + .3 * Math.sin(t * 9 + i * 1.3 + side), 1)); HANIM.push(q); q.visible = false; g.add(q); return q; })();
       g.visible = false; return g; };
     const gL = mk(-1), gR = mk(1); fl.add(gL); fr.add(gR);
     return { on: false, set(v) { this.on = !!v; gL.visible = gR.visible = !!v; [gL, gR].forEach(G => { for (const k in G.userData.ex) G.userData.ex[k].visible = k === v; }); const pl = CPAL[v];
@@ -7698,12 +7869,12 @@ addEventListener('resize', () => {
     im.onload = () => { if (!paintNim(im)) paintNim(null); }; im.onerror = () => paintNim(null); im.src = u;
   }
   setInterval(checkPic, 1500); checkPic();
-  const FX = { gold: [0xffa000, '255,200,60'], bfire: [0xff4400, '255,120,30'], bgal: [0xaa44ff, '170,90,255'], bsun: [0xff9800, '255,170,40'], bcryst: [0x4fc3f7, '120,210,255'], btoxic: [0x76ff03, '150,255,40'], bplasma: [0x7c4dff, '110,200,255'], brain: [0xffffff, '255,255,255'], bvoid: [0x7c4dff, '150,90,255'], mball: [0xff80ff, '255,160,255'], bneon: [0x39ff14, '60,255,40'], bocean: [0x29b6f6, '80,190,255'] };
+  const FX = { gold: [0xffa000, '255,200,60'], bfire: [0xff4400, '255,120,30'], bgal: [0xaa44ff, '170,90,255'], bsun: [0xff9800, '255,170,40'], bcryst: [0x4fc3f7, '120,210,255'], btoxic: [0x76ff03, '150,255,40'], bplasma: [0x7c4dff, '110,200,255'], brain: [0xffffff, '255,255,255'], bvoid: [0x7c4dff, '150,90,255'], mball: [0xff80ff, '255,160,255'], mnova: [0xff4fa0, '255,120,200'], bneon: [0x39ff14, '60,255,40'], bocean: [0x29b6f6, '80,190,255'] };
   const ballMat = (k, id) => stencilize(new THREE.MeshLambertMaterial(FX[k] ? { map: BTEX(k), emissive: FX[k][0], emissiveIntensity: .45 } : { map: BTEX(k) }), id);
-  const TA = { gold: [.002, 0], bocean: [.004, .02], bneon: [-.006, 0], bfire: [.003, .03], bgal: [.002, 0], bsun: [.003, 0], bcryst: [.0015, .01], btoxic: [.004, 0], bplasma: [.001, 0, .04], brain: [.005, 0], bvoid: [-.004, 0], mball: [.004, .03] };
+  const TA = { gold: [.002, 0], bocean: [.004, .02], bneon: [-.006, 0], bfire: [.003, .03], bgal: [.002, 0], bsun: [.003, 0], bcryst: [.0015, .01], btoxic: [.004, 0], bplasma: [.001, 0, .04], brain: [.005, 0], bvoid: [-.004, 0], mball: [.004, .03], mnova: [.004, .03] };
   let halo = null, goldM = null, mg = null;
   function buildOrb() { const g = new THREE.Group(), mk = (r, rx, rz, c) => { const m = new THREE.Mesh(new THREE.TorusGeometry(BR * r, BR * .035, 8, 48), new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: .85, blending: THREE.AdditiveBlending, depthWrite: false })); m.rotation.set(rx, 0, rz); return m; };
-    const gm = (r, col, em, w, sp) => { const m = new THREE.Mesh(new THREE.OctahedronGeometry(BR * r, 0), w ? new THREE.MeshBasicMaterial({ color: col, wireframe: true, transparent: true, opacity: .85, blending: THREE.AdditiveBlending, depthWrite: false }) : new THREE.MeshLambertMaterial({ color: col, emissive: em, flatShading: true, transparent: true, opacity: .85, depthWrite: false })); m.scale.y = 1.5; m.userData.gem = sp; return m; };
+    const gm = (r, col, em, w, sp) => { const m = new THREE.Mesh(new THREE.OctahedronGeometry(BR * r, 0), w ? new THREE.MeshBasicMaterial({ color: col, wireframe: true, transparent: true, opacity: .85, blending: THREE.AdditiveBlending, depthWrite: false }) : new THREE.MeshLambertMaterial({ color: col, emissive: em, transparent: true, opacity: .85, depthWrite: false })); m.scale.y = 1.5; m.userData.gem = sp; return m; };
     g.add(gm(1.0, 0xff2d55, 0x80102a, 0, 1), gm(.5, 0xffd0d8, 0xff6b8a, 0, -2), gm(1.4, 0xffd54a, 0, 1, .5)); g.add(mk(1.7, 1.2, 0, 0x80d8ff), mk(1.95, .3, .8, 0xff80ff)); const tx = haloTex('255,255,255');
     for (let i = 0; i < 10; i++) { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tx, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); sp.userData.i = i; g.add(sp); } return g; }
   function orbAnim(m, t) { let ri = 0; m.children.forEach((c, k) => { if (c.userData.gem) { c.rotation.y += c.userData.gem * .04; c.position.y = Math.sin(t * 2) * BR * .12; } else if (c.isMesh) { const q = ri++; c.rotation.y += .03 * (q + 1); c.rotation.x += .01 * (3 - q); } else { const i = c.userData.i, a = t * 1.3 + i * .628, r = BR * (1.6 + .4 * Math.sin(t + i)); c.position.set(Math.cos(a) * r, BR * .9 * Math.sin(t * 1.7 + i * 1.3), Math.sin(a) * r); c.material.color.setHSL((t * .1 + i / 10) % 1, 1, .65); c.scale.setScalar(BR * (.45 + .3 * Math.sin(t * 5 + i))); } }); }
@@ -7712,7 +7883,7 @@ addEventListener('resize', () => {
     g.addColorStop(0, 'rgba(' + rgb + ',.95)'); g.addColorStop(.35, 'rgba(' + rgb + ',.45)'); g.addColorStop(1, 'rgba(' + rgb + ',0)'); x.fillStyle = g; x.fillRect(0, 0, 128, 128); return new THREE.CanvasTexture(c); };
   function applyBall(id) { applyBall.cur = id; ballMesh.visible = id !== 'mball'; ballMesh.material = BTEX(id) ? ((applyBall.c = applyBall.c || {})[id] || (applyBall.c[id] = ballMat(id, 2))) : DEF_BALL_MAT;
     if (halo) { ball.remove(halo); halo = null; } goldM = FX[id] ? ballMesh.material : null; if (mg) { ball.remove(mg); mg = null; } if (id === 'mball') { mg = buildOrb(); ball.add(mg); }
-    if (goldM && ['gold', 'bfire', 'bgal', 'bplasma', 'btoxic', 'brain', 'bvoid', 'mball'].includes(id)) { halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: haloTex(FX[id][1]), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); halo.scale.setScalar(BR * 5); ball.add(halo); } }
+    if (goldM && ['gold', 'bfire', 'bgal', 'bplasma', 'btoxic', 'brain', 'bvoid', 'mball', 'mnova'].includes(id)) { halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: haloTex(FX[id][1]), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); halo.scale.setScalar(BR * 5); ball.add(halo); } }
   setInterval(() => { const t = performance.now() / 300; if (goldM) { goldM.emissiveIntensity = .5 + .3 * Math.sin(t); { const T = goldM.map, A = TA[applyBall.cur]; if (T && A) { T.offset.x = (T.offset.x + A[0]) % 1; T.offset.y = A[1] ? Math.sin(t / 3) * A[1] : 0; if (A[2]) T.offset.x += (Math.random() - .5) * A[2]; } } if (applyBall.cur === 'brain' || applyBall.cur === 'mball') { goldM.emissive.setHSL((t / 14) % 1, 1, .5); if (halo) halo.material.color.setHSL((t / 14) % 1, 1, .6); } } if (halo) halo.material.opacity = .65 + .3 * Math.sin(t); }, 50);
   function applyMus(id) { if (musO) { head.remove(musO); musO = null; } if (id) { musO = buildFace(id); head.add(musO); } }
   function applyHat(id) {
@@ -7747,7 +7918,7 @@ addEventListener('resize', () => {
   function applyCleat(id) { curCleat = id; if (!realKit) realKit = cleatKit(footL, footR); realKit.set(id); }
   const NM = (L, id) => { const x = L.find(i => i.id === id); return x ? x.n : L[0].n; };
   const eqv = () => { if (!tgt) return equipped(); const st = tmGet()[tgt.i] || {}, u = unlocked(); return { ball: 'classic', hat: u && st.hat ? 'nimbus' : null, cleat: u && st.cleat ? 'nimbus' : null, mus: pOK.mus() && st.mus ? 'mus' : null }; };
-  const equipped = () => { const w = getW(), u = unlocked(), bl = w.ball || 'classic', bad = (bl === 'nimbus' && !u) || (bl === 'perd' && !pOK.perd()) || (bl === 'gold' && !pOK.gold()) || (MIS[bl] && !pOK[bl]()) || !['classic', 'nimbus', 'perd', 'gold', 'bocean', 'bneon', 'bfire', 'bgal', 'bsun', 'bcryst', 'btoxic', 'bplasma', 'brain', 'bvoid', 'mball'].includes(bl);
+  const equipped = () => { const w = getW(), u = unlocked(), bl = w.ball || 'classic', bad = (bl === 'nimbus' && !u) || (bl === 'perd' && !pOK.perd()) || (bl === 'gold' && !pOK.gold()) || (MIS[bl] && !pOK[bl]()) || !['classic', 'nimbus', 'perd', 'gold', 'bocean', 'bneon', 'bfire', 'bgal', 'bsun', 'bcryst', 'btoxic', 'bplasma', 'brain', 'bvoid', 'mball', 'mnova'].includes(bl);
     return { cel: (!w.cel || (w.cel === 'login' && !u) || (w.cel === 'lider' && !pOK.lider())) ? 'pad' : w.cel, ball: bad ? 'classic' : bl, hat: ['chef', 'pirate'].includes(w.hat) ? null : NH.includes(w.hat) ? (pOK[w.hat]() ? w.hat : null) : u ? w.hat || null : null, cleat: NCL.includes(w.cleat) ? (pOK[w.cleat]() ? w.cleat : null) : u ? w.cleat || null : null, mus: !w.mus ? null : (w.mus === 'mus' || w.mus === true) ? (pOK.mus() ? 'mus' : null) : (pOK[w.mus] && pOK[w.mus]() ? w.mus : null) }; };
   function applyAll() {
     if (unlocked()) { const w = getW(); if (w.cleat === undefined) { w.cleat = 'nimbus'; setW(w); } }   // quem já tinha o presente ganha a chuteira equipada
@@ -7894,7 +8065,7 @@ addEventListener('resize', () => {
       T = 10; cam.position.set(0, 2.6, 16.5); cam.lookAt(0, 1.8, 0);
       const xs = [-3.375, -2.025, -.675, .675, 2.025, 3.375], HIT = 2, L = xs.map((x, i) => mk(i % 2 ? 0xffd54a : 0xff4f9a, x, 0, false)), skin0 = L[0].head.children[0].material.color.getHex();
       const PM = [0xff4f9a, 0xffd54a, 0x19d3f3], PG = new THREE.SphereGeometry(1, 8, 6);
-      L.forEach((c, i) => [c.handL, c.handR].forEach((h, j) => { const p = new THREE.Mesh(PG, LM({ color: PM[(i + j) % 3], flatShading: true })); p.scale.setScalar(.75); p.position.y = .25; h.add(p); }));
+      L.forEach((c, i) => [c.handL, c.handR].forEach((h, j) => { const p = new THREE.Mesh(PG, LM({ color: PM[(i + j) % 3] })); p.scale.setScalar(.75); p.position.y = .25; h.add(p); }));
       const sl = mk(0xffffff, -9, 0, true); sl.g.rotation.y = Math.PI / 2; sl.g.visible = false; const an = sprite('💢', false);
       const AP = [[[-1.7, 3.2, .2], [1.7, 3.2, .2]], [[-1.7, 3.2, .2], [1.5, 1.2, .2]], [[-2, 2.2, 0], [2, 2.2, 0]], [[-1.5, 1.2, .2], [1.7, 3.2, .2]]], per = .6;
       upd = t => {
@@ -8006,7 +8177,7 @@ addEventListener('resize', () => {
       grid.appendChild(d); drawables.push(card3d(it.slot === 'mus' ? 'mus' : tabK, it.id, cv));
     });
     drawables.push(tabK === 'cel' ? celStage($('wrBig'), prevCel || e.cel) : stage3d($('wrBig')));
-    { const st = document.querySelector('.wrStage'); if (st) st.classList.toggle('mys', [pvE().ball, pvE().hat, pvE().cleat, pvE().mus].some(x => ['mball', 'mhat', 'mcleat', 'mmask'].includes(x))); }
+    { const st = document.querySelector('.wrStage'); if (st) st.classList.toggle('mys', [pvE().ball, pvE().hat, pvE().cleat, pvE().mus].some(x => ['mball', 'mhat', 'mcleat', 'mmask', 'mdrag', 'mgalax', 'mice', 'mflame', 'mnova'].includes(x))); }
     { const e = pvE(); $('wrCap').textContent = (PV ? '👁 Prévia • ' : '') + (tgt ? tgt.name : (NAMES[e.ball] || NM(ITEMS.ball, e.ball))) + ' • ' + (e.hat || e.mus ? NM(ITEMS.hat, e.hat) : 'Sem acessório') + (e.mus ? ' + ' + NM(ITEMS.hat, e.mus) : '') + ' • ' + NM(ITEMS.cleat, e.cleat) + ' • ' + CELN[e.cel]; }
     document.querySelectorAll('.wrTabs button').forEach(b => b.classList.toggle('on', b.dataset.t === tabK));
   }
