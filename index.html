@@ -2474,7 +2474,8 @@ function resetPlayerPose() {
 function onGoal(home) { sfxCrowd(true);
   if (home) scoreHome++; else scoreAway++;
   if (!home && match.on && window.__prog) __prog.conc();
-  if (home && match.on && window.__prog) __prog.goal();   // inimigo fez gol -> missão da bola Perdedor
+  if (home && match.on && window.__prog) __prog.goal();
+  if (!home && match.on && lastToucher === U && window.__prog) __prog.own();   // inimigo fez gol -> missão da bola Perdedor
   match.conc = home ? 1 : 0; match.offL = null; match.rs = null; chgOn = false;
   if (match.on) for (const b of bots) if (b.t === match.conc) b.ang = (b.ang || 0) + 0.12;   // tomou gol: o time fica nervoso
   goalLock = 3.5; celebT = (match.on && !home) ? 0 : 3.5;
@@ -4296,7 +4297,7 @@ function knockBot(b, d) {
   if (ballOwner === b) { ballOwner = null; bv.set(d.x * 12, 0, d.z * 12); bvy = 3; }
 }
 // carrinho do JOGADOR contra um bot: desarme limpo se chegou na bola, falta se pegou o adversário sem a bola
-function userSlideHit(b, d) {
+function userSlideHit(b, d) { if (window.__prog) __prog.slide();
   curse(b); b.ang = (b.ang || 0) + 0.3; U.heat = (U.heat || 0) + 0.6;
   const bp = ball.position, holds = b === ballOwner, near = hyp2(bp.x - player.position.x, bp.z - player.position.z) < 3.6;
   if (near) { knockBot(b, d); return; }                                        // chegou na bola → lance normal
@@ -5292,12 +5293,12 @@ function animate() {
 
       // Colisão com o NPC
       if (player.position.distanceTo(dummy.position) < 2.2 && !dummyRagdoll) {
-        dummyRagdoll = true;
+        dummyRagdoll = true; if (window.__prog) __prog.slide();
         dummyRagdollTimer = 2.5;
         dummyVel.copy(slideDir).multiplyScalar(22).add(new THREE.Vector3(0, 8, 0));
       }
 
-      for (const K of keepers) if (K.state !== 'down' && player.position.distanceTo(K.g.position) < 2.4) { knockKeeper(K, slideDir.x, slideDir.z); say(K.g, rnd(INSULTS), 1.9); }
+      for (const K of keepers) if (K.state !== 'down' && player.position.distanceTo(K.g.position) < 2.4) { if (window.__prog) __prog.slide(); knockKeeper(K, slideDir.x, slideDir.z); say(K.g, rnd(INSULTS), 1.9); }
       if (match.on && match.freeze <= 0) for (const b of bots) if (b.t === 1 && !b.out && b.down <= 0 && b.sl < 0 && player.position.distanceTo(b.p) < 2.4) userSlideHit(b, slideDir);
       if (match.on && ref.g.visible && ref.down <= 0 && player.position.distanceTo(ref.p) < 2.4) refHit(slideDir);
 
@@ -7190,18 +7191,19 @@ addEventListener('resize', () => {
   const setW = w => LS.setItem('futio_wr', JSON.stringify(w));
   /* ---------- missões, avisos e texturas das bolas novas ---------- */
   const PK = 'futio_prog', getP = () => { try { return JSON.parse(LS.getItem(PK)) || {}; } catch (e) { return {}; } }, setP = p => LS.setItem(PK, JSON.stringify(p));
-  const pOK = { mus: () => !!getP().mus, perd: () => !!getP().perd, troph: () => !!getP().troph, gold: () => !!getP().gold };
-  const HINT = { mus: () => '🔒 Chute a bola 5 vezes (' + Math.min(5, getP().kicks || 0) + '/5)', perd: () => '🔒 Deixe o inimigo fazer 1 gol', troph: () => '🔒 Faça 5 gols no adversário (' + Math.min(5, getP().goals || 0) + '/5)', gold: () => '🔒 Faça 10 gols no adversário (' + Math.min(10, getP().goals || 0) + '/10)' };
+  const pOK = { trai: () => !!getP().trai, mus: () => !!getP().eye, perd: () => !!getP().perd, troph: () => !!getP().troph, gold: () => !!getP().gold };
+  const HINT = { trai: () => '🔒 Faça um gol contra', mus: () => '🔒 Faça um carrinho em alguém', perd: () => '🔒 Deixe o inimigo fazer 1 gol', troph: () => '🔒 Faça 5 gols no adversário (' + Math.min(5, getP().goals || 0) + '/5)', gold: () => '🔒 Faça 10 gols no adversário (' + Math.min(10, getP().goals || 0) + '/10)' };
   let kT = 0;
   const kToast = msg => { let t = document.getElementById('kToast');
     if (!t) { t = document.createElement('div'); t.id = 'kToast'; t.style.cssText = 'position:fixed;top:78px;left:50%;transform:translateX(-50%);z-index:200010;background:rgba(8,12,24,.94);color:#fff;border:2px solid #ffd54a;border-radius:14px;padding:12px 22px;font:700 15px system-ui;text-align:center;pointer-events:none;opacity:0;transition:opacity .4s;box-shadow:0 8px 30px #000a'; document.body.appendChild(t); }
     t.innerHTML = msg; t.style.opacity = 1; clearTimeout(kT); kT = setTimeout(() => t.style.opacity = 0, 5500); };
   const SUB = '<small style="display:block;font-weight:600;opacity:.75;font-size:12px">';
   window.__prog = {
-    kick() { const p = getP(); if (p.mus) return; p.kicks = (p.kicks || 0) + 1; if (p.kicks >= 5) p.mus = 1; setP(p);
-      if (p.mus) kToast('🥸 Desbloqueou o <b>Bigodinho</b>!' + SUB + 'Veja em Acessórios, no Vestiário.</small>'); },
+    kick() {},
+    slide() { const p = getP(); if (p.eye) return; p.eye = 1; setP(p); kToast('🟣 Desbloqueou o <b>Olho Roxo</b>!' + SUB + 'Você fez um carrinho em alguém. Veja em Acessórios, no Vestiário.</small>'); },
+    own() { const p = getP(); if (p.trai) return; p.trai = 1; setP(p); kToast('🗡️ Desbloqueou o chapéu <b>Traidor</b>!' + SUB + 'Gol contra... Veja em Acessórios, no Vestiário.</small>'); },
     goal() { const p = getP(); p.goals = (p.goals || 0) + 1; const t = !p.troph && p.goals >= 5, g = !p.gold && p.goals >= 10; if (t) p.troph = 1; if (g) p.gold = 1; setP(p);
-      if (g) kToast('✨ Desbloqueou a <b>Bola de Ouro</b>!' + SUB + '10 gols no adversário. Veja em Bolas, no Vestiário.</small>');
+      if (g) kToast('✨ Desbloqueou a <b>Bola de Ouro</b>!' + SUB + '10 gols no adversário. Bola e Chuteira de Ouro. Veja no Vestiário.</small>');
       else if (t) kToast('🏆 Desbloqueou o <b>Chapéu de Troféu</b>!' + SUB + '5 gols no adversário. Veja em Acessórios, no Vestiário.</small>'); },
     conc() { const p = getP(); if (p.perd) return; p.perd = 1; setP(p); kToast('😢 Desbloqueou a bola <b>Perdedor</b>!' + SUB + 'O inimigo fez um gol. Veja no Vestiário.</small>'); } };
   function ballTex(draw) {   // mesma projeção da Bola de Login: imagem 256x256 na frente e atrás da bola
@@ -7223,9 +7225,9 @@ addEventListener('resize', () => {
       p.lineJoin = 'round'; p.lineWidth = 12; p.strokeStyle = '#232323'; p.strokeText('L', S / 2, S / 2 + 8); p.fillStyle = '#ffd54a'; p.fillText('L', S / 2, S / 2 + 8); }))
     : k === 'gold' ? (_mt = _mt || ballTex((p, S) => { const g = p.createRadialGradient(S * .35, S * .3, 10, S / 2, S / 2, S * .75); g.addColorStop(0, '#fff3a0'); g.addColorStop(.45, '#ffc928'); g.addColorStop(1, '#b8780a'); p.fillStyle = g; p.fillRect(0, 0, S, S);   // Bola de Ouro
       p.lineJoin = 'round'; p.lineWidth = 8; p.strokeStyle = '#7a4a05'; p.fillStyle = '#e8a812'; p.beginPath(); for (let i = 0; i < 5; i++) { const a = -Math.PI / 2 + i * Math.PI * 2 / 5; p[i ? 'lineTo' : 'moveTo'](S / 2 + 50 * Math.cos(a), S / 2 + 50 * Math.sin(a)); } p.closePath(); p.fill(); p.stroke(); })) : null;
-  const ITEMS = { ball: [{ id: 'classic', n: 'Bola Clássica' }, { id: 'perd', n: 'Perdedor', rar: 'c', req: 'perd' }, { id: 'gold', n: 'Bola de Ouro', rar: 'r', req: 'gold' }, { id: 'nimbus', n: 'Bola de Login', lock: 1 }],
-                  hat: [{ id: null, n: 'Sem acessório' }, { id: 'nimbus', slot: 'hat', n: 'Chapéu Cowboy', lock: 1, rar: 'u' }, { id: 'troph', slot: 'hat', n: 'Chapéu de Troféu', rar: 'u', req: 'troph', solo: 1 }, { id: 'mus', slot: 'mus', n: 'Bigodinho', rar: 'c', req: 'mus' }],
-                  cleat: [{ id: null, n: 'Chuteira Clássica' }, { id: 'nimbus', n: 'Chuteira Nuvem', lock: 1 }] };
+  const ITEMS = { ball: [{ id: 'classic', n: 'Bola Clássica' }, { id: 'perd', n: 'Perdedor', rar: 'c', req: 'perd' }, { id: 'gold', n: 'Bola de Ouro', rar: 'u', req: 'gold' }, { id: 'nimbus', n: 'Bola de Login', lock: 1, rar: 'r' }],
+                  hat: [{ id: null, n: 'Sem acessório' }, { id: 'nimbus', slot: 'hat', n: 'Chapéu Cowboy', lock: 1, rar: 'u' }, { id: 'troph', slot: 'hat', n: 'Chapéu de Troféu', rar: 'u', req: 'troph', solo: 1 }, { id: 'trai', slot: 'hat', n: 'Traidor', rar: 'r', req: 'trai', solo: 1 }, { id: 'mus', slot: 'mus', n: 'Olho Roxo', rar: 'c', req: 'mus' }],
+                  cleat: [{ id: null, n: 'Chuteira Clássica' }, { id: 'nimbus', n: 'Chuteira Nuvem', lock: 1 }, { id: 'gold', n: 'Chuteira de Ouro', rar: 'u', req: 'gold', solo: 1 }] };
   function emblem(c, cx, cy, r) {   // emblema próprio: estrela de 4 pontas + faísca
     const k = r / 92, star = (x, y, ro) => { c.beginPath(); c.moveTo(x, y - ro); c.quadraticCurveTo(x, y, x + ro, y); c.quadraticCurveTo(x, y, x, y + ro); c.quadraticCurveTo(x, y, x - ro, y); c.quadraticCurveTo(x, y, x, y - ro); c.fill(); };
     const gr = c.createLinearGradient(cx - r, cy - r, cx + r, cy + r); gr.addColorStop(0, '#6D4AFF'); gr.addColorStop(1, '#19D3F3');
@@ -7264,8 +7266,17 @@ addEventListener('resize', () => {
     g.add(hp(TTOR, Au, .55, .55, .55, -.66, 1.66, 0, 0, idC, false)); g.add(hp(TTOR, Au, .55, .55, .55, .66, 1.66, 0, 0, idC, false)); // alças
     return g;
   }
+  function buildTraitor() {   // chapéu preto de espião com faixa vermelha e pena vermelha
+    const g = new THREE.Group(), idB = nextPid(), idC = nextPid();
+    g.add(hp(SPH3, 0x1c1c22, 1.55, .09, 1.55, 0, .75, 0, .07, idB, true));      // aba
+    g.add(hp(CROWN, 0x26262e, .85, 1, .85, 0, 1.1, 0, .06, idC, true));          // copa
+    g.add(hp(CYL, 0xc62828, .75, .13, .75, 0, .86, 0, 0, idC, false));           // faixa
+    g.add(spike(0xc62828, .09, .8, .52, .98, .0, .7, 1, 0, .04));               // pena
+    return g;
+  }
   function buildHat(id) {
     if (id === 'troph') return buildTrophy();
+    if (id === 'trai') return buildTraitor();
     const g = new THREE.Group(), idB = nextPid(), idC = nextPid();
     g.add(hp(SPH3, 0xc9944f, 1.8, .12, 1.7, 0, .6, 0, .07, idB, true));       // aba
     g.add(hp(CROWN, 0xb8803f, 1, 1, 1, 0, 1.0, 0, .06, idC, true));           // copa
@@ -7274,18 +7285,16 @@ addEventListener('resize', () => {
     g.add(hp(BOX, 0xffd54a, .17, .17, .05, 0, .72, .85, 0, idC, false));      // fivela
     return g;
   }
-  let _mg = null;
-  function buildMus() {   // bigode de guidão: uma peça só, curvada sobre o rosto, pontas viradas para cima
-    if (!_mg) { const k = .5, sh = new THREE.Shape(); sh.moveTo(0, .14 * k);
-      sh.bezierCurveTo(.3 * k, .42 * k, .72 * k, .2 * k, k, .62 * k); sh.bezierCurveTo(1.04 * k, -.12 * k, .55 * k, -.34 * k, .13 * k, -.2 * k);
-      sh.quadraticCurveTo(0, -.06 * k, -.13 * k, -.2 * k); sh.bezierCurveTo(-.55 * k, -.34 * k, -1.04 * k, -.12 * k, -k, .62 * k); sh.bezierCurveTo(-.72 * k, .2 * k, -.3 * k, .42 * k, 0, .14 * k);
-      _mg = new THREE.ExtrudeGeometry(sh, { depth: .07, bevelEnabled: true, bevelThickness: .035, bevelSize: .03, bevelSegments: 2, curveSegments: 14 }); _mg.translate(0, 0, -.035);
-      const P = _mg.attributes.position; for (let i = 0; i < P.count; i++) P.setZ(i, P.getZ(i) + Math.sqrt(Math.max(.05, 1 - P.getX(i) * P.getX(i) - P.getY(i) * P.getY(i))) - 1);
-      _mg.scale(1, .5, 1); _mg.computeVertexNormals(); }
-    const g = new THREE.Group(), id = nextPid(); const n = new THREE.Vector3(-.235, -.7, 0); n.z = Math.sqrt(1 - n.x * n.x - n.y * n.y); g.position.copy(n).multiplyScalar(.99);   // centro do rosto = meio dos olhos (x -0.235)
-    { const xa = new THREE.Vector3(0, 1, 0).cross(n).normalize(), ya = n.clone().cross(xa); g.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(xa, ya, n)); }   // sem rolar: fica simétrico e centralizado entre os olhos
-    const fill = new THREE.Mesh(_mg, stencilize(LM({ color: 0x2b1a0e }), id)), line = new THREE.Mesh(_mg, charHull(id));
-    fill.renderOrder = 1; line.scale.set(1.04, 1.22, 1.6); line.renderOrder = 2; g.add(fill, line); return g;
+  let _mg = null, _mt2 = null;
+  function buildMus() {   // olho roxo: anel roxo desfocado em volta do olho esquerdo (o olho fica visível no centro)
+    if (!_mg) { const T = .36; _mg = new THREE.SphereGeometry(1.006, 24, 10, 0, Math.PI * 2, 0, T); _mg.rotateX(Math.PI / 2);
+      const P = _mg.attributes.position, U = _mg.attributes.uv, h = Math.sin(T); for (let i = 0; i < P.count; i++) U.setXY(i, P.getX(i) / (2 * h) + .5, P.getY(i) / (2 * h) + .5);
+      const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'), g = x.createRadialGradient(64, 64, 0, 64, 64, 64);
+      g.addColorStop(0, 'rgba(90,30,140,0)'); g.addColorStop(.3, 'rgba(90,30,140,0)'); g.addColorStop(.42, 'rgba(95,35,150,.95)'); g.addColorStop(.7, 'rgba(110,45,165,.8)'); g.addColorStop(1, 'rgba(110,45,165,0)');
+      x.fillStyle = g; x.fillRect(0, 0, 128, 128); _mt2 = new THREE.CanvasTexture(c); }
+    const n = new THREE.Vector3(EYES[0][0], EYES[0][1], 0); n.z = Math.sqrt(1 - n.x * n.x - n.y * n.y);
+    const m = new THREE.Mesh(_mg, new THREE.MeshBasicMaterial({ map: _mt2, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 }));
+    m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), n); m.renderOrder = 3; return m;
   }
   let _bi = null;
   const ballIcon = () => { if (_bi) return _bi; const cv = document.createElement('canvas'); cv.width = cv.height = 128; const c = cv.getContext('2d');
@@ -7308,7 +7317,10 @@ addEventListener('resize', () => {
       [[-.13, .16], [.13, .16], [-.13, -.14], [.13, -.14]].forEach(([x, z]) => { const st = new THREE.Mesh(new THREE.CylinderGeometry(.04, .055, .11, 8), LM({ color: 0x4a4d5a })); st.position.set(x, -.27, z); g.add(st); });
       g.visible = false; return g; };
     const gL = mk(-1), gR = mk(1); fl.add(gL); fr.add(gR);
-    return { on: false, set(v) { this.on = v; gL.visible = gR.visible = v; fl.children[0].material.color.setHex(v ? 0x17181f : ORIG.L); fr.children[0].material.color.setHex(v ? 0x17181f : ORIG.R); } };
+    return { on: false, set(v) { this.on = !!v; gL.visible = gR.visible = !!v; const go = v === 'gold';
+      [gL, gR].forEach(G => G.traverse(m => { if (!m.isMesh || m.renderOrder === 2 || m.material.map || !m.material.color) return; if (m.userData.oc === undefined) m.userData.oc = m.material.color.getHex();
+        const o = m.userData.oc; m.material.color.setHex(go ? (o === 0xf2f2f2 || o === 0xffffff ? 0xfff2a8 : 0xffc928) : o); }));
+      fl.children[0].material.color.setHex(v ? (go ? 0xb8860b : 0x17181f) : ORIG.L); fr.children[0].material.color.setHex(v ? (go ? 0xb8860b : 0x17181f) : ORIG.R); } };
   }
 
   /* ---------- aplicar no jogo ---------- */
@@ -7352,13 +7364,13 @@ addEventListener('resize', () => {
   function applyMus(id) { if (musO) { head.remove(musO); musO = null; } if (id) { musO = buildMus(); head.add(musO); } }
   function applyHat(id) {
     if (hat) { head.remove(hat); hat = null; }
-    if (id !== 'nimbus' && id !== 'troph') return;
+    if (!id) return;
     hat = buildHat(id); hat.position.set(0, HAT_Y, 0); hat.rotation.x = HAT_RX; head.add(hat);
   }
-  function applyCleat(id) { if (!realKit) realKit = cleatKit(footL, footR); realKit.set(id === 'nimbus'); }
+  function applyCleat(id) { if (!realKit) realKit = cleatKit(footL, footR); realKit.set(id); }
   const eqv = () => { if (!tgt) return equipped(); const st = tmGet()[tgt.i] || {}, u = unlocked(); return { ball: 'classic', hat: u && st.hat ? 'nimbus' : null, cleat: u && st.cleat ? 'nimbus' : null, mus: pOK.mus() && st.mus ? 'mus' : null }; };
   const equipped = () => { const w = getW(), u = unlocked(), bl = w.ball || 'classic', bad = (bl === 'nimbus' && !u) || (bl === 'perd' && !pOK.perd()) || (bl === 'gold' && !pOK.gold()) || !['classic', 'nimbus', 'perd', 'gold'].includes(bl);
-    return { ball: bad ? 'classic' : bl, hat: w.hat === 'troph' ? (pOK.troph() ? 'troph' : null) : u ? w.hat || null : null, cleat: u ? w.cleat || null : null, mus: pOK.mus() ? w.mus || null : null }; };
+    return { ball: bad ? 'classic' : bl, hat: (w.hat === 'troph' || w.hat === 'trai') ? (pOK[w.hat]() ? w.hat : null) : u ? w.hat || null : null, cleat: w.cleat === 'gold' ? (pOK.gold() ? 'gold' : null) : u ? w.cleat || null : null, mus: pOK.mus() ? w.mus || null : null }; };
   function applyAll() {
     if (unlocked()) { const w = getW(); if (w.cleat === undefined) { w.cleat = 'nimbus'; setW(w); } }   // quem já tinha o presente ganha a chuteira equipada
     const e = equipped(); try { applyBall(e.ball); applyHat(e.hat); applyCleat(e.cleat); applyMus(e.mus); } catch (err) { console.error(err); }
@@ -7396,7 +7408,7 @@ addEventListener('resize', () => {
     for (const k in REAL) { const a = REAL[k].children[0].material, b = ch[k].children[0].material; b.color.copy(a.color); if (a.map) { b.map = a.map; b.needsUpdate = true; } }
     if (tgt && tgt.skin != null) [ch.head, ch.handL, ch.handR].forEach(p => p.children[0].material.color.set(tgt.skin));
     ch.footL.children[0].material.color.setHex(ORIG.L); ch.footR.children[0].material.color.setHex(ORIG.R);
-    ch.kit = cleatKit(ch.footL, ch.footR); ch.kit.set(cleatId === 'nimbus');
+    ch.kit = cleatKit(ch.footL, ch.footR); ch.kit.set(cleatId);
     if (hatId) { const h = buildHat(hatId); h.position.set(0, HAT_Y, 0); h.rotation.x = HAT_RX; ch.head.add(h); }
     if (musId) ch.head.add(buildMus());
     return ch;
@@ -7519,7 +7531,7 @@ addEventListener('resize', () => {
       grid.appendChild(d); drawables.push(card3d(it.slot === 'mus' ? 'mus' : tabK, it.id, cv));
     });
     drawables.push(stage3d($('wrBig')));
-    $('wrCap').textContent = (tgt ? tgt.name : NAMES[e.ball]) + ' • ' + (e.hat === 'troph' ? 'Chapéu de Troféu' : e.hat ? 'Chapéu Cowboy' : 'Sem acessório') + (e.mus ? ' + Bigodinho' : '') + ' • ' + (e.cleat ? 'Chuteira Nuvem' : 'Chuteira clássica');
+    $('wrCap').textContent = (tgt ? tgt.name : NAMES[e.ball]) + ' • ' + (e.hat === 'troph' ? 'Chapéu de Troféu' : e.hat === 'trai' ? 'Traidor' : e.hat ? 'Chapéu Cowboy' : 'Sem acessório') + (e.mus ? ' + Olho Roxo' : '') + ' • ' + (e.cleat === 'gold' ? 'Chuteira de Ouro' : e.cleat ? 'Chuteira Nuvem' : 'Chuteira clássica');
     document.querySelectorAll('.wrTabs button').forEach(b => b.classList.toggle('on', b.dataset.t === tabK));
   }
   function loop(ms) {
