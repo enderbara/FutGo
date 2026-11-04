@@ -7379,15 +7379,20 @@ addEventListener('resize', () => {
     p.quadraticCurveTo(cx, cy + .26 * k, cx - .12 * k, cy + .2 * k); p.bezierCurveTo(cx - .55 * k, cy + .32 * k, cx - k, cy + .15 * k, cx - k, cy - .55 * k);
     p.bezierCurveTo(cx - .7 * k, cy - .2 * k, cx - .3 * k, cy - .4 * k, cx, cy - .14 * k); p.closePath(); p.fill(); };
   let _pt = null, _mt = null;
+  const hexg = (p, S, ln, fl) => { const R = 30, h = R * Math.sqrt(3); p.lineWidth = 3; p.strokeStyle = ln; for (let r = -1; r < S / h + 1; r++) for (let c = -1; c < S / (R * 1.5) + 1; c++) { const x = c * R * 1.5, y = r * h + (c % 2 ? h / 2 : 0); p.beginPath(); for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3; p[k ? 'lineTo' : 'moveTo'](x + R * Math.cos(a), y + R * Math.sin(a)); } p.closePath(); if (fl && (r + c) % 3 === 0) { p.fillStyle = fl; p.fill(); } p.stroke(); } };
+  const shine = (p, S) => { const g = p.createRadialGradient(S * .35, S * .3, 5, S * .35, S * .3, S * .5); g.addColorStop(0, 'rgba(255,255,255,.55)'); g.addColorStop(1, 'rgba(255,255,255,0)'); p.fillStyle = g; p.fillRect(0, 0, S, S); };
   const BXD = {
-    bocean: (p, S) => { const g = p.createLinearGradient(0, 0, 0, S); g.addColorStop(0, '#4fc3f7'); g.addColorStop(1, '#01579b'); p.fillStyle = g; p.fillRect(0, 0, S, S); p.strokeStyle = '#fff'; p.lineWidth = 9; p.lineCap = 'round';
-      for (let i = 0; i < 4; i++) { p.beginPath(); for (let x = 20; x <= S - 20; x += 8) p[x === 20 ? 'moveTo' : 'lineTo'](x, 60 + i * 42 + Math.sin(x / 22 + i) * 11); p.stroke(); } },
-    bneon: (p, S) => { p.fillStyle = '#0b0f14'; p.fillRect(0, 0, S, S); p.strokeStyle = '#39ff14'; p.lineWidth = 8; for (let i = 1; i < 5; i++) { p.beginPath(); p.arc(S / 2, S / 2, i * 28, 0, 7); p.stroke(); } p.beginPath(); p.moveTo(20, S / 2); p.lineTo(S - 20, S / 2); p.moveTo(S / 2, 20); p.lineTo(S / 2, S - 20); p.stroke(); },
-    bfire: (p, S) => { const g = p.createRadialGradient(S / 2, S * .75, 10, S / 2, S / 2, S * .8); g.addColorStop(0, '#fff176'); g.addColorStop(.4, '#ff9100'); g.addColorStop(1, '#b71c1c'); p.fillStyle = g; p.fillRect(0, 0, S, S);
-      p.fillStyle = '#ffe082'; p.strokeStyle = '#7f0000'; p.lineWidth = 7; p.beginPath(); p.moveTo(S / 2, 40); p.bezierCurveTo(S / 2 + 70, 110, S / 2 + 60, 200, S / 2, 215); p.bezierCurveTo(S / 2 - 60, 200, S / 2 - 70, 110, S / 2, 40); p.fill(); p.stroke(); },
-    bgal: (p, S) => { const g = p.createLinearGradient(0, 0, S, S); g.addColorStop(0, '#1a0033'); g.addColorStop(.5, '#4a148c'); g.addColorStop(1, '#0d47a1'); p.fillStyle = g; p.fillRect(0, 0, S, S); let r = 7;
-      for (let i = 0; i < 60; i++) { r = (r * 9301 + 49297) % 233280; const x = r / 233280 * S; r = (r * 9301 + 49297) % 233280; const y = r / 233280 * S; p.fillStyle = i % 5 ? '#fff' : '#ffd54a'; p.beginPath(); p.arc(x, y, i % 7 ? 2 : 4, 0, 7); p.fill(); }
-      p.strokeStyle = '#ff80ff'; p.lineWidth = 6; p.beginPath(); p.ellipse(S / 2, S / 2, 80, 26, -.5, 0, 7); p.stroke(); p.fillStyle = '#00e5ff'; p.beginPath(); p.arc(S / 2, S / 2, 26, 0, 7); p.fill(); } };
+    bocean: (p, S) => { const g = p.createLinearGradient(0, 0, 0, S); g.addColorStop(0, '#81d4fa'); g.addColorStop(.5, '#0288d1'); g.addColorStop(1, '#01357a'); p.fillStyle = g; p.fillRect(0, 0, S, S); hexg(p, S, 'rgba(255,255,255,.28)', 'rgba(255,255,255,.12)');
+      p.lineCap = 'round'; for (let i = 0; i < 5; i++) { p.strokeStyle = i % 2 ? 'rgba(255,255,255,.9)' : '#b3e5fc'; p.lineWidth = 7 - i; p.beginPath(); for (let x = 10; x <= S - 10; x += 6) p[x === 10 ? 'moveTo' : 'lineTo'](x, 55 + i * 36 + Math.sin(x / 20 + i * 1.3) * 12); p.stroke(); }
+      p.fillStyle = 'rgba(255,255,255,.7)'; [[70, 80, 7], [180, 150, 5], [120, 200, 6], [200, 60, 4]].forEach(([x, y, r]) => { p.beginPath(); p.arc(x, y, r, 0, 7); p.fill(); }); shine(p, S); },
+    bneon: (p, S) => { p.fillStyle = '#05080d'; p.fillRect(0, 0, S, S); p.shadowColor = '#39ff14'; p.shadowBlur = 14; hexg(p, S, '#39ff14', 'rgba(57,255,20,.16)'); p.strokeStyle = '#00ffd5'; p.lineWidth = 7;
+      p.beginPath(); p.arc(S / 2, S / 2, 70, 0, 7); p.stroke(); p.beginPath(); p.arc(S / 2, S / 2, 36, 0, 7); p.stroke(); p.beginPath(); p.moveTo(S / 2 - 70, S / 2); p.lineTo(20, S / 2 + 40); p.moveTo(S / 2 + 70, S / 2); p.lineTo(S - 20, S / 2 - 40); p.stroke(); p.fillStyle = '#fff'; p.beginPath(); p.arc(S / 2, S / 2, 9, 0, 7); p.fill(); p.shadowBlur = 0; },
+    bfire: (p, S) => { const g = p.createRadialGradient(S / 2, S * .85, 10, S / 2, S / 2, S * .85); g.addColorStop(0, '#fff59d'); g.addColorStop(.35, '#ff9100'); g.addColorStop(.75, '#c62828'); g.addColorStop(1, '#4a0000'); p.fillStyle = g; p.fillRect(0, 0, S, S); hexg(p, S, 'rgba(60,0,0,.5)', 'rgba(255,230,120,.18)');
+      for (let i = 0; i < 7; i++) { const x = 30 + i * 32, h = 70 + (i % 3) * 38; p.fillStyle = i % 2 ? '#ffd54f' : '#ff6d00'; p.beginPath(); p.moveTo(x - 16, S); p.quadraticCurveTo(x - 10, S - h * .6, x + (i % 2 ? 8 : -8), S - h); p.quadraticCurveTo(x + 14, S - h * .5, x + 16, S); p.fill(); }
+      p.fillStyle = '#fff8e1'; p.beginPath(); p.arc(S / 2, S / 2 - 10, 20, 0, 7); p.fill(); shine(p, S); },
+    bgal: (p, S) => { p.fillStyle = '#07021a'; p.fillRect(0, 0, S, S); [[60, 70, '#7c4dff'], [190, 90, '#ff4081'], [120, 200, '#00b0ff'], [210, 210, '#aa00ff']].forEach(([x, y, c]) => { const g = p.createRadialGradient(x, y, 0, x, y, 110); g.addColorStop(0, c); g.addColorStop(1, 'rgba(0,0,0,0)'); p.globalAlpha = .75; p.fillStyle = g; p.fillRect(0, 0, S, S); }); p.globalAlpha = 1;
+      hexg(p, S, 'rgba(200,180,255,.22)', null); let r = 7; for (let i = 0; i < 80; i++) { r = (r * 9301 + 49297) % 233280; const x = r / 233280 * S; r = (r * 9301 + 49297) % 233280; const y = r / 233280 * S; p.fillStyle = i % 6 ? '#fff' : '#ffe082'; p.beginPath(); p.arc(x, y, i % 9 ? 1.6 : 3.4, 0, 7); p.fill(); }
+      p.shadowColor = '#ff80ff'; p.shadowBlur = 12; p.strokeStyle = '#ffb3ff'; p.lineWidth = 5; p.beginPath(); p.ellipse(S / 2, S / 2, 92, 30, -.5, 0, 7); p.stroke(); p.beginPath(); p.ellipse(S / 2, S / 2, 70, 22, .6, 0, 7); p.stroke(); p.fillStyle = '#e0f7fa'; p.beginPath(); p.arc(S / 2, S / 2, 20, 0, 7); p.fill(); p.shadowBlur = 0; shine(p, S); } };
   const BXC = {}, BX = k => BXD[k] ? (BXC[k] = BXC[k] || ballTex(BXD[k])) : null;
   const BTEX = k => k === 'nimbus' ? nimTex() : k === 'perd' ? (_pt = _pt || ballTex((p, S) => {   // Perdedor: bola vermelha com L amarelo no centro
       p.fillStyle = '#d32f2f'; p.fillRect(0, 0, S, S); p.font = '900 190px "Arial Black",Impact,sans-serif'; p.textAlign = 'center'; p.textBaseline = 'middle';
@@ -7452,17 +7457,33 @@ addEventListener('resize', () => {
     g.add(spike(0xc62828, .09, .8, .52, .98, .0, .7, 1, 0, .04));               // pena
     return g;
   }
+  const ARCH = new THREE.TorusGeometry(1, .09, 8, 24, Math.PI);
+  const glow = (rgb, sc, y) => { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: haloTex(rgb), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); sp.scale.setScalar(sc); sp.position.y = y; return sp; };
+  const ring = (g, n, R, y, f) => { for (let i = 0; i < n; i++) { const t = i * Math.PI * 2 / n; g.add(f(Math.cos(t) * R, y, Math.sin(t) * R, i)); } };
   const HB = {   // chapéus novos
-    cap() { const g = new THREE.Group(), a = nextPid(), b = nextPid(); g.add(hp(SPH3, 0xd32f2f, .92, .62, .92, 0, .8, 0, .06, a, true)); g.add(hp(SPH3, 0xb71c1c, .7, .07, .62, 0, .72, .85, .05, b, true)); g.add(hp(SPH3, 0xffffff, .12, .12, .12, 0, 1.4, 0, 0, a, false)); return g; },
-    beanie() { const g = new THREE.Group(), a = nextPid(); g.add(hp(SPH3, 0x1e88e5, .95, .8, .95, 0, .9, 0, .06, a, true)); g.add(hp(CYL, 0xffffff, .93, .16, .93, 0, .7, 0, 0, a, false)); g.add(hp(SPH3, 0xffffff, .22, .22, .22, 0, 1.68, 0, .04, a, true)); return g; },
-    party() { const g = new THREE.Group(), a = nextPid(); g.add(spike(0xff4f9a, .55, 1.4, 0, .6, 0, 0, 1, .1, .05)); g.add(hp(CYL, 0xffd54a, .52, .06, .52, 0, .82, 0, 0, a, false)); g.add(hp(SPH3, 0x19d3f3, .16, .16, .16, 0, 2.05, 0, .03, a, true)); return g; },
-    top() { const g = new THREE.Group(), a = nextPid(), b = nextPid(); g.add(hp(CYL, 0x15151a, 1.5, .08, 1.5, 0, .64, 0, .06, a, true)); g.add(hp(CYL, 0x1c1c22, .95, 1.3, .95, 0, 1.3, 0, .06, b, true)); g.add(hp(CYL, 0xffd54a, .97, .2, .97, 0, .85, 0, 0, b, false)); return g; },
-    viking() { const g = new THREE.Group(), a = nextPid(); g.add(hp(SPH3, 0x9aa0aa, 1.0, .72, 1.0, 0, .8, 0, .06, a, true)); g.add(hp(CYL, 0x6d4c2a, 1.02, .12, 1.02, 0, .68, 0, 0, a, false));
-      g.add(spike(0xf5ead0, .22, 1.0, .9, .95, 0, .8, 1, 0, .05)); g.add(spike(0xf5ead0, .22, 1.0, -.9, .95, 0, -.8, 1, 0, .05)); return g; },
-    crown() { const g = new THREE.Group(), a = nextPid(); g.add(hp(CYL, 0xffc928, .9, .34, .9, 0, .85, 0, .06, a, true));
-      for (let i = 0; i < 5; i++) { const t = i * Math.PI * 2 / 5; g.add(spike(0xffc928, .15, .55, Math.cos(t) * .74, 1.0, Math.sin(t) * .74, 0, 1, 0, .04)); }
-      g.add(hp(SPH3, 0xe53935, .12, .12, .12, 0, .85, .9, 0, a, false)); g.add(hp(SPH3, 0x29b6f6, .1, .1, .1, .5, .85, .72, 0, a, false)); g.add(hp(SPH3, 0x29b6f6, .1, .1, .1, -.5, .85, .72, 0, a, false)); return g; },
-    halo() { const g = new THREE.Group(), a = nextPid(); g.add(hp(TRIM, 0xfff2a8, 1.0, 1.8, 1.0, 0, 1.55, 0, 0, a, false)); g.add(hp(TRIM, 0xffe066, .88, 1.2, .88, 0, 1.55, 0, 0, a, false)); return g; } };
+    cap() { const g = new THREE.Group(), a = nextPid(), b = nextPid(); g.add(hp(SPH3, 0xd32f2f, .92, .62, .92, 0, .8, 0, .06, a, true)); g.add(hp(SPH3, 0xb71c1c, .74, .07, .66, 0, .72, .86, .05, b, true));
+      g.add(hp(BOX, 0xffffff, .09, .6, .05, 0, 1.0, .85, 0, a, false)); g.add(hp(SPH3, 0xffd54a, .15, .15, .05, 0, .98, .9, 0, a, false)); g.add(hp(TRIM, 0xffffff, .93, 1.0, .93, 0, .73, 0, 0, a, false)); g.add(hp(SPH3, 0xffffff, .1, .1, .1, 0, 1.4, 0, .03, a, true));
+      [-1, 1].forEach(x => g.add(hp(BOX, 0xa31515, .05, .5, .7, x * .88, .95, 0, 0, a, false))); return g; },
+    beanie() { const g = new THREE.Group(), a = nextPid(); g.add(hp(SPH3, 0x1e88e5, .95, .8, .95, 0, .9, 0, .06, a, true));
+      [[.62, 0xffffff, .98], [.74, 0x1565c0, .98]].forEach(([y, c, r]) => g.add(hp(CYL, c, r, .14, r, 0, y, 0, 0, a, false))); [[1.1, .93], [1.35, .8]].forEach(([y, r], i) => g.add(hp(TRIM, i ? 0x90caf9 : 0xffffff, r, 1.3, r, 0, y, 0, 0, a, false)));
+      g.add(hp(SPH3, 0xffffff, .24, .24, .24, 0, 1.68, 0, .04, a, true)); ring(g, 6, .18, 1.72, (x, y, z) => hp(SPH3, 0xe3f2fd, .1, .1, .1, x, y, z, 0, a, false)); return g; },
+    party() { const g = new THREE.Group(), a = nextPid(); g.add(spike(0xff4f9a, .55, 1.4, 0, .6, 0, 0, 1, 0, .05));
+      [[.35, .41, 0xffd54a], [.7, .28, 0x19d3f3], [1.05, .14, 0xffd54a]].forEach(([h, r, c]) => g.add(hp(TRIM, c, r, 1.6, r, 0, .6 + h, 0, 0, a, false)));
+      ring(g, 7, .52, .66, (x, y, z, i) => hp(SPH3, [0xffd54a, 0x19d3f3, 0xffffff][i % 3], .07, .07, .07, x, y, z, 0, a, false));
+      g.add(hp(SPH3, 0x19d3f3, .17, .17, .17, 0, 2.05, 0, .03, a, true)); ring(g, 5, .2, 2.0, (x, y, z, i) => hp(SPH3, [0xffd54a, 0xff4f9a, 0xffffff][i % 3], .07, .07, .07, x, y, z, 0, a, false)); return g; },
+    top() { const g = new THREE.Group(), a = nextPid(), b = nextPid(); g.add(hp(CYL, 0x15151a, 1.5, .08, 1.5, 0, .64, 0, .06, a, true)); g.add(hp(CYL, 0x1c1c22, .95, 1.3, .95, 0, 1.3, 0, .06, b, true));
+      g.add(hp(CYL, 0x23232b, .97, .05, .97, 0, 1.96, 0, 0, b, false)); g.add(hp(CYL, 0xb71c1c, .97, .2, .97, 0, .85, 0, 0, b, false)); g.add(hp(BOX, 0xffc928, .24, .26, .05, 0, .85, .96, 0, b, true));
+      g.add(hp(BOX, 0x4a4a58, .06, .85, .03, -.42, 1.4, .86, 0, b, false)); g.add(hp(SPH3, 0xe53935, .15, .15, .12, .4, .95, .88, 0, b, false)); g.add(hp(SPH3, 0x2e7d32, .12, .05, .09, .56, .92, .86, 0, b, false)); return g; },
+    viking() { const g = new THREE.Group(), a = nextPid(); g.add(hp(SPH3, 0x9aa0aa, 1.0, .72, 1.0, 0, .8, 0, .06, a, true)); g.add(hp(CYL, 0x6d4c2a, 1.03, .14, 1.03, 0, .68, 0, 0, a, false)); g.add(hp(BOX, 0x7b818c, .12, .12, 1.9, 0, 1.5, 0, 0, a, false));
+      ring(g, 8, 1.03, .68, (x, y, z) => hp(SPH3, 0xd7dbe0, .06, .06, .06, x, y, z, 0, a, false)); g.add(hp(TRIM, 0xb0b6c0, 1.0, 1.1, 1.0, 0, 1.0, 0, 0, a, false));
+      [-1, 1].forEach(sd => { g.add(spike(0xf5ead0, .24, .75, sd * .9, .95, 0, sd, .45, 0, .05)); g.add(spike(0xe6d6aa, .16, .75, sd * 1.55, 1.25, 0, sd * .3, 1, 0, .05)); g.add(hp(TRIM, 0x6d4c2a, .24, 1.3, .24, sd * .98, .98, 0, 0, a, false)); }); return g; },
+    crown() { const g = new THREE.Group(), a = nextPid(); g.add(hp(CYL, 0xffc928, .9, .34, .9, 0, .85, 0, .06, a, true)); g.add(hp(CYL, 0xb71c1c, .84, .2, .84, 0, 1.05, 0, 0, a, false));
+      for (let i = 0; i < 5; i++) { const t = i * Math.PI * 2 / 5, x = Math.cos(t) * .74, z = Math.sin(t) * .74; g.add(spike(0xffc928, .15, .55, x, 1.0, z, 0, 1, 0, .04)); g.add(hp(SPH3, 0xffffff, .09, .09, .09, x, 1.58, z, 0, a, false)); }
+      const A1 = hp(ARCH, 0xffc928, .72, .72, .72, 0, 1.02, 0, .03, a, true), A2 = hp(ARCH, 0xffc928, .72, .72, .72, 0, 1.02, 0, .03, a, true); A2.rotation.y = Math.PI / 2; g.add(A1, A2);
+      g.add(hp(SPH3, 0xffc928, .15, .15, .15, 0, 1.78, 0, .03, a, true)); g.add(hp(BOX, 0xffc928, .05, .2, .05, 0, 1.98, 0, 0, a, false)); g.add(hp(BOX, 0xffc928, .15, .05, .05, 0, 1.98, 0, 0, a, false));
+      ring(g, 10, .91, .85, (x, y, z, i) => hp(SPH3, i % 2 ? 0x29b6f6 : 0xe53935, .08, .08, .08, x, y, z, 0, a, false)); g.add(glow('255,200,60', 3.4, 1.2)); return g; },
+    halo() { const g = new THREE.Group(), a = nextPid(); g.add(hp(TRIM, 0xfff8c0, 1.0, 1.8, 1.0, 0, 1.55, 0, 0, a, false)); g.add(hp(TRIM, 0xffe066, .88, 1.2, .88, 0, 1.55, 0, 0, a, false)); g.add(hp(TRIM, 0xffffff, 1.12, .6, 1.12, 0, 1.55, 0, 0, a, false));
+      ring(g, 6, 1.0, 1.75, (x, y, z, i) => hp(SPH3, 0xffffff, i % 2 ? .06 : .09, i % 2 ? .06 : .09, i % 2 ? .06 : .09, x, y + (i % 2) * .15, z, 0, a, false)); g.add(glow('255,240,160', 4.2, 1.55)); return g; } };
   function buildHat(id) {
     if (HB[id]) return HB[id]();
     if (id === 'troph') return buildTrophy();
@@ -7516,6 +7537,14 @@ addEventListener('resize', () => {
       (g.userData.ex = g.userData.ex || {}).ccosmo = (() => { const q = new THREE.Group(); q.add(pieceT(0x5a5e70, 0.04, 0.2, 0.28, 0.3 * side, 0.12, -0.1, ID, .04)); q.add(pieceT(0x5a5e70, 0.04, 0.12, 0.2, 0.32 * side, 0.3, -0.1, ID, .04)); q.add(pieceT(0xffffff, 0.07, 0.07, 0.07, 0 * side, 0.28, 0.1, ID, .04)); q.add(pieceT(0x5a5e70, 0.06, 0.06, 0.06, 0 * side, 0.3, -0.2, ID, .04)); q.add(pieceT(0x3a3d4c, 0.14, 0.04, 0.14, 0 * side, -0.1, 0.4, ID, .04)); q.visible = false; g.add(q); return q; })();
       (g.userData.ex = g.userData.ex || {}).cdiam = (() => { const q = new THREE.Group(); q.add(pieceT(0xffffff, 0.07, 0.22, 0.07, 0 * side, 0.28, 0.15, ID, .04)); q.add(pieceT(0xffffff, 0.05, 0.3, 0.05, 0.1 * side, 0.3, -0.05, ID, .04)); q.add(pieceT(0xffffff, 0.05, 0.26, 0.05, -0.1 * side, 0.28, -0.1, ID, .04)); q.add(pieceT(0x5a5e70, 0.18, 0.04, 0.3, 0 * side, 0.2, 0, ID, .04)); q.visible = false; g.add(q); return q; })();
       (g.userData.ex = g.userData.ex || {}).cphx = (() => { const q = new THREE.Group(); q.add(pieceT(0x5a5e70, 0.03, 0.32, 0.3, 0.28 * side, 0.3, -0.3, ID, .04)); q.add(pieceT(0x3a3d4c, 0.03, 0.22, 0.24, 0.3 * side, 0.5, -0.32, ID, .04)); q.add(pieceT(0xffffff, 0.03, 0.14, 0.16, 0.32 * side, 0.62, -0.34, ID, .04)); q.add(pieceT(0x5a5e70, 0.12, 0.1, 0.1, 0 * side, 0.2, -0.42, ID, .04)); q.add(pieceT(0x3a3d4c, 0.08, 0.12, 0.08, 0 * side, 0.3, -0.5, ID, .04)); q.visible = false; g.add(q); return q; })();
+      g.userData.ex.cpink.add(pieceT(0x5a5e70, 0.34, 0.03, 0.43, 0 * side, -0.12, 0.02, ID, .04),pieceT(0xffffff, 0.05, 0.05, 0.05, 0.14 * side, 0.2, 0.14, ID, .04),pieceT(0xffffff, 0.05, 0.05, 0.05, -0.14 * side, 0.2, 0.14, ID, .04));
+      g.userData.ex.clime.add(pieceT(0x5a5e70, 0.34, 0.03, 0.43, 0 * side, -0.12, 0.02, ID, .04),pieceT(0xffffff, 0.05, 0.1, 0.05, 0.12 * side, 0.3, -0.2, ID, .04),pieceT(0xffffff, 0.05, 0.1, 0.05, -0.12 * side, 0.3, -0.2, ID, .04));
+      g.userData.ex.cice.add(pieceT(0x5a5e70, 0.34, 0.03, 0.43, 0 * side, -0.12, 0.02, ID, .04),pieceT(0xffffff, 0.03, 0.1, 0.03, 0.06 * side, 0.2, 0.3, ID, .04),pieceT(0xffffff, 0.03, 0.1, 0.03, -0.06 * side, 0.2, 0.3, ID, .04),pieceT(0xffffff, 0.3, 0.02, 0.04, 0 * side, 0.05, 0.38, ID, .04));
+      g.userData.ex.cfire.add(pieceT(0x5a5e70, 0.34, 0.03, 0.43, 0 * side, -0.12, 0.02, ID, .04),pieceT(0xffffff, 0.025, 0.07, 0.2, 0.3 * side, 0.16, 0.12, ID, .04),pieceT(0x5a5e70, 0.04, 0.1, 0.06, 0 * side, 0.65, -0.38, ID, .04));
+      g.userData.ex.cdark.add(pieceT(0x5a5e70, 0.34, 0.03, 0.43, 0 * side, -0.12, 0.02, ID, .04),pieceT(0x5a5e70, 0.07, 0.07, 0.07, 0.1 * side, 0.28, 0.0, ID, .04),pieceT(0x5a5e70, 0.07, 0.07, 0.07, -0.1 * side, 0.28, 0.0, ID, .04),pieceT(0xffffff, 0.26, 0.03, 0.2, 0 * side, 0.62, -0.15, ID, .04));
+      g.userData.ex.ccosmo.add(pieceT(0x5a5e70, 0.34, 0.03, 0.43, 0 * side, -0.12, 0.02, ID, .04),pieceT(0xffffff, 0.04, 0.04, 0.04, 0.15 * side, 0.18, 0.2, ID, .04),pieceT(0xffffff, 0.04, 0.04, 0.04, -0.16 * side, 0.2, 0.0, ID, .04),pieceT(0xffffff, 0.03, 0.03, 0.03, 0.1 * side, 0.22, -0.2, ID, .04),pieceT(0x5a5e70, 0.03, 0.12, 0.14, 0.34 * side, 0.44, -0.1, ID, .04));
+      g.userData.ex.cdiam.add(pieceT(0x5a5e70, 0.34, 0.03, 0.43, 0 * side, -0.12, 0.02, ID, .04),pieceT(0xffffff, 0.04, 0.12, 0.04, 0.16 * side, 0.22, 0.2, ID, .04),pieceT(0xffffff, 0.04, 0.1, 0.04, -0.16 * side, 0.2, 0.1, ID, .04),pieceT(0xffffff, 0.2, 0.025, 0.3, 0 * side, -0.08, 0.0, ID, .04));
+      g.userData.ex.cphx.add(pieceT(0x5a5e70, 0.34, 0.03, 0.43, 0 * side, -0.12, 0.02, ID, .04),pieceT(0xffffff, 0.03, 0.1, 0.1, 0.34 * side, 0.72, -0.36, ID, .04),pieceT(0x5a5e70, 0.06, 0.08, 0.06, 0.1 * side, 0.12, 0.3, ID, .04),pieceT(0x5a5e70, 0.06, 0.08, 0.06, -0.1 * side, 0.12, 0.3, ID, .04),pieceT(0x3a3d4c, 0.05, 0.18, 0.06, 0 * side, 0.5, -0.5, ID, .04));
       g.visible = false; return g; };
     const gL = mk(-1), gR = mk(1); fl.add(gL); fr.add(gR);
     return { on: false, set(v) { this.on = !!v; gL.visible = gR.visible = !!v; [gL, gR].forEach(G => { for (const k in G.userData.ex) G.userData.ex[k].visible = k === v; }); const pl = CPAL[v];
@@ -7554,13 +7583,14 @@ addEventListener('resize', () => {
     im.onload = () => { if (!paintNim(im)) paintNim(null); }; im.onerror = () => paintNim(null); im.src = u;
   }
   setInterval(checkPic, 1500); checkPic();
-  const ballMat = (k, id) => stencilize(new THREE.MeshLambertMaterial(k === 'gold' ? { map: BTEX(k), emissive: 0xffa000, emissiveIntensity: .45 } : { map: BTEX(k) }), id);
+  const FX = { gold: [0xffa000, '255,200,60'], bfire: [0xff4400, '255,120,30'], bgal: [0xaa44ff, '170,90,255'], bneon: [0x39ff14, '60,255,40'], bocean: [0x29b6f6, '80,190,255'] };
+  const ballMat = (k, id) => stencilize(new THREE.MeshLambertMaterial(FX[k] ? { map: BTEX(k), emissive: FX[k][0], emissiveIntensity: .45 } : { map: BTEX(k) }), id);
   let halo = null, goldM = null;
-  const haloTex = () => { const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'), g = x.createRadialGradient(64, 64, 8, 64, 64, 64);
-    g.addColorStop(0, 'rgba(255,230,120,.95)'); g.addColorStop(.35, 'rgba(255,190,40,.45)'); g.addColorStop(1, 'rgba(255,170,0,0)'); x.fillStyle = g; x.fillRect(0, 0, 128, 128); return new THREE.CanvasTexture(c); };
+  const haloTex = (rgb = '255,200,60') => { const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'), g = x.createRadialGradient(64, 64, 8, 64, 64, 64);
+    g.addColorStop(0, 'rgba(' + rgb + ',.95)'); g.addColorStop(.35, 'rgba(' + rgb + ',.45)'); g.addColorStop(1, 'rgba(' + rgb + ',0)'); x.fillStyle = g; x.fillRect(0, 0, 128, 128); return new THREE.CanvasTexture(c); };
   function applyBall(id) { ballMesh.material = BTEX(id) ? ((applyBall.c = applyBall.c || {})[id] || (applyBall.c[id] = ballMat(id, 2))) : DEF_BALL_MAT;
-    if (halo) { ball.remove(halo); halo = null; } goldM = id === 'gold' ? ballMesh.material : null;
-    if (goldM) { halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: haloTex(), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); halo.scale.setScalar(BR * 5); ball.add(halo); } }
+    if (halo) { ball.remove(halo); halo = null; } goldM = FX[id] ? ballMesh.material : null;
+    if (goldM && ['gold', 'bfire', 'bgal'].includes(id)) { halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: haloTex(FX[id][1]), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); halo.scale.setScalar(BR * 5); ball.add(halo); } }
   setInterval(() => { const t = performance.now() / 300; if (goldM) goldM.emissiveIntensity = .5 + .3 * Math.sin(t); if (halo) halo.material.opacity = .65 + .3 * Math.sin(t); }, 50);
   function applyMus(id) { if (musO) { head.remove(musO); musO = null; } if (id) { musO = buildMus(); head.add(musO); } }
   function applyHat(id) {
