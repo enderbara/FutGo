@@ -516,7 +516,7 @@ html.mob .crow,html.mob .crow span{font-size:12px!important}html.mob .kbtn{min-w
 html.mob .tcard{padding:5px 9px!important}html.mob .tcard b{font-size:13px!important}
 html.mob #tcSkip{font-size:13px;padding:8px 14px}
 </style>
-<style>.plabel,.ptag,#shout,.sbub,#call,#goalMk,#trBub{z-index:2!important}.plabel,.ptag,#shout,.sbub,#call,#goalMk{transition:opacity .15s}body.paused .plabel,body.paused #call,body.paused #shout,body.paused .sbub,body.paused #goalMk{display:none!important}body.lookc{cursor:none!important}body.lookc *{cursor:none!important}</style>
+<style>.plabel,.ptag,#shout,.sbub,#call,#goalMk,#trBub{z-index:2!important}.plabel,.ptag,#shout,.sbub,#call,#goalMk{transition:opacity .15s}body.paused .plabel,body.paused #call,body.paused #shout,body.paused .sbub,body.paused #goalMk{display:none!important}#lookDot{position:fixed;left:50%;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:#fff;border:2px solid #232323;z-index:3;pointer-events:none;display:none}body.lookc #lookDot{display:block}body.lookc{cursor:none!important}body.lookc *{cursor:none!important}</style>
 </head>
 <body>
 <div id="ver">Kick.io v1.1.0</div>
@@ -771,7 +771,7 @@ body.replay #penHint,body.intro #penHint{display:none!important}
 #inCount.pop{opacity:1;animation:goalpop .6s cubic-bezier(.2,1.5,.4,1) both}
 @media(max-width:720px){.spTeam .crest{width:64px;height:64px}.spTeam b{font-size:18px}.spVs{font-size:34px}.inLine{width:150px;font-size:11px;top:calc(11vh + 120px)}#inCount{font-size:96px}}
 </style>
-<div id="call"></div>
+<div id="lookDot"></div><div id="call"></div>
 <div id="note"></div>
 <div id="penHint"></div>
 <div id="barT" class="bar"></div><div id="barB" class="bar"></div>
@@ -1672,7 +1672,7 @@ addEventListener('wheel', e => {
 
 // ---------- Mouse-look (tecla Alt liga/desliga): cursor some e mexer o mouse gira a câmera ----------
 let mlook = false;
-document.addEventListener('pointerlockchange', () => { mlook = document.pointerLockElement === renderer.domElement; });
+document.addEventListener('pointerlockchange', () => { mlook = document.pointerLockElement === renderer.domElement; document.body.classList.toggle('lookc', mlook || fakeLook); });
 let fakeLook = false;
 const lookOff = () => { fakeLook = false; document.body.classList.remove('lookc'); };
 document.addEventListener('pointerlockerror', () => { fakeLook = true; document.body.classList.add('lookc'); });
@@ -5890,8 +5890,8 @@ function animate() {
       bp.y += bvy * dt;
       if (bp.y < BR) { bp.y = BR; if (bvy < -2) { bvy = -bvy * 0.62; const bk = Math.max(0.8, 1 - 0.012 * -bvy); bv.x *= bk; bv.z *= bk; } else bvy = 0; }
       const onGround = bp.y <= BR + 0.01 && bvy < 0.5;
-      if (onGround) { const s1 = hyp2(bv.x, bv.z); if (s1 > 0) { const kr = Math.max(0, s1 - (1.6 + s1 * 0.32) * dt) / s1; bv.x *= kr; bv.z *= kr; } }
-      else bv.multiplyScalar(Math.exp(-0.05 * dt - 0.0006 * hyp2(bv.x, bv.z) * dt));
+      if (onGround) { const s1 = hyp2(bv.x, bv.z); if (s1 > 0) { const kr = Math.max(0, s1 * Math.exp(-1.25 * dt) - 0.4 * dt) / s1; bv.x *= kr; bv.z *= kr; } }
+      else bv.multiplyScalar(Math.exp(-0.1 * dt));
       if (bcurve) { const s0 = hyp2(bv.x, bv.z); if (s0 > 10) { const kc = bcurve * 22 * dt, vx0 = bv.x; bv.x += -bv.z / s0 * kc; bv.z += vx0 / s0 * kc; } bcurve *= Math.exp(-(onGround ? 1.5 : 0.35) * dt); if (Math.abs(bcurve) < 0.03) bcurve = 0; }   // efeito (Magnus)
       if (onGround && hyp2(bv.x, bv.z) < 0.25) { bv.x = 0; bv.z = 0; }
       bp.x += bv.x * dt; bp.z += bv.z * dt;
@@ -6682,7 +6682,8 @@ addEventListener('resize', () => {
     el.addEventListener('pointerdown', go);
   });
   const cv = new THREE.Vector3(); let cl = 0;
-  const foot = rot => { camBehind(rot); targetDist = 5.5; targetPhi = 1.25; camCut = cv.set(ball.position.x, 0.4, ball.position.z); };
+  const camSide = rot => { let bd = 9; for (const a of [2.0, -2.0]) { let d = rot + a - theta; d = ((d + Math.PI) % TAU + TAU) % TAU - Math.PI; if (Math.abs(d) < Math.abs(bd)) bd = d; } targetTheta = theta + bd; };
+  const foot = rot => { camSide(rot); targetDist = 6; targetPhi = 1.2; camCut = cv.set(ball.position.x, 0.5, ball.position.z); };
   (function loop() {
     requestAnimationFrame(loop);
     const now = performance.now(), dtc = Math.min(0.05, (now - (cl || now)) / 1000); cl = now;
@@ -6692,6 +6693,11 @@ addEventListener('resize', () => {
       if (ballOwner === CUT.to || hasBall || CUT.t > 3.2 || (CUT.t > 0.6 && hyp2(bv.x, bv.z) < 1.5)) { targetDist = CUT.sv[0]; targetPhi = CUT.sv[1]; camCut = null; camBehind(player.rotation.y); CUT = null; }
     }
     if (!TH) return;
+    if (!TH.snapped && now - TH.t0 > 4500) {
+      TH.snapped = true;
+      for (const o of TH.mates.concat(TH.opp, TH.ev)) if (o._ts) { o.p.x = o._ts.x; o.p.z = o._ts.z; o.v.set(0, 0, 0); }
+      if (!TH.userTaker) { player.position.x = lockX; player.position.z = lockZ; }
+    }
     if (TH.pend) {
       foot(player.rotation.y); mks.forEach(m => m.style.display = 'none'); hint.style.display = 'none';
       if (now >= TH.pend.at) { const m = TH.pend.m; TH.pend = null; userThrow(m); }
@@ -6709,7 +6715,7 @@ addEventListener('resize', () => {
         if (wait && now - TH.t0 < 4500) { TH.setT = 0; if (match.rs.t > 0.3) match.rs.t = 0.3; }
         else { if (!TH.setT) TH.setT = now; if (now - TH.setT < 900 && match.rs.t > 0.3) match.rs.t = 0.3; }
         if (TH.setT) foot(TH.tk.rot);                              // todos ajustados: câmera mira no pé do batedor
-        else { camBehind(TH.tk.rot); targetDist = 10; targetPhi = 1.2; camCut = cv.set((TH.tk.p.x + ball.position.x) / 2, 1.1, (TH.tk.p.z + ball.position.z) / 2); }
+        else { camSide(TH.tk.rot); targetDist = 10; targetPhi = 1.15; camCut = cv.set((TH.tk.p.x + ball.position.x) / 2, 1.1, (TH.tk.p.z + ball.position.z) / 2); }
       }
     }
   })();
