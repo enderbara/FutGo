@@ -518,7 +518,7 @@ html.mob #tcSkip{font-size:13px;padding:8px 14px}
 </style>
 </head>
 <body>
-<div id="ver">Kick.io v1.0.0</div>
+<div id="ver">Kick.io v1.1.0</div>
 <div id="splash"><div class="sp-bar t"></div><div class="sp-bar b"></div><div class="sp-line"></div>
 <div class="sp-c"><div class="sp-by">UM JOGO DE</div><i class="fa-solid fa-gamepad sp-lg"></i><div class="sp-nm"><span>FunTudio</span></div></div>
 <div class="tp" id="spTap">CLIQUE PARA CONTINUAR</div><div class="sp-vig"></div></div></div>
@@ -810,8 +810,8 @@ document.body.appendChild(renderer.domElement);
 const _toonMap = new THREE.DataTexture(new Uint8Array([115,115,115,255, 205,205,205,255, 255,255,255,255]), 3, 1, THREE.RGBAFormat);
 _toonMap.minFilter = _toonMap.magFilter = THREE.NearestFilter; _toonMap.generateMipmaps = false; _toonMap.needsUpdate = true;
 THREE.MeshLambertMaterial = function (p) { p = Object.assign({}, p); p.gradientMap = _toonMap; return new THREE.MeshToonMaterial(p); };   // toda a cena em 3 tons (cel-shading)
-scene.add(new THREE.HemisphereLight(0xffffff, 0xb4bccf, 0.5));
-const sun = new THREE.DirectionalLight(0xfff6e6, 0.5);
+scene.add(new THREE.HemisphereLight(0xffffff, 0xb4bccf, 0.58));
+const sun = new THREE.DirectionalLight(0xfff6e6, 0.56);
 const fillL = new THREE.DirectionalLight(0xdde8ff, 0.1); fillL.position.set(-8, 6, -6); scene.add(fillL);
 { const vg = document.createElement('div'); vg.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:1;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 62%,rgba(40,30,90,.08) 100%)'; document.body.appendChild(vg); }
 sun.castShadow = true;
@@ -854,21 +854,21 @@ const HULL_MAT = new THREE.MeshBasicMaterial({
 // contorno com espessura minima em pixels (nunca some de longe nem de lado)
 const PXU = { value: new THREE.Vector2(innerWidth, innerHeight) };
 addEventListener('resize', () => PXU.value.set(innerWidth, innerHeight));
-function pxOut(m, px) {
+function pxOut(m, px, lift = 0) {
   m.onBeforeCompile = sh => {
     sh.uniforms.uRes = PXU;
     sh.vertexShader = 'uniform vec2 uRes;\n' + sh.vertexShader.replace('#include <project_vertex>',
-      '#include <project_vertex>\n{ vec3 vn = normalize(normalMatrix * normal); vec2 d = normalize((projectionMatrix * vec4(vn, 0.0)).xy + 1e-6); gl_Position.xy += d * gl_Position.w * ' + px.toFixed(2) + ' * 2.0 / uRes; }');
+      '#include <project_vertex>\n' + (lift ? 'gl_Position = projectionMatrix * vec4(mvPosition.xyz + normalize(-mvPosition.xyz) * ' + lift.toFixed(2) + ', 1.0);\n' : '') + '{ vec3 vn = normalize(normalMatrix * normal); vec2 d = normalize((projectionMatrix * vec4(vn, 0.0)).xy + 1e-6); gl_Position.xy += d * gl_Position.w * ' + px.toFixed(2) + ' * 2.0 / uRes; }');
   };
-  m.customProgramCacheKey = () => 'px' + px;
+  m.customProgramCacheKey = () => 'px' + px + '_' + lift;
   return m;
 }
 pxOut(HULL_MAT, 1.2);
 const _hulls = {};
-const charHull = id => _hulls[id] || (_hulls[id] = pxOut(new THREE.MeshBasicMaterial({
+const charHull = (id, lift) => { lift = lift || ((id === 2 || id === 51) ? 0.4 : 0); const k = id + ':' + lift; return _hulls[k] || (_hulls[k] = pxOut(new THREE.MeshBasicMaterial({
   color: 0x232323, side: THREE.BackSide,
   stencilWrite: true, stencilFunc: THREE.NotEqualStencilFunc, stencilRef: id
-}), 1.2));
+}), 1.2, lift)); };   // bola: contorno levantado (não afunda no chão); cabeça: ver liftHead
 // ids únicos para cada lote (estádio, gol, placas...). 1-3 são do player/bola/NPC.
 let _nextHullId = 10;
 const batchHull = id => new THREE.MeshBasicMaterial({
@@ -1511,7 +1511,9 @@ const handL = part(...SPEC.handL);
 const handR = part(...SPEC.handR);
 const footL = part(...SPEC.footL);
 const footR = part(...SPEC.footR);
-model.add(body, head, handL, handR, footL, footR);
+// cabeça e corpo dividem o mesmo ID de stencil: o contorno fica só na silhueta externa (sem anel da cabeça em cima do torso)
+function shareOutline(h) { const id = h.userData.sid; if (id && h.children[1]) h.children[1].material = charHull(id, 0.7); }   // contorno completo da cabeça, por cima do torso
+model.add(body, head, handL, handR, footL, footR); shareOutline(head);
 
 const eyes = [];
 for (const [cx, cy] of EYES) {
@@ -1651,7 +1653,7 @@ function makeChar(id, bodyCol, gloveCol) {
     handL: mk('handL', gloveCol, 1.35), handR: mk('handR', gloveCol, 1.35),
     footL: mk('footL', 0x424242), footR: mk('footR', 0x565050)
   };
-  model.add(ch.body, ch.head, ch.handL, ch.handR, ch.footL, ch.footR);
+  model.add(ch.body, ch.head, ch.handL, ch.handR, ch.footL, ch.footR); shareOutline(ch.head);
   for (const [cx, cy] of EYES) {
     const m = new THREE.Mesh(eyeGeometry(4), stencilize(new THREE.MeshBasicMaterial({ color: 0x232323 }), ch.head.userData.sid));
     const pl = eyePlacement(cx, cy);
