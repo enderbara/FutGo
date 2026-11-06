@@ -807,11 +807,10 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFShadowMap;            // bem mais barata que a "Soft" e quase igual no estilo toon
 document.body.appendChild(renderer.domElement);
 
-scene.add(new THREE.HemisphereLight(0xfff6e5, 0x6f86c8, 0.95));
-const sun = new THREE.DirectionalLight(0xffedc9, 0.55);
-const fillL = new THREE.DirectionalLight(0xaecbff, 0.2); fillL.position.set(-8, 6, -6); scene.add(fillL);
-if (!LOWEND) renderer.domElement.style.filter = 'saturate(1.22) contrast(1.06) brightness(1.02)';
-{ const vg = document.createElement('div'); vg.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:1;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 62%,rgba(10,20,60,.28) 100%)'; document.body.appendChild(vg); }
+scene.add(new THREE.HemisphereLight(0xfff2de, 0x8ea2d8, 1.0));
+const sun = new THREE.DirectionalLight(0xffe4b8, 0.62);
+const fillL = new THREE.DirectionalLight(0xbcd6ff, 0.22); fillL.position.set(-8, 6, -6); scene.add(fillL);
+{ const vg = document.createElement('div'); vg.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:1;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 62%,rgba(40,30,90,.16) 100%)'; document.body.appendChild(vg); }
 sun.castShadow = true;
 sun.shadow.mapSize.set(LOWEND ? 512 : 1024, LOWEND ? 512 : 1024);
 sun.shadow.camera.left = -12; sun.shadow.camera.right = 12;
@@ -827,7 +826,7 @@ ground.rotation.x = -Math.PI / 2;
 ground.position.y = -0.01;
 scene.add(ground);
 
-const shadowPlane = new THREE.Mesh(new THREE.PlaneGeometry(320, 320), new THREE.ShadowMaterial({ opacity: 0.4, color: 0x1c2b66 }));
+const shadowPlane = new THREE.Mesh(new THREE.PlaneGeometry(320, 320), new THREE.ShadowMaterial({ opacity: 0.34, color: 0x34377a }));
 shadowPlane.rotation.x = -Math.PI / 2;
 shadowPlane.position.y = 0.03;
 shadowPlane.receiveShadow = true;
@@ -988,6 +987,18 @@ function idle(mat) {
   return mat;
 }
 
+function crowdHull() {   // contorno da torcida: casca no mundo + empurrão fixo em pixels (aparece em qualquer distância)
+  const m = HULL_MAT.clone();
+  m.onBeforeCompile = sh => {
+    sh.uniforms.uTime = FU.uTime; sh.uniforms.uCheer = FU.uCheer; sh.uniforms.uRes = PXU;
+    sh.vertexShader = 'attribute float aPhase;\nuniform float uTime;\nuniform float uCheer;\nuniform vec2 uRes;\n' + sh.vertexShader
+      .replace('#include <begin_vertex>', 'vec3 transformed = vec3(position);\ntransformed.y += sin(uTime * 2.0 + aPhase) * 0.04 + abs(sin(uTime * 7.0 + aPhase)) * 1.4 * uCheer;')
+      .replace('#include <project_vertex>', '#include <project_vertex>\n{\n#ifdef USE_INSTANCING\nvec3 vn = normalize(normalMatrix * (mat3(instanceMatrix) * normal));\n#else\nvec3 vn = normalize(normalMatrix * normal);\n#endif\nvec2 d = normalize((projectionMatrix * vec4(vn, 0.0)).xy + 1e-6); gl_Position.xy += d * gl_Position.w * 1.1 * 2.0 / uRes; }');
+  };
+  m.customProgramCacheKey = () => 'crowdHull';
+  return m;
+}
+
 // ---------- Estádio ----------
 const stadium = new THREE.Group();
 stadium.scale.setScalar(2.15);
@@ -1121,7 +1132,7 @@ const crowdLOD = [];   // contornos/olhos da torcida: somem só quando estão lo
     return g;
   }));
   const lam = () => idle(new THREE.MeshLambertMaterial());
-  const mats = { prop: idle(new THREE.MeshLambertMaterial({ vertexColors: true })), body: lam(), skin: lam(), shoe: lam(), eyes: idle(new THREE.MeshBasicMaterial({ color: 0x232323 })), hull: idle(HULL_MAT.clone()) };
+  const mats = { prop: idle(new THREE.MeshLambertMaterial({ vertexColors: true })), body: lam(), skin: lam(), shoe: lam(), eyes: idle(new THREE.MeshBasicMaterial({ color: 0x232323 })), hull: crowdHull() };
   const pick = a => a[Math.floor(Math.random() * a.length)];
   const groups = {};
   crowd.forEach(f => (groups[f.ck] = groups[f.ck] || []).push(f));
@@ -1170,7 +1181,7 @@ function updateCrowdLOD() {
   const k = 1 / 2.15, cx = camera.position.x * k, cy = camera.position.y * k, cz = camera.position.z * k;
   for (const o of crowdLOD) {
     const dx = o.c.x - cx, dy = o.c.y - cy, dz = o.c.z - cz, d = Math.sqrt(dx * dx + dy * dy + dz * dz) - o.r;
-    o.m.visible = d < (LOWEND ? 32 : 46); o.e.visible = d < (LOWEND ? 44 : 62);
+    o.m.visible = true; if (o.e !== o.m) o.e.visible = d < (LOWEND ? 44 : 62);   // contorno sempre desenhado; só os olhos somem longe
   }
 }
 
@@ -5278,7 +5289,7 @@ function startBot() {
 loadSaved();
 
 let menuAcc = 0, menuFrame = 0, qPR = renderer.getPixelRatio(), qN = 0, qT = performance.now(), qWarm = 0;
-const qMax = Math.min(Math.max(devicePixelRatio, LOWEND ? 1 : 1.5), LOWEND ? 1.6 : 2); let qPeak = 0, qGood = 0, qNoUp = false, shF = 0, dtSm = 1 / 60;
+const qMax = Math.min(Math.max(devicePixelRatio, LOWEND ? 1 : 1.5), LOWEND ? 1.6 : 2); let qPeak = 0, qGood = 0, qNoUp = LOWEND, shF = 0, dtSm = 1 / 60;
 const fpsEl = document.getElementById('fps');
 addEventListener('keydown', e => { if (e.code === 'F3') { e.preventDefault(); fpsEl.style.display = fpsEl.style.display === 'block' ? 'none' : 'block'; } });
 const _pv = new THREE.Vector3();
@@ -5401,7 +5412,7 @@ function animate() {
     if (fpsEl.style.display === 'block') fpsEl.textContent = Math.round(fps) + ' fps · res ' + qPR.toFixed(2) + 'x';
     qN = 0; qT = _n;
   }
-  const dt = Math.min(clock.getDelta(), 0.05);
+  const _r = Math.min(clock.getDelta(), 0.05), dt = Math.abs(_r - dtSm) < 0.005 ? dtSm : _r;   // tira o tremido do tempo entre quadros
   idleT += dt;
   FU.uTime.value = clock.elapsedTime;
   for (const t of boardTex) t.offset.x = -(clock.elapsedTime * 0.6 / BOARD_TILE) % 1;
@@ -5412,7 +5423,7 @@ function animate() {
   if (menu.mode === 'play' && ++shF % (LOWEND ? 4 : dtSm > 0.022 ? 3 : 2) === 0) renderer.shadowMap.needsUpdate = true;   // sombra a cada 2 quadros (3 se o jogo estiver pesado)
   if ((++lodF & 15) === 0) updateCrowdLOD();
   if (menu.mode === 'train' && window.__trStep) { window.__trStep(dt); return; }
-  if (menu.mode !== 'play') { updateTags(); try { sfxStep(dt); } catch (_) {} menuAcc += dt; if (menuAcc < (document.querySelector('#wrPop.on,#gLogin.on') ? 1 / 10 : 1 / 32)) return; menuStep(menuAcc); menuAcc = 0; return; }
+  if (menu.mode !== 'play') { updateTags(); try { sfxStep(dt); } catch (_) {} menuAcc += dt; if (menuAcc < (document.querySelector('#wrPop.on,#gLogin.on') ? 1 / 2 : 1 / 32)) return; menuStep(menuAcc); menuAcc = 0; return; }
   if (intro.on) { stepIntro(dt); updateTags(dt); stepBubs(dt); stepFans(dt); renderer.render(scene, camera); return; }
 
   if (replay.on) {
@@ -6262,6 +6273,7 @@ if (IS_MOBILE) (function () {
   setInterval(update, 200); update();
 })();
 
+try { renderer.compile(scene, camera); } catch (_) {}   // pré-compila shaders: evita engasgo quando algo novo aparece
 animate();
 
 addEventListener('resize', () => {
@@ -7440,6 +7452,7 @@ addEventListener('resize', () => {
                   hat: [{ id: null, n: 'Sem acessório' }, { id: 'nimbus', slot: 'hat', n: 'Chapéu Cowboy', lock: 1, rar: 'u' }, { id: 'troph', slot: 'hat', n: 'Chapéu de Troféu', rar: 'u', req: 'troph', solo: 1 }, { id: 'trai', slot: 'hat', n: 'Traidor', rar: 'r', req: 'trai', solo: 1 }, { id: 'mus', slot: 'mus', n: 'Olho Roxo', rar: 'c', req: 'mus' }, { id: 'shades', slot: 'mus', n: 'Óculos Escuros', rar: 'c', req: 'shades', solo: 1 }, { id: 'nose', slot: 'mus', n: 'Nariz de Palhaço', rar: 'c', req: 'nose', solo: 1 }, { id: 'mustache', slot: 'mus', n: 'Bigode', rar: 'u', req: 'mustache', solo: 1 }, { id: 'specs', slot: 'mus', n: 'Óculos de Sábio', rar: 'u', req: 'specs', solo: 1 }, { id: 'hero', slot: 'mus', n: 'Máscara de Herói', rar: 'r', req: 'hero', solo: 1 }, { id: 'cyber', slot: 'mus', n: 'Visor Cyber', rar: 'l', req: 'cyber', solo: 1 }, { id: 'mmask', slot: 'mus', n: 'Máscara Arcana', rar: 'm', req: 'mmask', solo: 1 }, { id: 'cap', slot: 'hat', n: 'Boné', rar: 'c', req: 'cap', solo: 1 },{ id: 'beanie', slot: 'hat', n: 'Gorro', rar: 'c', req: 'beanie', solo: 1 },{ id: 'party', slot: 'hat', n: 'Chapéu de Festa', rar: 'u', req: 'party', solo: 1 },{ id: 'top', slot: 'hat', n: 'Cartola', rar: 'r', req: 'top', solo: 1 },{ id: 'viking', slot: 'hat', n: 'Capacete Viking', rar: 'r', req: 'viking', solo: 1 },{ id: 'crown', slot: 'hat', n: 'Coroa Real', rar: 'l', req: 'crown', solo: 1 },{ id: 'halo', slot: 'hat', n: 'Auréola Divina', rar: 'l', req: 'halo', solo: 1 }, { id: 'visor', slot: 'hat', n: 'Viseira', rar: 'c', req: 'visor', solo: 1 }, { id: 'headband', slot: 'hat', n: 'Faixa de Craque', rar: 'c', req: 'headband', solo: 1 }, { id: 'wizard', slot: 'hat', n: 'Chapéu de Mago', rar: 'u', req: 'wizard', solo: 1 }, { id: 'samurai', slot: 'hat', n: 'Elmo Samurai', rar: 'r', req: 'samurai', solo: 1 }, { id: 'wings', slot: 'hat', n: 'Asas Douradas', rar: 'l', req: 'wings', solo: 1 }, { id: 'mhat', slot: 'hat', n: 'Diadema Estelar', rar: 'm', req: 'mhat', solo: 1 }, { id: 'mdrag', slot: 'hat', n: 'Elmo do Dragão', rar: 'm', req: 'mdrag', solo: 1 }, { id: 'mgalax', slot: 'hat', n: 'Chapéu Galáctico', rar: 'm', req: 'mgalax', solo: 1 }, { id: 'mice', slot: 'hat', n: 'Coroa de Gelo Eterno', rar: 'm', req: 'mice', solo: 1 }],
                   cleat: [{ id: null, n: 'Chuteira Clássica' }, { id: 'nimbus', n: 'Chuteira Nuvem', lock: 1, rar: 'c' }, { id: 'gold', n: 'Chuteira de Ouro', rar: 'u', req: 'gold', solo: 1 }, { id: 'cpink', n: 'Chuteira Rosa Chiclete', rar: 'c', req: 'cpink', solo: 1 },{ id: 'clime', n: 'Chuteira Limão', rar: 'c', req: 'clime', solo: 1 },{ id: 'cice', n: 'Chuteira Gelo', rar: 'u', req: 'cice', solo: 1 },{ id: 'cfire', n: 'Chuteira Fogo', rar: 'u', req: 'cfire', solo: 1 },{ id: 'cdark', n: 'Chuteira Sombra', rar: 'r', req: 'cdark', solo: 1 },{ id: 'ccosmo', n: 'Chuteira Cósmica', rar: 'r', req: 'ccosmo', solo: 1 },{ id: 'cdiam', n: 'Chuteira Diamante', rar: 'l', req: 'cdiam', solo: 1 },{ id: 'cphx', n: 'Chuteira Fênix', rar: 'l', req: 'cphx', solo: 1 }, { id: 'mcleat', n: 'Chuteira Aurora', rar: 'm', req: 'mcleat', solo: 1 }, { id: 'mflame', n: 'Chuteira Dragão', rar: 'm', req: 'mflame', solo: 1 }, { id: 'mraio', n: 'Chuteira Relâmpago', rar: 'm', req: 'mraio', solo: 1 }, { id: 'mcosm', n: 'Chuteira Nebulosa', rar: 'm', req: 'mcosm', solo: 1 }, { id: 'mwing', n: 'Chuteira de Hermes', rar: 'm', req: 'mwing', solo: 1 }],
     cel: [{ id: 'pad', n: 'Padrão', rar: 'c' }, { id: 'login', n: 'Selfie do Login', lock: 1, rar: 'r' }, { id: 'lider', n: 'Líderes de Torcida', rar: 'u', req: 'lider' }] };
+  ITEMS.hat = ITEMS.hat.filter(x => x.slot !== 'mus');   // sem itens de rosto
   function emblem(c, cx, cy, r) {   // emblema próprio: estrela de 4 pontas + faísca
     const k = r / 92, star = (x, y, ro) => { c.beginPath(); c.moveTo(x, y - ro); c.quadraticCurveTo(x, y, x + ro, y); c.quadraticCurveTo(x, y, x, y + ro); c.quadraticCurveTo(x, y, x - ro, y); c.quadraticCurveTo(x, y, x, y - ro); c.fill(); };
     const gr = c.createLinearGradient(cx - r, cy - r, cx + r, cy + r); gr.addColorStop(0, '#6D4AFF'); gr.addColorStop(1, '#19D3F3');
@@ -8047,8 +8060,8 @@ addEventListener('resize', () => {
   }, 33);
   function applyCleat(id) { curCleat = id; if (!realKit) realKit = cleatKit(footL, footR); realKit.set(id); }
   const NM = (L, id) => { const x = L.find(i => i.id === id); return x ? x.n : L[0].n; };
-  const eqv = () => { if (!tgt) return equipped(); const st = tmGet()[tgt.i] || {}, u = unlocked(); return { ball: 'classic', hat: u && st.hat ? 'nimbus' : null, cleat: u && st.cleat ? 'nimbus' : null, mus: pOK.mus() && st.mus ? 'mus' : null }; };
-  const equipped = () => { const w = getW(), u = unlocked(), bl = w.ball || 'classic', bad = (bl === 'nimbus' && !u) || (bl === 'perd' && !pOK.perd()) || (bl === 'gold' && !pOK.gold()) || (MIS[bl] && !pOK[bl]()) || !['classic', 'nimbus', 'perd', 'gold', 'bocean', 'bneon', 'bfire', 'bgal', 'bsun', 'bcryst', 'btoxic', 'bplasma', 'brain', 'bvoid', 'mball', 'mnova', 'megg', 'mplan'].includes(bl);
+  const eqv = () => { const r = eqv0(); r.mus = null; return r; }; const eqv0 = () => { if (!tgt) return equipped(); const st = tmGet()[tgt.i] || {}, u = unlocked(); return { ball: 'classic', hat: u && st.hat ? 'nimbus' : null, cleat: u && st.cleat ? 'nimbus' : null, mus: pOK.mus() && st.mus ? 'mus' : null }; };
+  const equipped = () => { const r = equipped0(); r.mus = null; return r; }; const equipped0 = () => { const w = getW(), u = unlocked(), bl = w.ball || 'classic', bad = (bl === 'nimbus' && !u) || (bl === 'perd' && !pOK.perd()) || (bl === 'gold' && !pOK.gold()) || (MIS[bl] && !pOK[bl]()) || !['classic', 'nimbus', 'perd', 'gold', 'bocean', 'bneon', 'bfire', 'bgal', 'bsun', 'bcryst', 'btoxic', 'bplasma', 'brain', 'bvoid', 'mball', 'mnova', 'megg', 'mplan'].includes(bl);
     return { cel: (!w.cel || (w.cel === 'login' && !u) || (w.cel === 'lider' && !pOK.lider())) ? 'pad' : w.cel, ball: bad ? 'classic' : bl, hat: ['chef', 'pirate'].includes(w.hat) ? null : NH.includes(w.hat) ? (pOK[w.hat]() ? w.hat : null) : u ? w.hat || null : null, cleat: NCL.includes(w.cleat) ? (pOK[w.cleat]() ? w.cleat : null) : u ? w.cleat || null : null, mus: !w.mus ? null : (w.mus === 'mus' || w.mus === true) ? (pOK.mus() ? 'mus' : null) : (pOK[w.mus] && pOK[w.mus]() ? w.mus : null) }; };
   function applyAll() {
     if (unlocked()) { const w = getW(); if (w.cleat === undefined) { w.cleat = 'nimbus'; setW(w); } }   // quem já tinha o presente ganha a chuteira equipada
@@ -8099,7 +8112,7 @@ addEventListener('resize', () => {
     if (MB[kind]) { g.children.forEach(c => c.visible = false); const o = MB[kind](51); o.scale.setScalar(BR * .98); if (o.userData.anim) { o.userData.idle = 0; HANIM.push(o); } g.add(o); }
     return { g, spin };
   }
-  const mkRend = (w, h) => { const r = new THREE.WebGLRenderer({ alpha: true, antialias: true, stencil: true, preserveDrawingBuffer: true }); r.setSize(w, h, false); r.setPixelRatio(1); r.setClearColor(0, 0); const _rr = r.render.bind(r); r.render = (sc, cam) => { PXU.value.set(w, h); try { _rr(sc, cam); } finally { PXU.value.set(innerWidth, innerHeight); } }; return r; };
+  const mkRend = (w, h, aa) => { const r = new THREE.WebGLRenderer({ alpha: true, antialias: aa !== false, stencil: true, preserveDrawingBuffer: true }); r.setSize(w, h, false); r.setPixelRatio(1); r.setClearColor(0, 0); const _rr = r.render.bind(r); r.render = (sc, cam) => { PXU.value.set(w, h); try { _rr(sc, cam); } finally { PXU.value.set(innerWidth, innerHeight); } }; return r; };
   const lights = sc => { sc.add(new THREE.AmbientLight(0xffffff, .9)); const d = new THREE.DirectionalLight(0xffffff, .6); d.position.set(3, 6, 5); sc.add(d); };
   const floor = r => { const f = new THREE.Mesh(new THREE.CircleGeometry(r, 36), new THREE.MeshBasicMaterial({ color: 0, transparent: true, opacity: .2 })); f.rotation.x = -Math.PI / 2; f.position.y = .01; return f; };
   let R1 = null, R2 = null, R3 = null, tabK = 'ball', drawables = [], phoneD = null, raf = 0;
@@ -8108,7 +8121,7 @@ addEventListener('resize', () => {
   const lazy = (cv, f) => { let inst = null, vis = true, vt = 0, lt = -9; return { draw(t) {
     const n = performance.now(); if (n - vt > 250) { vt = n; const r = cv.getBoundingClientRect(); vis = r.width > 0 && r.bottom > 0 && r.top < innerHeight; }
     if (!vis) return; if (inst && t - lt < 0.066) return;
-    if (!inst) { if ((window.__mk || 0) >= 2) return; window.__mk = (window.__mk || 0) + 1; inst = f(); }
+    if (!inst) { if ((window.__mk || 0) >= 1) return; window.__mk = (window.__mk || 0) + 1; inst = f(); }
     lt = t; inst.draw(t); } }; };
   function card3d(kind, id, canvas) {
     if (kind === 'cel') { const cs = celScene(id), cx = canvas.getContext('2d'); return { draw(t) { cs.render(t, R1, 1); cx.clearRect(0, 0, 220, 220); cx.drawImage(R1.domElement, 0, 0, 220, 220); } }; }   // 'ball' = bola; 'hat' = boneco com chapéu; 'cleat' = pés com chuteira
@@ -8119,11 +8132,11 @@ addEventListener('resize', () => {
     else if (kind === 'hat') { root.add(mkChar(id, null).g); cam.position.set(0, 2.6, 6.6); cam.lookAt(0, 2.45, 0); }
     else { root.add(mkChar(null, id).g); cam.position.set(0, .85, 4.4); cam.lookAt(0, .75, 0); }
     const ctx = canvas.getContext('2d');
-    return { draw(t) { root.rotation.y = isB ? Math.sin(t * 1.1) * .5 : Math.sin(t * 1.2) * .8; R1.render(sc, cam); ctx.clearRect(0, 0, 220, 220); ctx.drawImage(R1.domElement, 0, 0, 220, 220); } };
+    return { draw(t) { root.rotation.y = isB ? Math.sin(t * 1.1) * .5 : Math.sin(t * 1.2) * .8; R1.render(sc, cam); ctx.clearRect(0, 0, canvas.width, canvas.width); ctx.drawImage(R1.domElement, 0, 0, canvas.width, canvas.width); } };
   }
   const VW = { yaw: 0, pit: 0, z: 1, auto: true };
   function stage3d(host) {
-    if (!R2) R2 = mkRend(560, 454);
+    if (!R2) R2 = mkRend(COARSE ? 420 : 560, COARSE ? 340 : 454);
     host.innerHTML = ''; host.style.position = 'relative'; host.appendChild(R2.domElement); R2.domElement.style.cssText = 'width:100%;max-width:560px;height:auto;touch-action:none;cursor:grab';
     host.insertAdjacentHTML('beforeend', '<div class="wrHint">Arraste para girar • scroll ou pinça para zoom • toque duplo reseta</div>');
     if (!R2._ev) { R2._ev = 1; const cv = R2.domElement, P = new Map(); let d0 = 0, cl = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -8291,28 +8304,28 @@ addEventListener('resize', () => {
   /* ---------- UI ---------- */
   const NAMES = { classic: 'Bola Clássica', nimbus: 'Bola de Login', google: 'Bola de Login', perd: 'Perdedor', gold: 'Bola de Ouro' };
   function build() {
-    if (!R1) R1 = mkRend(220, 220);
+    if (!R1) R1 = mkRend(COARSE ? 160 : 220, COARSE ? 160 : 220, !COARSE);
     document.querySelector('.wrTabs [data-t="ball"]').style.display = tgt ? 'none' : ''; document.querySelector('.wrTabs [data-t="cel"]').style.display = 'none'; if (tgt && (tabK === 'ball' || tabK === 'cel')) tabK = 'hat';
     document.querySelector('.wrTitle small').textContent = tgt ? tgt.name : 'Seu jogador e sua bola';
     const sb = $('wrSkinBox'); sb.style.display = tgt ? 'none' : '';
     if (!tgt) { const u = members[USER_SLOT], p = $('wrSkin'); p.innerHTML = '';
       SKIN_TONES.forEach(c => { const sw = document.createElement('div'); sw.className = 'sw' + (u.skin === c ? ' on' : ''); sw.style.background = '#' + c.toString(16).padStart(6, '0');
         sw.onclick = () => { setSkin(u, c); persist(); build(); }; p.appendChild(sw); }); }
-    const ok = unlocked(), e = eqv(), grid = $('wrGrid'); grid.innerHTML = ''; drawables = [];
+    const ok = unlocked(), e = eqv(), grid = $('wrGrid'); grid.innerHTML = ''; drawables = []; const _b = window.__bid = (window.__bid || 0) + 1;
     const rk = x => x.rar ? ORD.indexOf(x.rar) + 1 : 0, cnt = r => ITEMS[tabK].filter(x => (x.rar || '') === r && !(tgt && x.solo)).length; let lastR = '';
     [...ITEMS[tabK]].sort((a, b) => rk(a) - rk(b)).forEach(it => {
       if (!(tgt && it.solo) && (it.rar || '') !== lastR) { lastR = it.rar || ''; const h = document.createElement('div'); h.className = 'wrH r' + lastR; h.innerHTML = RN[lastR] + ' <i>' + cnt(lastR) + '</i>'; grid.appendChild(h); }
       if (tgt && it.solo) return;
       const need = it.req && !pOK[it.req](), lk = (it.lock && !ok) || need, on = it.id === null && tabK === 'hat' ? (!e.hat && !e.mus) : e[it.slot || tabK] === it.id;
       const d = document.createElement('div'); d.className = 'wrI' + (lk ? ' lk' : '') + (on ? ' on' : '') + (it.rar ? ' r' + it.rar : it.lock ? ' epic' : '');
-      const cv = document.createElement('canvas'); cv.width = cv.height = 220; d.appendChild(cv);
+      const cv = document.createElement('canvas'); cv.width = cv.height = COARSE ? 128 : 220; d.appendChild(cv);
       if (it.rar) d.insertAdjacentHTML('beforeend', '<span class="bd r' + it.rar + '">' + ({ c: 'COMUM', u: 'INCOMUM', r: 'RARO', l: 'LENDÁRIO', m: 'MÍSTICO' })[it.rar] + '</span>'); else if (it.lock) d.insertAdjacentHTML('beforeend', '<span class="bd">NUVEM</span>');
       d.insertAdjacentHTML('beforeend', it.n + (lk ? '<small>' + (need ? HINT[it.req]() : '🔒 Entre com Google') + '</small>' : on ? '<small>✔ Equipado</small>' : '<small>Toque para equipar</small>'));
       if (tabK !== 'cel') { const on2 = PV && PV.t === tabK && PV.id === it.id; const eye = document.createElement('button'); eye.type = 'button'; eye.className = 'pvb' + (on2 ? ' on' : ''); eye.title = 'Ver no meu jogador'; eye.textContent = '👁'; eye.onclick = ev => { ev.stopPropagation(); PV = on2 ? null : { t: tabK, id: it.id, slot: it.slot }; build(); }; d.appendChild(eye); }
       d.onclick = () => { if (lk) { if (tabK === 'cel') { prevCel = it.id; build(); } else { PV = { t: tabK, id: it.id, slot: it.slot }; build(); } return; } if (tabK === 'cel') prevCel = null; PV = null; if (tgt) { const st = tmGet(); st[tgt.i] = st[tgt.i] || {}; if (tabK === 'hat') { if (it.id === null) { st[tgt.i].hat = 0; st[tgt.i].mus = 0; } else st[tgt.i][it.slot] = st[tgt.i][it.slot] ? 0 : 1; } else st[tgt.i][tabK] = it.id ? 1 : 0; LS.setItem(TMK, JSON.stringify(st)); mateSync(); build(); return; } const w = getW(); if (tabK === 'hat') { if (it.id === null) { w.hat = null; w.mus = null; } else w[it.slot] = w[it.slot] === it.id ? null : it.id; } else w[tabK] = (it.id === 'classic') ? null : it.id; setW(w); applyAll(); build(); };
       grid.appendChild(d); { const kk = it.slot === 'mus' ? 'mus' : tabK; drawables.push(lazy(cv, () => card3d(kk, it.id, cv))); }
     });
-    drawables.push(tabK === 'cel' ? celStage($('wrBig'), prevCel || e.cel) : stage3d($('wrBig')));
+    { const _tk = tabK, _pc = prevCel || e.cel; setTimeout(() => { if (_b !== window.__bid) return; try { drawables.push(_tk === 'cel' ? celStage($('wrBig'), _pc) : stage3d($('wrBig'))); start(); } catch (err) { console.error(err); } }, 40); }
     { const st = document.querySelector('.wrStage'); if (st) st.classList.toggle('mys', [pvE().ball, pvE().hat, pvE().cleat, pvE().mus].some(x => ['mball', 'mhat', 'mcleat', 'mmask', 'mdrag', 'mgalax', 'mice', 'mflame', 'mnova', 'megg', 'mplan', 'mraio', 'mcosm', 'mwing'].includes(x))); }
     { const e = pvE(); $('wrCap').textContent = (PV ? '👁 Prévia • ' : '') + (tgt ? tgt.name : (NAMES[e.ball] || NM(ITEMS.ball, e.ball))) + ' • ' + (e.hat || e.mus ? NM(ITEMS.hat, e.hat) : 'Sem acessório') + (e.mus ? ' + ' + NM(ITEMS.hat, e.mus) : '') + ' • ' + NM(ITEMS.cleat, e.cleat) + ' • ' + CELN[e.cel]; }
     document.querySelectorAll('.wrTabs button').forEach(b => b.classList.toggle('on', b.dataset.t === tabK));
@@ -8331,9 +8344,10 @@ addEventListener('resize', () => {
   $('wrPop').addEventListener('click', e => { if (e.target.id === 'wrPop') $('wrPop').classList.remove('on'); });
   $('wgOk').onclick = () => $('wrGift').classList.remove('on');
   new MutationObserver(() => { if ($('gLogin').classList.contains('on')) setTimeout(() => { try { const ph = document.querySelector('#gLogin .gl-ph'); if (!phoneD && ph && ph.offsetParent !== null) phoneD = phoneCard(); } catch (err) { console.error(err); } start(); }, 60); }).observe($('gLogin'), { attributes: true, attributeFilter: ['class'] });
-  window.__wr = { cel: () => equipped().cel, gift() { tgt = null; applyAll(); if (!R1) R1 = mkRend(220, 220);
+  window.__wr = { cel: () => equipped().cel, gift() { tgt = null; applyAll(); if (!R1) R1 = mkRend(COARSE ? 160 : 220, COARSE ? 160 : 220, !COARSE);
     drawables = [card3d('ball', 'nimbus', $('wgB')), card3d('hat', 'nimbus', $('wgH')), card3d('cleat', 'nimbus', $('wgC'))]; $('wrGift').classList.add('on'); start(); } };
   applyAll();
+  (window.requestIdleCallback || (f => setTimeout(f, 1500)))(() => { try { if (!R1) R1 = mkRend(COARSE ? 160 : 220, COARSE ? 160 : 220, !COARSE); if (!R2) R2 = mkRend(COARSE ? 420 : 560, COARSE ? 340 : 454); } catch (_) {} }, { timeout: 5000 });   // cria os contextos 3D do vestiário em tempo ocioso
 })();
 </script>
 <style>
