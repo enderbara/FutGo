@@ -516,6 +516,7 @@ html.mob .crow,html.mob .crow span{font-size:12px!important}html.mob .kbtn{min-w
 html.mob .tcard{padding:5px 9px!important}html.mob .tcard b{font-size:13px!important}
 html.mob #tcSkip{font-size:13px;padding:8px 14px}
 </style>
+<style>.plabel,.ptag,#shout,.sbub,#call,#goalMk,#trBub{z-index:2!important}.plabel,.ptag,#shout,.sbub,#call,#goalMk{transition:opacity .15s}body.paused .plabel,body.paused #call,body.paused #shout,body.paused .sbub,body.paused #goalMk{display:none!important}body.lookc{cursor:none!important}body.lookc *{cursor:none!important}</style>
 </head>
 <body>
 <div id="ver">Kick.io v1.1.0</div>
@@ -979,12 +980,12 @@ const SHIRTS = [[0xff914d, 0xfdd835, 0xffffff, 0xe53935], [0x1e88e5, 0xffffff, 0
 const SHOE_COLORS = [0x111111, 0xeeeeee, 0xd32f2f, 0x1976d2];
 const FU = { uTime: { value: 0 }, uCheer: { value: 0 } };
 const CK = { h: { value: new THREE.Color(0xffffff) }, a: { value: new THREE.Color(0xffffff) }, hh: { value: 0 }, ha: { value: 0 } };   // cor 2 e tipo de listra dos uniformes da torcida
-const EAT_FN = 'float eAmt(float side, float t) { float cy = 4.5 + fract(aPhase * 3.7) * 4.0 + side * 0.9; float ct = mod(t + aPhase * 7.1 + side * 2.3, cy); return smoothstep(0.0, 0.45, ct) * (1.0 - smoothstep(1.7, 2.2, ct)); }\n' +
+const EAT_FN = 'float eAmt(float side, float t) { float cy = 4.5 + fract(aPhase * 3.7) * 4.0 + side * 0.9; float ct = mod(t + aPhase * 7.1 + side * 2.3, cy); return 0.0; }\n' +
   'vec3 eOff(float side, float t) { float e = eAmt(side, t); vec3 d = side < 0.5 ? vec3(-1.0, 1.15, 0.9) : vec3(0.95, 1.1, 1.2); return d * e + vec3(0.0, e * 0.06 * sin(t * 14.0), 0.0); }\n';
 function eatMat(mat, mode, hull) {   // mão + pipoca (R) / refri (L) sobem até a boca de tempos em tempos
   mat.onBeforeCompile = sh => {
     sh.uniforms.uTime = FU.uTime; sh.uniforms.uCheer = FU.uCheer; if (hull) sh.uniforms.uRes = PXU;
-    const bob = 'transformed.y += sin(uTime * 2.0 + aPhase) * 0.04 + abs(sin(uTime * 7.0 + aPhase)) * 1.4 * uCheer;';
+    const bob = 'transformed.y += (sin(uTime * 1.8 + aPhase) * 0.035 + sin(uTime * 0.7 + aPhase * 2.3) * 0.025) + abs(sin(uTime * 7.0 + aPhase)) * 1.4 * uCheer; transformed.x += sin(uTime * 1.1 + aPhase * 3.0) * 0.045 * max(transformed.y, 0.0) * (1.0 - uCheer);';
     const mv = mode === 'R' ? 'transformed += eOff(0.0, uTime);\n' : mode === 'L' ? 'transformed += eOff(1.0, uTime);\n' :
       '{ float hy = step(0.9, position.y) * step(position.y, 2.05); float r = step(0.97, position.x) * hy * step(0.5, mod(aSn, 2.0)); float l = step(position.x, -0.97) * hy * step(1.5, aSn); transformed += eOff(0.0, uTime) * r + eOff(1.0, uTime) * l; }\n';
     let v = 'attribute float aPhase;\nattribute float aSn;\nuniform float uTime;\nuniform float uCheer;\n' + (hull ? 'uniform vec2 uRes;\n' : '') + EAT_FN +
@@ -1014,7 +1015,7 @@ function idle(mat) {
     sh.vertexShader = 'attribute float aPhase;\nuniform float uTime;\nuniform float uCheer;\n' +
       sh.vertexShader.replace('#include <begin_vertex>',
         'vec3 transformed = vec3(position);\n' +
-        'transformed.y += sin(uTime * 2.0 + aPhase) * 0.04 + abs(sin(uTime * 7.0 + aPhase)) * 1.4 * uCheer;');
+        'transformed.y += (sin(uTime * 1.8 + aPhase) * 0.035 + sin(uTime * 0.7 + aPhase * 2.3) * 0.025) + abs(sin(uTime * 7.0 + aPhase)) * 1.4 * uCheer; transformed.x += sin(uTime * 1.1 + aPhase * 3.0) * 0.045 * max(transformed.y, 0.0) * (1.0 - uCheer);');
   };
   return mat;
 }
@@ -1028,7 +1029,7 @@ function blinkEyes(mat, cy) {   // olhos da torcida: mesma balançada do corpo +
         'float bP = 3.0 + fract(aPhase * 7.13) * 3.0; float bf = mod(uTime + aPhase * 5.3, bP);\n' +
         'float bk = bf < 0.16 ? 1.0 - sin(bf / 0.16 * 3.14159) * 0.92 : 1.0;\n' +
         'transformed.y = ' + cy.toFixed(4) + ' + (transformed.y - ' + cy.toFixed(4) + ') * bk;\n' +
-        'transformed.y += sin(uTime * 2.0 + aPhase) * 0.04 + abs(sin(uTime * 7.0 + aPhase)) * 1.4 * uCheer;');
+        'transformed.y += (sin(uTime * 1.8 + aPhase) * 0.035 + sin(uTime * 0.7 + aPhase * 2.3) * 0.025) + abs(sin(uTime * 7.0 + aPhase)) * 1.4 * uCheer; transformed.x += sin(uTime * 1.1 + aPhase * 3.0) * 0.045 * max(transformed.y, 0.0) * (1.0 - uCheer);');
   };
   mat.customProgramCacheKey = () => 'crowdEyesBlink';
   return mat;
@@ -1039,7 +1040,7 @@ function crowdHull() {   // contorno da torcida: casca no mundo + empurrão fixo
   m.onBeforeCompile = sh => {
     sh.uniforms.uTime = FU.uTime; sh.uniforms.uCheer = FU.uCheer; sh.uniforms.uRes = PXU;
     sh.vertexShader = 'attribute float aPhase;\nuniform float uTime;\nuniform float uCheer;\nuniform vec2 uRes;\n' + sh.vertexShader
-      .replace('#include <begin_vertex>', 'vec3 transformed = vec3(position);\ntransformed.y += sin(uTime * 2.0 + aPhase) * 0.04 + abs(sin(uTime * 7.0 + aPhase)) * 1.4 * uCheer;')
+      .replace('#include <begin_vertex>', 'vec3 transformed = vec3(position);\ntransformed.y += (sin(uTime * 1.8 + aPhase) * 0.035 + sin(uTime * 0.7 + aPhase * 2.3) * 0.025) + abs(sin(uTime * 7.0 + aPhase)) * 1.4 * uCheer; transformed.x += sin(uTime * 1.1 + aPhase * 3.0) * 0.045 * max(transformed.y, 0.0) * (1.0 - uCheer);')
       .replace('#include <project_vertex>', '#include <project_vertex>\n{\n#ifdef USE_INSTANCING\nvec3 vn = normalize(normalMatrix * (mat3(instanceMatrix) * normal));\n#else\nvec3 vn = normalize(normalMatrix * normal);\n#endif\nvec2 d = normalize((projectionMatrix * vec4(vn, 0.0)).xy + 1e-6); gl_Position.xy += d * gl_Position.w * 1.1 * 2.0 / uRes; }');
   };
   m.customProgramCacheKey = () => 'crowdHull';
@@ -1671,17 +1672,22 @@ addEventListener('wheel', e => {
 // ---------- Mouse-look (tecla Alt liga/desliga): cursor some e mexer o mouse gira a câmera ----------
 let mlook = false;
 document.addEventListener('pointerlockchange', () => { mlook = document.pointerLockElement === renderer.domElement; });
+let fakeLook = false;
+const lookOff = () => { fakeLook = false; document.body.classList.remove('lookc'); };
+document.addEventListener('pointerlockerror', () => { fakeLook = true; document.body.classList.add('lookc'); });
+addEventListener('blur', () => { lookOff(); });
 addEventListener('keydown', e => {
   if (e.code !== 'AltLeft' && e.code !== 'AltRight') return;
   e.preventDefault();
   if (e.repeat || menu.mode !== 'play') return;
   if (document.pointerLockElement) document.exitPointerLock();
-  else { dragging = false; try { renderer.domElement.requestPointerLock(); } catch (_) {} }
+  else if (fakeLook) lookOff();
+  else { dragging = false; try { const r = renderer.domElement.requestPointerLock(); if (r && r.catch) r.catch(() => { fakeLook = true; document.body.classList.add('lookc'); }); } catch (_) { fakeLook = true; document.body.classList.add('lookc'); } }
 });
 addEventListener('keyup', e => { if (e.code === 'AltLeft' || e.code === 'AltRight') e.preventDefault(); });
 addEventListener('mousemove', e => {
-  if (!mlook) return;
-  if (menu.mode !== 'play') { document.exitPointerLock(); return; }
+  if (!mlook && !fakeLook) return;
+  if (menu.mode !== 'play') { if (mlook) document.exitPointerLock(); lookOff(); return; }
   targetTheta -= e.movementX * 0.0045 * CFG.sens;
   targetPhi = clampPhi(targetPhi - e.movementY * 0.0045 * CFG.sens * CFG.inv);
 });
@@ -4429,6 +4435,7 @@ function poseBot(b, dt) {
   const lean = clampN(-(b.av || 0) * 0.03, -0.22, 0.22) * a;   // inclina o corpo para dentro da curva
   c.model.rotation.set(-b.dn * 1.45 + (0.08 + 0.2 * run) * a, 0, lean);
   c.model.position.y = b.dn * 0.72 + (1 - Math.abs(sn)) * (0.13 + 0.12 * run) * a;
+  { const ia = (1 - a) * (1 - b.dn), ti = performance.now() / 1000, ph = c.g.id * 1.7; c.model.position.y += ia * Math.sin(ti * 2.2 + ph) * 0.03; c.model.rotation.z += ia * Math.sin(ti * 0.9 + ph) * 0.03; c.handL.position.y += ia * Math.sin(ti * 2.2 + ph + 0.6) * 0.05; c.handR.position.y += ia * Math.sin(ti * 2.2 + ph + 1.2) * 0.05; c.handL.position.z += ia * Math.sin(ti * 1.3 + ph) * 0.06; c.handR.position.z -= ia * Math.sin(ti * 1.3 + ph) * 0.06; c.head.rotation.y = ia * Math.sin(ti * 0.55 + ph) * 0.35; }
   const G = b.fgt;
   if (G && b.dn < 0.4) {
     const tm = performance.now() / 1000;
@@ -5733,6 +5740,7 @@ function animate() {
                      + (1.9 + Math.sin(idleT * 12 + 2) * 0.2) * celAmp;
 
     head.rotation.z = -s * 0.03 * amp;
+    { const ia = (1 - amp) * (celAmp > 0.1 ? 0 : 1); model.position.y += ia * Math.sin(idleT * 2.2) * 0.03; model.rotation.z += ia * Math.sin(idleT * 0.9) * 0.03; handL.position.y += ia * Math.sin(idleT * 2.2 + 0.6) * 0.05; handR.position.y += ia * Math.sin(idleT * 2.2 + 1.2) * 0.05; handL.position.z += ia * Math.sin(idleT * 1.3) * 0.06; handR.position.z -= ia * Math.sin(idleT * 1.3) * 0.06; head.rotation.y = ia * Math.sin(idleT * 0.55) * 0.3; }
     head.rotation.x = 0;
     head.position.set(SPEC.head[4], 3.12 + Math.sin(walkT * 2 - 0.6) * 0.03 * amp, SPEC.head[6]);
     sadAmp += ((celebT > 0 && ownGoal ? 1 : 0) - sadAmp) * Math.min(1, dt * 6);
@@ -5879,11 +5887,12 @@ function animate() {
 
       bvy -= 32 * dt;
       bp.y += bvy * dt;
-      if (bp.y < BR) { bp.y = BR; bvy = bvy < -3 ? -bvy * 0.5 : 0; }
-      const onGround = bp.y <= BR + 0.01;
-      bv.multiplyScalar(Math.exp(-(onGround ? 1.3 : 0.1) * dt));
+      if (bp.y < BR) { bp.y = BR; if (bvy < -2) { bvy = -bvy * 0.62; const bk = Math.max(0.8, 1 - 0.012 * -bvy); bv.x *= bk; bv.z *= bk; } else bvy = 0; }
+      const onGround = bp.y <= BR + 0.01 && bvy < 0.5;
+      if (onGround) { const s1 = hyp2(bv.x, bv.z); if (s1 > 0) { const kr = Math.max(0, s1 - (1.6 + s1 * 0.32) * dt) / s1; bv.x *= kr; bv.z *= kr; } }
+      else bv.multiplyScalar(Math.exp(-0.05 * dt - 0.0006 * hyp2(bv.x, bv.z) * dt));
       if (bcurve) { const s0 = hyp2(bv.x, bv.z); if (s0 > 10) { const kc = bcurve * 22 * dt, vx0 = bv.x; bv.x += -bv.z / s0 * kc; bv.z += vx0 / s0 * kc; } bcurve *= Math.exp(-(onGround ? 1.5 : 0.35) * dt); if (Math.abs(bcurve) < 0.03) bcurve = 0; }   // efeito (Magnus)
-      if (onGround && hyp2(bv.x, bv.z) < 0.12) { bv.x = 0; bv.z = 0; }
+      if (onGround && hyp2(bv.x, bv.z) < 0.25) { bv.x = 0; bv.z = 0; }
       bp.x += bv.x * dt; bp.z += bv.z * dt;
 
       if (bp.x >  116.6) { bp.x =  116.6; bv.x *= -0.5; }
