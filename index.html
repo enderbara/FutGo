@@ -978,6 +978,34 @@ const SKIN_TONES = [0xffe4d6, 0xffdbac, 0xf1c27d, 0xe0ac69, 0xc68642, 0x8d5524];
 const SHIRTS = [[0xff914d, 0xfdd835, 0xffffff, 0xe53935], [0x1e88e5, 0xffffff, 0x43a047, 0x8e24aa]];
 const SHOE_COLORS = [0x111111, 0xeeeeee, 0xd32f2f, 0x1976d2];
 const FU = { uTime: { value: 0 }, uCheer: { value: 0 } };
+const CK = { h: { value: new THREE.Color(0xffffff) }, a: { value: new THREE.Color(0xffffff) }, hh: { value: 0 }, ha: { value: 0 } };   // cor 2 e tipo de listra dos uniformes da torcida
+const EAT_FN = 'float eAmt(float side, float t) { float cy = 4.5 + fract(aPhase * 3.7) * 4.0 + side * 0.9; float ct = mod(t + aPhase * 7.1 + side * 2.3, cy); return smoothstep(0.0, 0.45, ct) * (1.0 - smoothstep(1.7, 2.2, ct)); }\n' +
+  'vec3 eOff(float side, float t) { float e = eAmt(side, t); vec3 d = side < 0.5 ? vec3(-1.0, 1.15, 0.9) : vec3(0.95, 1.1, 1.2); return d * e + vec3(0.0, e * 0.06 * sin(t * 14.0), 0.0); }\n';
+function eatMat(mat, mode, hull) {   // mão + pipoca (R) / refri (L) sobem até a boca de tempos em tempos
+  mat.onBeforeCompile = sh => {
+    sh.uniforms.uTime = FU.uTime; sh.uniforms.uCheer = FU.uCheer; if (hull) sh.uniforms.uRes = PXU;
+    const bob = 'transformed.y += sin(uTime * 2.0 + aPhase) * 0.04 + abs(sin(uTime * 7.0 + aPhase)) * 1.4 * uCheer;';
+    const mv = mode === 'R' ? 'transformed += eOff(0.0, uTime);\n' : mode === 'L' ? 'transformed += eOff(1.0, uTime);\n' :
+      '{ float hy = step(0.9, position.y) * step(position.y, 2.05); float r = step(0.97, position.x) * hy * step(0.5, mod(aSn, 2.0)); float l = step(position.x, -0.97) * hy * step(1.5, aSn); transformed += eOff(0.0, uTime) * r + eOff(1.0, uTime) * l; }\n';
+    let v = 'attribute float aPhase;\nattribute float aSn;\nuniform float uTime;\nuniform float uCheer;\n' + (hull ? 'uniform vec2 uRes;\n' : '') + EAT_FN +
+      sh.vertexShader.replace('#include <begin_vertex>', 'vec3 transformed = vec3(position);\n' + mv + bob);
+    if (hull) v = v.replace('#include <project_vertex>', '#include <project_vertex>\n{\n#ifdef USE_INSTANCING\nvec3 vn = normalize(normalMatrix * (mat3(instanceMatrix) * normal));\n#else\nvec3 vn = normalize(normalMatrix * normal);\n#endif\nvec2 d = normalize((projectionMatrix * vec4(vn, 0.0)).xy + 1e-6); gl_Position.xy += d * gl_Position.w * 1.1 * 2.0 / uRes; }');
+    sh.vertexShader = v;
+  };
+  mat.customProgramCacheKey = () => 'eat' + mode + (hull ? 'H' : 'M');
+  return mat;
+}
+function bodyKit(mat) {   // camisa listrada com as cores do time (mandante/visitante) nos torcedores marcados
+  const prev = mat.onBeforeCompile;
+  mat.onBeforeCompile = sh => {
+    prev(sh); sh.uniforms.uCh = CK.h; sh.uniforms.uCa = CK.a; sh.uniforms.uHh = CK.hh; sh.uniforms.uHa = CK.ha;
+    sh.vertexShader = 'attribute float aKt;\nvarying float vKt;\nvarying vec2 vLp;\n' + sh.vertexShader.replace('void main() {', 'void main() {\nvKt = aKt; vLp = position.xy;');
+    sh.fragmentShader = 'varying float vKt;\nvarying vec2 vLp;\nuniform vec3 uCh;\nuniform vec3 uCa;\nuniform float uHh;\nuniform float uHa;\n' +
+      sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\nif (vKt > -0.5) { bool aw = vKt > 0.5; float hp = aw ? uHa : uHh; float w = hp > 0.5 ? vLp.y * 7.0 : vLp.x * 9.0; diffuseColor.rgb = mix(diffuseColor.rgb, aw ? uCa : uCh, step(0.0, sin(w))); }');
+  };
+  mat.customProgramCacheKey = () => 'crowdBodyKit';
+  return mat;
+}
 
 function idle(mat) {
   mat.onBeforeCompile = sh => {
@@ -1159,42 +1187,44 @@ const crowdLOD = [];   // contornos/olhos da torcida: somem só quando estão lo
   }));
   const eyeCy = (() => { const g = mkEyes(); g.computeBoundingBox(); return (g.boundingBox.min.y + g.boundingBox.max.y) / 2; })();
   const lam = () => idle(new THREE.MeshLambertMaterial());
-  const mats = { prop: idle(new THREE.MeshLambertMaterial({ vertexColors: true })), body: lam(), skin: lam(), shoe: lam(), eyes: blinkEyes(new THREE.MeshBasicMaterial({ color: 0x232323 }), eyeCy), hull: crowdHull() };
+  const mats = { propR: eatMat(new THREE.MeshLambertMaterial({ vertexColors: true }), 'R', false), propL: eatMat(new THREE.MeshLambertMaterial({ vertexColors: true }), 'L', false),
+    body: bodyKit(lam()), skin: eatMat(new THREE.MeshLambertMaterial(), 'S', false), shoe: lam(), eyes: blinkEyes(new THREE.MeshBasicMaterial({ color: 0x232323 }), eyeCy),
+    hull: eatMat(HULL_MAT.clone(), 'S', true), hullR: eatMat(HULL_MAT.clone(), 'R', true), hullL: eatMat(HULL_MAT.clone(), 'L', true) };
   const pick = a => a[Math.floor(Math.random() * a.length)];
   const groups = {};
   crowd.forEach(f => (groups[f.ck] = groups[f.ck] || []).push(f));
   for (const key in groups) {
     const list = groups[key], k = list.length;
     const ph = new Float32Array(k).map(() => Math.random() * 6.28);
+    const snA = new Float32Array(k); list.forEach((f, i) => { const q = Math.random(); f.sn = q < 0.14 ? 1 : q < 0.26 ? 2 : q < 0.3 ? 3 : 0; snA[i] = f.sn; });   // 1 = pipoca, 2 = refri, 3 = os dois
     const ctr = new THREE.Vector3(), tmp = new THREE.Vector3();
     list.forEach(f => ctr.add(tmp.setFromMatrixPosition(f.m))); ctr.divideScalar(k);
     let rad = 0; list.forEach(f => { rad = Math.max(rad, ctr.distanceTo(tmp.setFromMatrixPosition(f.m))); });
     const make = (geo, mat, colorFn) => {
-      geo.setAttribute('aPhase', new THREE.InstancedBufferAttribute(ph, 1));
+      geo.setAttribute('aPhase', new THREE.InstancedBufferAttribute(ph, 1)); geo.setAttribute('aSn', new THREE.InstancedBufferAttribute(snA, 1));
       geo.boundingSphere = new THREE.Sphere(ctr.clone(), rad + 3);
       const im = new THREE.InstancedMesh(geo, mat, k);
       list.forEach((f, i) => { im.setMatrixAt(i, f.m); if (colorFn) im.setColorAt(i, _c.set(colorFn(f))); });
       stadium.add(im);
       return im;
     };
-    { const r0 = Math.random; const bim = make(sp('body', 0), mats.body, f => { const r = r0(); f.kt = r < 0.2 ? 0 : r < 0.38 ? 1 : -1; return (f.col = pick(SHIRTS[f.sec])); }); crowdBodies.push({ im: bim, list }); }
+    { const r0 = Math.random; const bim = make(sp('body', 0), mats.body, f => { const r = r0(); f.kt = r < 0.26 ? 0 : r < 0.42 ? 1 : -1; return (f.col = pick(SHIRTS[f.sec])); }); bim.geometry.setAttribute('aKt', new THREE.InstancedBufferAttribute(Float32Array.from(list, f => f.kt), 1)); crowdBodies.push({ im: bim, list }); }
     make(mergeGeos([sp('head', 0), sp('handL', 0), sp('handR', 0)]), mats.skin, () => pick(SKIN_TONES));
     make(mergeGeos([sp('footL', 0), sp('footR', 0)]), mats.shoe, () => pick(SHOE_COLORS));
-    list.forEach(f => { const q = Math.random(); f.sn = q < 0.14 ? 1 : q < 0.26 ? 2 : q < 0.3 ? 3 : 0; });   // 1 = pipoca, 2 = refri, 3 = os dois
     {
-      const mkProp = (idx, parts) => {
+      const mkProp = (idx, parts, pm, hmat) => {
         if (!idx.length) return;
         const phs = new Float32Array(idx.map(i => ph[i]));
-        for (const [geo, mat] of [[mergeCol(parts(0)), mats.prop], [mergeCol(parts(0.05)), mats.hull]]) {
+        for (const [geo, mat] of [[mergeCol(parts(0)), pm], [mergeCol(parts(0.05)), hmat]]) {
           geo.setAttribute('aPhase', new THREE.InstancedBufferAttribute(phs, 1));
           geo.boundingSphere = new THREE.Sphere(ctr.clone(), rad + 3);
           const im = new THREE.InstancedMesh(geo, mat, idx.length);
           idx.forEach((i, j) => im.setMatrixAt(j, list[i].m)); stadium.add(im);
-          if (mat === mats.hull) crowdLOD.push({ m: im, e: im, c: ctr.clone(), r: rad });
+          if (mat === hmat) crowdLOD.push({ m: im, e: im, c: ctr.clone(), r: rad });
         }
       };
-      mkProp(list.map((f, i) => i).filter(i => list[i].sn === 1 || list[i].sn === 3), popParts);
-      mkProp(list.map((f, i) => i).filter(i => list[i].sn === 2 || list[i].sn === 3), sodaParts);
+      mkProp(list.map((f, i) => i).filter(i => list[i].sn === 1 || list[i].sn === 3), popParts, mats.propR, mats.hullR);
+      mkProp(list.map((f, i) => i).filter(i => list[i].sn === 2 || list[i].sn === 3), sodaParts, mats.propL, mats.hullL);
     }
     const em = make(mkEyes(), mats.eyes);
     const hm = make(mergeGeos(['body', 'head', 'handL', 'handR', 'footL', 'footR'].map(n => sp(n, T))), mats.hull);
@@ -3798,7 +3828,8 @@ function fighterStep(f, dt, B) {
     if (G.nextP <= 0) { G.nextP = rr(0.3, 0.8); startPunch(f, G, foe); }
   }
 }
-function giveCard(b, kind, why) {                            // entra na fila de cartões do juiz (2º amarelo vira vermelho)
+function giveCard(b, kind, why) {
+  return;   // cartões desativados                            // entra na fila de cartões do juiz (2º amarelo vira vermelho)
   let card = kind;
   if (kind === 'yellow') { b.cards = (b.cards || 0) + 1; if (b.cards >= 2) card = 'red'; }
   ref.q.push({ who: b, card, lbl: (b.isU ? 'Você' : (b.t ? 'Adversário' : 'Seu time') + ' #' + b.num) + ' · ' + (card === 'red' && kind === 'yellow' ? '2º amarelo' : why) });
@@ -5025,6 +5056,7 @@ function mkFan(id) {
 }
 function setFanFightVis(v) { const F = fanFight; if (F.a) F.a.g.visible = F.b.g.visible = !!(v && F.on); }
 function fanFightStart() {
+  return false;   // briga na arquibancada desativada
   const F = fanFight; if (!aisleSpots.length) return false;
   let sp = null;
   for (let k = 0; k < 24 && !sp; k++) {
@@ -5133,7 +5165,8 @@ function kickoff(tm) {
   match.rs = null; setRestart('ko', tm || 0, 0, 0);
 }
 function applyCrowdKits() {
-  const hc = kitSaved.c1, ac = awayKit(0).c1;
+  const hc = kitSaved.c1, ak = awayKit(0), ac = ak.c1;
+  CK.h.value.set(kitSaved.c2 || '#ffffff'); CK.a.value.set(ak.c2 || '#ffffff'); CK.hh.value = kitSaved.tpl === 'hoop' ? 1 : 0; CK.ha.value = ak.tpl === 'hoop' ? 1 : 0;
   for (const g of crowdBodies) { g.list.forEach((f, i) => g.im.setColorAt(i, _c.set(f.kt === 0 ? hc : f.kt === 1 ? ac : f.col))); if (g.im.instanceColor) g.im.instanceColor.needsUpdate = true; }
 }
 function restoreMembers() {
@@ -5482,7 +5515,7 @@ function animate() {
   requestAnimationFrame(animate);
   if (LOWEND) { const _t = performance.now(), _d = _t - (window.__lr || _t); window.__lr = _t; if (_d > 2 && _d < 50) window.__rd = (window.__rd || 16.7) * 0.9 + _d * 0.1;
     if ((window.__rd || 16.7) < 9.5 && _t - (window.__lf || 0) < 15.5) return; window.__lf = _t; }   // só limita a 60 em telas 120Hz+; em 60/90Hz roda todo quadro
-  if (window.__mobBlock || window.__paused) { clock.getDelta(); return; }
+  if (window.__mobBlock || window.__paused || window.__devBlock) { clock.getDelta(); return; }
   const _n = performance.now(); qN++;                       // se o FPS cair, reduz a resolução aos poucos (só diminui)
   if (_n - qT >= 1000) {
     const fps = qN * 1000 / (_n - qT);
@@ -5992,7 +6025,7 @@ function sfxWalk(dt, list) {
     let spd = Math.hypot(g.position.x - e.lx, g.position.z - e.lz) / Math.max(dt, 1e-3); e.lx = g.position.x; e.lz = g.position.z; if (spd > 45) spd = 0;
     e.v += (spd - e.v) * Math.min(1, dt * 8);
     const near = Math.abs(g.position.x - camera.position.x) + Math.abs(g.position.z - camera.position.z) < 130;
-    const tgt = (g.visible !== false && e.v > 1.8 && near) ? Math.min(1, e.v / 14) * 0.55 * CFG.vol : 0;
+    const tgt = (g.visible !== false && e.v > 1.8 && near) ? Math.min(1, e.v / 14) * 0.32 * CFG.vol : 0;
     e.gn.gain.value += (tgt - e.gn.gain.value) * Math.min(1, dt * 12);
     e.s.playbackRate.value = 0.85 + 0.4 * Math.min(1, e.v / 22);
     setPan(e.p, g.position.x, 0.5, g.position.z);
@@ -7148,6 +7181,16 @@ addEventListener('resize', () => {
   #gOutAsk .row { display: flex; gap: 8px; margin-top: 10px; } #gOutAsk .gb { flex: 1; text-align: center !important; }
   #gOutAsk .gb.red { background: #d32f2f !important; color: #fff !important; }
 </style>
+<style>
+  #gBlock { position: fixed; inset: 0; z-index: 200010; display: none; place-items: center; background: rgba(4,7,16,.96); font-family: system-ui; color: #fff; padding: 16px; box-sizing: border-box; text-align: center; }
+  #gBlock.on { display: grid; }
+  #gBlock .gb-c { width: min(400px, 100%); padding: 26px 22px; border-radius: 22px; background: #0d1426; border: 2px solid #ffd54a88; box-shadow: 0 20px 60px #000b; }
+  #gBlock h3 { margin: 6px 0 8px; font-size: 22px; } #gBlock p { margin: 0 0 18px; opacity: .8; font-size: 14px; line-height: 1.45; } #gBlock .big { font-size: 46px; }
+  #gBlock button { display: block; width: 100%; margin-top: 8px; padding: 13px; border-radius: 13px; font: 800 15px system-ui; cursor: pointer; border: 2px solid rgba(255,255,255,.3); background: rgba(255,255,255,.1); color: #fff; }
+  #gBlock button.go { background: #ffd54a; color: #222; border-color: #ffd54a; }
+</style>
+<div id="gBlock"><div class="gb-c"><div class="big">📱</div><h3>Há um dispositivo jogando</h3><p>Esta conta já está sendo usada em outro aparelho. Feche o jogo lá para jogar aqui. Vamos tentar de novo automaticamente.</p>
+  <button class="go" id="gbRetry" type="button">Tentar de novo</button><button id="gbOut" type="button">Sair da conta neste aparelho</button></div></div>
 <div id="gPanel"><div class="gp-c">
   <button class="gl-x" id="gpX" type="button" aria-label="Fechar">✕</button>
   <div class="gp-h"><div class="gp-av" id="gpAv"></div><div><b id="gpName"></b><small id="gpSt"></small></div></div>
@@ -7252,7 +7295,7 @@ addEventListener('resize', () => {
     $('gEmail').textContent = (sess.name || '') + ' • ' + (LABEL[status] || '');
     $('gName').textContent = sess.name || 'Jogador'; $('gSt').textContent = LABEL[status] || ''; $('gAv').innerHTML = sess.picture ? '<img referrerpolicy="no-referrer" src="' + sess.picture + '" alt="">' : '<span>' + GLOGO + '</span>'; $('gRe').style.display = tokOk() ? 'none' : 'block';
   }
-  const setStatus = s => { status = s; render(); };
+  const setStatus = s => { status = s; render(); if (s === 'ok') setTimeout(() => lockTick(), 60); };
 
   /* ---------- autenticação (Google Identity Services) ---------- */
   function initGIS() {
@@ -7370,6 +7413,7 @@ addEventListener('resize', () => {
   }
   async function logout() {
     if (loggingOut) return; loggingOut = true; clearTimeout(timer);
+    try { if (sess && tokOk() && !blocked) await Promise.race([lockWrite(0), new Promise(r => setTimeout(r, 3000))]); } catch (_) {}   // libera o aparelho para outro entrar
     try { if (pending && sess && tokOk()) await Promise.race([push(), new Promise(r => setTimeout(r, 6000))]); } catch (_) {}   // guarda o que faltava na nuvem antes de apagar daqui
     try { if (tok && window.google) google.accounts.oauth2.revoke(tok.v, () => {}); } catch (_) {}
     tok = null; sess = null; fileId = null; pending = false;
@@ -7377,6 +7421,47 @@ addEventListener('resize', () => {
     try { await Promise.race([new Promise(r => { const q = indexedDB.deleteDatabase('futio'); q.onsuccess = q.onerror = q.onblocked = () => r(); }), new Promise(r => setTimeout(r, 1500))]); } catch (_) {}   // hino enviado
     location.reload();   // volta do zero (uniforme padrão, escala 0...)
   }
+  /* ---------- um aparelho jogando por vez (trava na pasta do app no Drive) ---------- */
+  const LOCKF = 'kickio-lock.json', LOCK_TTL = 35000;
+  const DEV = (() => { let d = null; try { d = sessionStorage.getItem('gsave_dev'); } catch (_) {} if (!d) { d = Math.random().toString(36).slice(2) + Date.now().toString(36); try { sessionStorage.setItem('gsave_dev', d); } catch (_) {} } return d; })();
+  let lockId = null, blocked = false, lockBusy = false;
+  async function lockFind() {
+    const j = await (await api('https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&fields=files(id)&pageSize=1&q=' + encodeURIComponent("name='" + LOCKF + "'"))).json();
+    return lockId = (j.files && j.files[0] && j.files[0].id) || null;
+  }
+  async function lockRead() {
+    if (!lockId && !(await lockFind())) return null;
+    try { return await (await api('https://www.googleapis.com/drive/v3/files/' + lockId + '?alt=media')).json(); }
+    catch (e) { if (/404/.test(e.message)) { lockId = null; return null; } throw e; }
+  }
+  async function lockWrite(ts) {
+    const body = JSON.stringify({ dev: DEV, ts });
+    if (!lockId) await lockFind();
+    if (lockId) { await api('https://www.googleapis.com/upload/drive/v3/files/' + lockId + '?uploadType=media', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body }); return; }
+    const b = 'kl' + Date.now();
+    const mp = '--' + b + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify({ name: LOCKF, parents: ['appDataFolder'] }) + '\r\n--' + b + '\r\nContent-Type: application/json\r\n\r\n' + body + '\r\n--' + b + '--';
+    const j = await (await api('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', { method: 'POST', headers: { 'Content-Type': 'multipart/related; boundary=' + b }, body: mp })).json();
+    lockId = j.id;
+  }
+  function setBlocked(v) {
+    if (v === blocked) return; blocked = v; window.__devBlock = v; $('gBlock').classList.toggle('on', v);
+    try { if (typeof actx !== 'undefined' && actx) v ? actx.suspend() : actx.resume(); } catch (_) {}
+  }
+  async function lockTick(force) {
+    if (!sess || !tokOk() || lockBusy || loggingOut) return;
+    if (document.visibilityState === 'hidden' && !blocked && !force) return;   // aba escondida não conta como \"jogando\"
+    lockBusy = true;
+    try {
+      const L = await lockRead(), now = Date.now();
+      if (L && L.dev !== DEV && now - (+L.ts || 0) < LOCK_TTL) setBlocked(true);
+      else { await lockWrite(now); setBlocked(false); }
+    } catch (_) {} finally { lockBusy = false; }
+  }
+  setInterval(() => lockTick(), 10000);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') lockTick(); });
+  addEventListener('pagehide', () => { if (lockId && !blocked && tokOk()) { try { fetch('https://www.googleapis.com/upload/drive/v3/files/' + lockId + '?uploadType=media', { method: 'PATCH', keepalive: true, headers: { Authorization: 'Bearer ' + tok.v, 'Content-Type': 'application/json' }, body: JSON.stringify({ dev: DEV, ts: 0 }) }); } catch (_) {} } });
+  $('gbRetry').onclick = () => lockTick(true);
+  $('gbOut').onclick = () => { $('gBlock').classList.remove('on'); window.__devBlock = false; blocked = false; logout(); };
   const fmtTs = () => { const t = +LS.getItem(K_TS); return t ? new Date(t).toLocaleString('pt-BR') : '—'; };
   function renderPanel() {
     if (!sess) return;
