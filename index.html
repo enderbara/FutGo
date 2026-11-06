@@ -853,14 +853,15 @@ const HULL_MAT = new THREE.MeshBasicMaterial({
 // ids: 1 = player, 2 = bola, 3 = NPC (cada um com seu próprio contorno).
 // contorno com espessura minima em pixels (nunca some de longe nem de lado)
 const PXU = { value: new THREE.Vector2(innerWidth, innerHeight) };
+const GND = { value: 1 };   // 1 = cena do jogo (contorno achatado no gramado); 0 = prévias do vestiário
 addEventListener('resize', () => PXU.value.set(innerWidth, innerHeight));
 function pxOut(m, px, lift = 0) {
   m.onBeforeCompile = sh => {
-    sh.uniforms.uRes = PXU;
-    sh.vertexShader = 'uniform vec2 uRes;\n' + sh.vertexShader.replace('#include <project_vertex>',
-      '#include <project_vertex>\n' + (lift ? 'gl_Position = projectionMatrix * vec4(mvPosition.xyz + normalize(-mvPosition.xyz) * ' + lift.toFixed(2) + ', 1.0);\n' : '') + '{ vec3 vn = normalize(normalMatrix * normal); vec2 d = normalize((projectionMatrix * vec4(vn, 0.0)).xy + 1e-6); gl_Position.xy += d * gl_Position.w * ' + px.toFixed(2) + ' * 2.0 / uRes; }');
+    sh.uniforms.uRes = PXU; sh.uniforms.uGnd = GND;
+    sh.vertexShader = 'uniform vec2 uRes;\nuniform float uGnd;\n' + sh.vertexShader.replace('#include <project_vertex>',
+      '#include <project_vertex>\n#ifndef USE_INSTANCING\n{ vec4 wp = modelMatrix * vec4(transformed, 1.0); float gy = 0.03 - wp.y; if (uGnd > 0.5 && gy > 0.0) { mvPosition = viewMatrix * (wp + vec4(0.0, gy, 0.0, 0.0)); gl_Position = projectionMatrix * mvPosition; } }\n#endif\n' + (lift ? 'gl_Position = projectionMatrix * vec4(mvPosition.xyz + normalize(-mvPosition.xyz) * ' + lift.toFixed(2) + ', 1.0);\n' : '') + '{ vec3 vn = normalize(normalMatrix * normal); vec2 d = normalize((projectionMatrix * vec4(vn, 0.0)).xy + 1e-6); gl_Position.xy += d * gl_Position.w * ' + px.toFixed(2) + ' * 2.0 / uRes; }');
   };
-  m.customProgramCacheKey = () => 'px' + px + '_' + lift;
+  m.customProgramCacheKey = () => 'pxg' + px + '_' + lift;
   return m;
 }
 pxOut(HULL_MAT, 1.2);
@@ -7615,10 +7616,10 @@ addEventListener('resize', () => {
       p.lineJoin = 'round'; p.lineWidth = 12; p.strokeStyle = '#232323'; p.strokeText('L', S / 2, S / 2 + 8); p.fillStyle = '#ffd54a'; p.fillText('L', S / 2, S / 2 + 8); }))
     : k === 'gold' && !BXD.gold ? (_mt = _mt || ballTex((p, S) => { const g = p.createRadialGradient(S * .35, S * .3, 10, S / 2, S / 2, S * .75); g.addColorStop(0, '#fff3a0'); g.addColorStop(.45, '#ffc928'); g.addColorStop(1, '#b8780a'); p.fillStyle = g; p.fillRect(0, 0, S, S);   // Bola de Ouro
       p.lineJoin = 'round'; p.lineWidth = 8; p.strokeStyle = '#7a4a05'; p.fillStyle = '#e8a812'; p.beginPath(); for (let i = 0; i < 5; i++) { const a = -Math.PI / 2 + i * Math.PI * 2 / 5; p[i ? 'lineTo' : 'moveTo'](S / 2 + 50 * Math.cos(a), S / 2 + 50 * Math.sin(a)); } p.closePath(); p.fill(); p.stroke(); })) : BX(k);
-  const NH = ['troph', 'trai','cap','beanie','party','top','viking','crown','halo','visor','headband','wizard','samurai','wings','mhat','mdrag','mgalax','mice'], NCL = ['gold','mcleat','cpink','clime','cice','cfire','cdark','ccosmo','cdiam','cphx','mflame','mraio','mcosm','mwing'];
+  const NH = ['troph', 'trai','cap','beanie','party','top','viking','crown','halo','visor','headband','wizard','samurai','wings','mhat','mdrag','mgalax','mice'], NCL = ['gold','mcleat','cpink','clime','cice','cfire','cdark','ccosmo','cdiam','cphx','mflame','mraio','mwing'];
   const ITEMS = { ball: [{ id: 'classic', n: 'Bola Clássica' }, { id: 'perd', n: 'Perdedor', rar: 'c', req: 'perd' }, { id: 'gold', n: 'Bola de Ouro', rar: 'u', req: 'gold' }, { id: 'nimbus', n: 'Bola de Login', lock: 1, rar: 'r' }, { id: 'bocean', n: 'Bola Oceano', rar: 'c', req: 'bocean' },{ id: 'bneon', n: 'Bola Neon', rar: 'u', req: 'bneon' },{ id: 'bfire', n: 'Bola Chama', rar: 'r', req: 'bfire' },{ id: 'bgal', n: 'Bola Galáxia', rar: 'l', req: 'bgal' }, { id: 'bsun', n: 'Bola Solar', rar: 'u', req: 'bsun' }, { id: 'bcryst', n: 'Bola Cristal', rar: 'u', req: 'bcryst' }, { id: 'btoxic', n: 'Bola Tóxica', rar: 'r', req: 'btoxic' }, { id: 'bplasma', n: 'Bola Plasma', rar: 'r', req: 'bplasma' }, { id: 'brain', n: 'Bola Arco-Íris', rar: 'l', req: 'brain' }, { id: 'bvoid', n: 'Bola do Vazio', rar: 'l', req: 'bvoid' }, { id: 'mball', n: 'Cristal Celestial', rar: 'm', req: 'mball' }, { id: 'mnova', n: 'Estrela Cadente', rar: 'm', req: 'mnova' }, { id: 'megg', n: 'Ovo de Dragão', rar: 'm', req: 'megg' }, { id: 'mplan', n: 'Planeta Anelado', rar: 'm', req: 'mplan' }],
                   hat: [{ id: null, n: 'Sem acessório' }, { id: 'nimbus', slot: 'hat', n: 'Chapéu Cowboy', lock: 1, rar: 'u' }, { id: 'troph', slot: 'hat', n: 'Chapéu de Troféu', rar: 'u', req: 'troph', solo: 1 }, { id: 'trai', slot: 'hat', n: 'Traidor', rar: 'r', req: 'trai', solo: 1 }, { id: 'mus', slot: 'mus', n: 'Olho Roxo', rar: 'c', req: 'mus' }, { id: 'shades', slot: 'mus', n: 'Óculos Escuros', rar: 'c', req: 'shades', solo: 1 }, { id: 'nose', slot: 'mus', n: 'Nariz de Palhaço', rar: 'c', req: 'nose', solo: 1 }, { id: 'mustache', slot: 'mus', n: 'Bigode', rar: 'u', req: 'mustache', solo: 1 }, { id: 'specs', slot: 'mus', n: 'Óculos de Sábio', rar: 'u', req: 'specs', solo: 1 }, { id: 'hero', slot: 'mus', n: 'Máscara de Herói', rar: 'r', req: 'hero', solo: 1 }, { id: 'cyber', slot: 'mus', n: 'Visor Cyber', rar: 'l', req: 'cyber', solo: 1 }, { id: 'mmask', slot: 'mus', n: 'Máscara Arcana', rar: 'm', req: 'mmask', solo: 1 }, { id: 'cap', slot: 'hat', n: 'Boné', rar: 'c', req: 'cap', solo: 1 },{ id: 'beanie', slot: 'hat', n: 'Gorro', rar: 'c', req: 'beanie', solo: 1 },{ id: 'party', slot: 'hat', n: 'Chapéu de Festa', rar: 'u', req: 'party', solo: 1 },{ id: 'top', slot: 'hat', n: 'Cartola', rar: 'r', req: 'top', solo: 1 },{ id: 'viking', slot: 'hat', n: 'Capacete Viking', rar: 'r', req: 'viking', solo: 1 },{ id: 'crown', slot: 'hat', n: 'Coroa Real', rar: 'l', req: 'crown', solo: 1 },{ id: 'halo', slot: 'hat', n: 'Auréola Divina', rar: 'l', req: 'halo', solo: 1 }, { id: 'visor', slot: 'hat', n: 'Viseira', rar: 'c', req: 'visor', solo: 1 }, { id: 'headband', slot: 'hat', n: 'Faixa de Craque', rar: 'c', req: 'headband', solo: 1 }, { id: 'wizard', slot: 'hat', n: 'Chapéu de Mago', rar: 'u', req: 'wizard', solo: 1 }, { id: 'samurai', slot: 'hat', n: 'Elmo Samurai', rar: 'r', req: 'samurai', solo: 1 }, { id: 'wings', slot: 'hat', n: 'Asas Douradas', rar: 'l', req: 'wings', solo: 1 }, { id: 'mhat', slot: 'hat', n: 'Diadema Estelar', rar: 'm', req: 'mhat', solo: 1 }, { id: 'mdrag', slot: 'hat', n: 'Elmo do Dragão', rar: 'm', req: 'mdrag', solo: 1 }, { id: 'mgalax', slot: 'hat', n: 'Chapéu Galáctico', rar: 'm', req: 'mgalax', solo: 1 }, { id: 'mice', slot: 'hat', n: 'Coroa de Gelo Eterno', rar: 'm', req: 'mice', solo: 1 }],
-                  cleat: [{ id: null, n: 'Chuteira Clássica' }, { id: 'nimbus', n: 'Chuteira Nuvem', lock: 1, rar: 'c' }, { id: 'gold', n: 'Chuteira de Ouro', rar: 'u', req: 'gold', solo: 1 }, { id: 'cpink', n: 'Chuteira Rosa Chiclete', rar: 'c', req: 'cpink', solo: 1 },{ id: 'clime', n: 'Chuteira Limão', rar: 'c', req: 'clime', solo: 1 },{ id: 'cice', n: 'Chuteira Gelo', rar: 'u', req: 'cice', solo: 1 },{ id: 'cfire', n: 'Chuteira Fogo', rar: 'u', req: 'cfire', solo: 1 },{ id: 'cdark', n: 'Chuteira Sombra', rar: 'r', req: 'cdark', solo: 1 },{ id: 'ccosmo', n: 'Chuteira Cósmica', rar: 'r', req: 'ccosmo', solo: 1 },{ id: 'cdiam', n: 'Chuteira Diamante', rar: 'l', req: 'cdiam', solo: 1 },{ id: 'cphx', n: 'Chuteira Fênix', rar: 'l', req: 'cphx', solo: 1 }, { id: 'mcleat', n: 'Chuteira Aurora', rar: 'm', req: 'mcleat', solo: 1 }, { id: 'mflame', n: 'Chuteira Dragão', rar: 'm', req: 'mflame', solo: 1 }, { id: 'mraio', n: 'Chuteira Relâmpago', rar: 'm', req: 'mraio', solo: 1 }, { id: 'mcosm', n: 'Chuteira Nebulosa', rar: 'm', req: 'mcosm', solo: 1 }, { id: 'mwing', n: 'Chuteira de Hermes', rar: 'm', req: 'mwing', solo: 1 }],
+                  cleat: [{ id: null, n: 'Chuteira Clássica' }, { id: 'nimbus', n: 'Chuteira Nuvem', lock: 1, rar: 'c' }, { id: 'gold', n: 'Chuteira de Ouro', rar: 'u', req: 'gold', solo: 1 }, { id: 'cpink', n: 'Chuteira Rosa Chiclete', rar: 'c', req: 'cpink', solo: 1 },{ id: 'clime', n: 'Chuteira Limão', rar: 'c', req: 'clime', solo: 1 },{ id: 'cice', n: 'Chuteira Gelo', rar: 'u', req: 'cice', solo: 1 },{ id: 'cfire', n: 'Chuteira Fogo', rar: 'u', req: 'cfire', solo: 1 },{ id: 'cdark', n: 'Chuteira Sombra', rar: 'r', req: 'cdark', solo: 1 },{ id: 'ccosmo', n: 'Chuteira Cósmica', rar: 'r', req: 'ccosmo', solo: 1 },{ id: 'cdiam', n: 'Chuteira Diamante', rar: 'l', req: 'cdiam', solo: 1 },{ id: 'cphx', n: 'Chuteira Fênix', rar: 'l', req: 'cphx', solo: 1 }, { id: 'mcleat', n: 'Chuteira Aurora', rar: 'm', req: 'mcleat', solo: 1 }, { id: 'mflame', n: 'Chuteira Dragão', rar: 'm', req: 'mflame', solo: 1 }, { id: 'mraio', n: 'Chuteira Relâmpago', rar: 'm', req: 'mraio', solo: 1 }, { id: 'mwing', n: 'Chuteira de Hermes', rar: 'm', req: 'mwing', solo: 1 }],
     cel: [{ id: 'pad', n: 'Padrão', rar: 'c' }, { id: 'login', n: 'Selfie do Login', lock: 1, rar: 'r' }, { id: 'lider', n: 'Líderes de Torcida', rar: 'u', req: 'lider' }] };
   ITEMS.hat = ITEMS.hat.filter(x => x.slot !== 'mus');   // sem itens de rosto
   function emblem(c, cx, cy, r) {   // emblema próprio: estrela de 4 pontas + faísca
@@ -8204,7 +8205,7 @@ addEventListener('resize', () => {
   setInterval(() => { if (mg) orbAnim(mg, performance.now() / 1000); }, 33);
   const haloTex = (rgb = '255,200,60') => { const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'), g = x.createRadialGradient(64, 64, 8, 64, 64, 64);
     g.addColorStop(0, 'rgba(' + rgb + ',.95)'); g.addColorStop(.35, 'rgba(' + rgb + ',.45)'); g.addColorStop(1, 'rgba(' + rgb + ',0)'); x.fillStyle = g; x.fillRect(0, 0, 128, 128); return new THREE.CanvasTexture(c); };
-  function applyBall(id) { applyBall.cur = id; ballMesh.visible = !MB[id]; ballMesh.material = BTEX(id) ? ((applyBall.c = applyBall.c || {})[id] || (applyBall.c[id] = ballMat(id, 2))) : DEF_BALL_MAT;
+  function applyBall(id) { applyBall.cur = id; ballMesh.visible = !MB[id]; ball.children[0].visible = ball.children[1].visible = !MB[id]; ballMesh.material = BTEX(id) ? ((applyBall.c = applyBall.c || {})[id] || (applyBall.c[id] = ballMat(id, 2))) : DEF_BALL_MAT;
     if (halo) { ball.remove(halo); halo = null; } goldM = FX[id] ? ballMesh.material : null; if (applyBall.mb) { ballSpin.remove(applyBall.mb); applyBall.mb = null; } if (MB[id]) { const o = MB[id](2); o.scale.setScalar(BR * .98); ballSpin.add(o); applyBall.mb = o; if (o.userData.anim) { o.userData.idle = 0; HANIM.push(o); } }
     if (goldM && ['gold', 'bfire', 'bgal', 'bplasma', 'btoxic', 'brain', 'bvoid', 'mball', 'mnova', 'megg', 'mplan'].includes(id)) { halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: haloTex(FX[id][1]), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); halo.scale.setScalar(BR * 5); ball.add(halo); } }
   setInterval(() => { const t = performance.now() / 300; if (goldM) { goldM.emissiveIntensity = .5 + .3 * Math.sin(t); { const T = goldM.map, A = TA[applyBall.cur]; if (T && A) { T.offset.x = (T.offset.x + A[0]) % 1; T.offset.y = A[1] ? Math.sin(t / 3) * A[1] : 0; if (A[2]) T.offset.x += (Math.random() - .5) * A[2]; } } if (applyBall.cur === 'brain' || applyBall.cur === 'mball') { goldM.emissive.setHSL((t / 14) % 1, 1, .5); if (halo) halo.material.color.setHSL((t / 14) % 1, 1, .6); } } if (halo) halo.material.opacity = .65 + .3 * Math.sin(t); }, 50);
@@ -8217,25 +8218,42 @@ addEventListener('resize', () => {
   /* ---------- efeitos das chuteiras ao andar ---------- */
   const PFX = { cice: { c: '#bfe9ff', m: 'melt', l: 2.2, s: .55, r: .35 }, clime: { c: '#9cff4a', m: 'melt', l: 1.6, s: .45, r: .3 }, cfire: { c: '#ff7a1a', m: 'rise', a: 1, l: .7, s: .45, r: .8 }, cphx: { c: '#ffb020', m: 'rise', a: 1, l: .9, s: .6, r: 1 },
     ccosmo: { c: '#c58bff', m: 'float', a: 1, l: 1.3, s: .35, r: .7 }, cdiam: { c: '#c8fbff', m: 'twinkle', a: 1, l: .9, s: .3, r: .7 }, cdark: { c: '#2b2b33', m: 'smoke', l: 1.2, s: .5, r: .5 }, cpink: { c: '#ff7ab8', m: 'float', a: 1, l: 1, s: .3, r: .4 }, mcleat: { c: '#fff', m: 'float', a: 1, rb: 1, n: 3, l: 1.5, s: .42, r: 1 }, gold: { c: '#ffd54a', m: 'twinkle', a: 1, l: .8, s: .28, r: .5 } };
-  const PT = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'), g = x.createRadialGradient(32, 32, 0, 32, 32, 32); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(.5, 'rgba(255,255,255,.6)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64); return new THREE.CanvasTexture(c); })();
-  const PL = []; let pLast = null, pFoot = 0, curCleat = null; const pv = new THREE.Vector3();
-  function pSpawn(f, pos) {
+  const POCT = new THREE.OctahedronGeometry(1, 0), PGEO = { cyl: CYL, sph: SPH3, cone: CONE, oct: POCT };
+  const PSH = { cice: ['cyl', .5, .12, .7], clime: ['sph', .5, .15, .5], cfire: ['cone', .4, 1.2, .4], cphx: ['cone', .4, 1.2, .4], ccosmo: ['oct', .5, .7, .5], cdiam: ['oct', .45, .75, .45],
+    cdark: ['sph', .5, .5, .5], cpink: ['sph', .5, .5, .5], mcleat: ['sph', .4, .4, .4], gold: ['oct', .5, .6, .5] };
+  const PL = []; let pLast = null, pFoot = 0, curCleat = null; const pv = new THREE.Vector3(), pq = new THREE.Quaternion(), pe = new THREE.Euler();
+  function pSpawn(f, pos, key) {   // partícula 3D: peça sólida com o mesmo contorno escuro dos bonecos (gelo vira \"passo\" de gelo, fogo vira chama etc.)
     let q = PL.find(o => !o.on);
-    if (!q) { if (PL.length >= 140) return; const m = new THREE.SpriteMaterial({ map: PT, transparent: true, depthWrite: false }), sp = new THREE.Sprite(m); sp.renderOrder = 15; scene.add(sp); q = { sp, m, on: false }; PL.push(q); }
-    q.on = true; q.f = f; q.t = 0; q.life = f.l * (.8 + Math.random() * .4); q.sp.visible = true; q.m.color.set(f.c); if (f.rb) q.m.color.setHSL(Math.random(), 1, .65); q.m.blending = f.a ? THREE.AdditiveBlending : THREE.NormalBlending; q.m.needsUpdate = true;
-    q.sp.position.set(pos.x + (Math.random() - .5) * .4, f.m === 'melt' ? .08 : pos.y + .1, pos.z + (Math.random() - .5) * .4);
-    q.vy = f.m === 'rise' ? 1.8 + Math.random() : f.m === 'smoke' ? .7 : f.m === 'melt' ? 0 : .5; q.vx = (Math.random() - .5) * .6; q.vz = (Math.random() - .5) * .6;
+    if (!q) {
+      if (PL.length >= 70) return;
+      const id = nextPid(), mat = stencilize(LM({ color: 0xffffff }), id), fill = new THREE.Mesh(POCT, mat), hull = new THREE.Mesh(POCT, charHull(id)), g = new THREE.Group();
+      fill.renderOrder = 1; hull.renderOrder = 2; g.add(fill, hull); scene.add(g); q = { g, fill, hull, mat, on: false };
+      PL.push(q);
+    }
+    const sh = PSH[key] || ['sph', .5, .5, .5], geo = PGEO[sh[0]];
+    q.on = true; q.f = f; q.t = 0; q.life = f.l * (.8 + Math.random() * .4); q.fill.geometry = q.hull.geometry = geo;
+    q.k = [f.s * sh[1], f.s * sh[2], f.s * sh[3]]; q.mat.color.set(f.c); if (f.rb) q.mat.color.setHSL(Math.random(), 1, .65);
+    q.mat.emissive.set(f.a ? q.mat.color : 0x000000); q.mat.emissiveIntensity = f.a ? .55 : 0;
+    footL.getWorldQuaternion(pq); pe.setFromQuaternion(pq, 'YXZ'); q.yaw = f.m === 'melt' ? pe.y : Math.random() * 6.28; q.spin = f.m === 'melt' ? 0 : (Math.random() - .5) * 6;
+    q.g.rotation.set(0, q.yaw, 0); q.g.position.set(pos.x + (Math.random() - .5) * .4, f.m === 'melt' ? .05 : pos.y + .1, pos.z + (Math.random() - .5) * .4);
+    q.vy = f.m === 'rise' ? 1.8 + Math.random() : f.m === 'smoke' ? .7 : f.m === 'melt' ? 0 : .5; q.vx = f.m === 'melt' ? 0 : (Math.random() - .5) * .6; q.vz = f.m === 'melt' ? 0 : (Math.random() - .5) * .6;
+    q.g.visible = true; q.g.scale.set(.001, .001, .001);
   }
   function pStep(dt) {
-    for (const q of PL) { if (!q.on) continue; q.t += dt; const u = q.t / q.life; if (u >= 1) { q.on = false; q.sp.visible = false; continue; }
-      const f = q.f, p = q.sp.position; p.x += q.vx * dt; p.z += q.vz * dt; p.y += q.vy * dt; let sc = f.s, o = 1 - u;
-      if (f.m === 'melt') { sc = f.s * (1 - u * .85); o = u < .6 ? 1 : 1 - (u - .6) / .4; q.sp.scale.set(sc * (1 + u * 1.2), sc * (1 - u * .5), 1); q.m.opacity = .9 * o; if (u > .5) q.m.color.set(f.c === '#bfe9ff' ? '#6ec6ff' : '#5ab52a'); continue; }
-      if (f.m === 'smoke') { sc = f.s * (1 + u * 2); o = (1 - u) * .55; } else if (f.m === 'twinkle') o = Math.abs(Math.sin(q.t * 18)); else sc = f.s * (1 - u * .6);
-      q.sp.scale.set(sc, sc, 1); q.m.opacity = o; }
+    for (const q of PL) { if (!q.on) continue; q.t += dt; const u = q.t / q.life; if (u >= 1) { q.on = false; q.g.visible = false; continue; }
+      const f = q.f, p = q.g.position, k = q.k; p.x += q.vx * dt; p.z += q.vz * dt; p.y += q.vy * dt; let a = 1, h = 1;
+      const pop = Math.min(1, u * 8);   // nasce crescendo
+      if (f.m === 'melt') { a = (1 - u * .85) * pop; h = 1 - u * .7; if (u > .5) q.mat.color.set(f.c === '#bfe9ff' ? '#6ec6ff' : '#5ab52a'); }
+      else if (f.m === 'smoke') { a = (1 + u * 1.8) * (1 - u * .5) * pop; h = a; }
+      else if (f.m === 'twinkle') { a = (.35 + .65 * Math.abs(Math.sin(q.t * 18))) * pop; h = a; }
+      else { a = (1 - u * .7) * pop; h = a; }
+      q.g.rotation.y = q.yaw + q.spin * q.t;
+      q.g.scale.set(Math.max(.001, k[0] * a), Math.max(.001, k[1] * h), Math.max(.001, k[2] * a));
+      q.hull.scale.setScalar(1.14); }
   }
   setInterval(() => {
     const P = typeof player !== 'undefined' ? player : null, f = PFX[curCleat];
-    if (P && f) { if (pLast) { const sp = Math.hypot(P.position.x - pLast.x, P.position.z - pLast.z) / .033; if (sp > 2 && P.visible && Math.random() < f.r) { for (let k = 0; k < (f.n || 1); k++) { (pFoot++ % 2 ? footR : footL).getWorldPosition(pv); pSpawn(f, pv); } } } else pLast = new THREE.Vector3(); pLast.copy(P.position); }
+    if (P && f) { if (pLast) { const sp = Math.hypot(P.position.x - pLast.x, P.position.z - pLast.z) / .033; if (sp > 2 && P.visible && Math.random() < f.r) { for (let k = 0; k < (f.n || 1); k++) { (pFoot++ % 2 ? footR : footL).getWorldPosition(pv); pSpawn(f, pv, curCleat); } } } else pLast = new THREE.Vector3(); pLast.copy(P.position); }
     pStep(.033);
   }, 33);
   function applyCleat(id) { curCleat = id; if (!realKit) realKit = cleatKit(footL, footR); realKit.set(id); }
@@ -8292,7 +8310,7 @@ addEventListener('resize', () => {
     if (MB[kind]) { g.children.forEach(c => c.visible = false); const o = MB[kind](51); o.scale.setScalar(BR * .98); if (o.userData.anim) { o.userData.idle = 0; HANIM.push(o); } g.add(o); }
     return { g, spin };
   }
-  const mkRend = (w, h, aa) => { const r = new THREE.WebGLRenderer({ alpha: true, antialias: aa !== false, stencil: true, preserveDrawingBuffer: true }); r.setSize(w, h, false); r.setPixelRatio(1); r.setClearColor(0, 0); const _rr = r.render.bind(r); r.render = (sc, cam) => { PXU.value.set(w, h); try { _rr(sc, cam); } finally { PXU.value.set(innerWidth, innerHeight); } }; return r; };
+  const mkRend = (w, h, aa) => { const r = new THREE.WebGLRenderer({ alpha: true, antialias: aa !== false, stencil: true, preserveDrawingBuffer: true }); r.setSize(w, h, false); r.setPixelRatio(1); r.setClearColor(0, 0); const _rr = r.render.bind(r); r.render = (sc, cam) => { PXU.value.set(w, h); GND.value = 0; try { _rr(sc, cam); } finally { PXU.value.set(innerWidth, innerHeight); GND.value = 1; } }; return r; };
   const lights = sc => { sc.add(new THREE.AmbientLight(0xffffff, .9)); const d = new THREE.DirectionalLight(0xffffff, .6); d.position.set(3, 6, 5); sc.add(d); };
   const floor = r => { const f = new THREE.Mesh(new THREE.CircleGeometry(r, 36), new THREE.MeshBasicMaterial({ color: 0, transparent: true, opacity: .2 })); f.rotation.x = -Math.PI / 2; f.position.y = .01; return f; };
   let R1 = null, R2 = null, R3 = null, tabK = 'ball', drawables = [], phoneD = null, raf = 0;
