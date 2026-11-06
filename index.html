@@ -516,7 +516,7 @@ html.mob .crow,html.mob .crow span{font-size:12px!important}html.mob .kbtn{min-w
 html.mob .tcard{padding:5px 9px!important}html.mob .tcard b{font-size:13px!important}
 html.mob #tcSkip{font-size:13px;padding:8px 14px}
 </style>
-<style>.plabel,.ptag,#shout,.sbub,#call,#goalMk,#trBub{z-index:2!important}.plabel,.ptag,#shout,.sbub,#call,#goalMk{transition:opacity .15s}body.paused .plabel,body.paused #call,body.paused #shout,body.paused .sbub,body.paused #goalMk{display:none!important}#lookDot{position:fixed;left:50%;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:#fff;border:2px solid #232323;z-index:3;pointer-events:none;display:none}body.lookc #lookDot{display:block}body.lookc{cursor:none!important}body.lookc *{cursor:none!important}</style>
+<style>.plabel,.ptag,#shout,.sbub,#call,#goalMk,#trBub{z-index:2!important}.plabel,.ptag,#shout,.sbub,#call,#goalMk{transition:opacity .15s}body.paused .plabel,body.paused #call,body.paused #shout,body.paused .sbub,body.paused #goalMk{display:none!important}#lookDot{position:fixed;left:50%;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:#fff;border:2px solid #232323;z-index:3;pointer-events:none;display:none}body.lookc #lookDot,body.lookf #lookDot{display:block}body.lookf #lookDot{width:26px;height:26px;margin:-13px 0 0 -13px;background:transparent}body.lookc{cursor:none!important}body.lookc *{cursor:none!important}</style>
 </head>
 <body>
 <div id="ver">Kick.io v1.1.0</div>
@@ -1672,26 +1672,35 @@ addEventListener('wheel', e => {
 
 // ---------- Mouse-look (tecla Alt liga/desliga): cursor some e mexer o mouse gira a câmera ----------
 let mlook = false;
-document.addEventListener('pointerlockchange', () => { mlook = document.pointerLockElement === renderer.domElement; document.body.classList.toggle('lookc', mlook || fakeLook); });
-let fakeLook = false;
-const lookOff = () => { fakeLook = false; document.body.classList.remove('lookc'); };
-document.addEventListener('pointerlockerror', () => { fakeLook = true; document.body.classList.add('lookc'); });
-addEventListener('blur', () => { lookOff(); });
+document.addEventListener('pointerlockchange', () => { mlook = document.pointerLockElement === renderer.domElement; document.body.classList.toggle('lookc', mlook); });
+let fakeLook = false, fmx = 0, fmy = 0;
+const lookOff = () => { fakeLook = false; document.body.classList.remove('lookf'); };
+const lookFake = () => { fakeLook = true; fmx = innerWidth / 2; fmy = innerHeight / 2; document.body.classList.add('lookf'); };
+document.addEventListener('pointerlockerror', lookFake);
+addEventListener('blur', lookOff);
 addEventListener('keydown', e => {
   if (e.code !== 'AltLeft' && e.code !== 'AltRight') return;
   e.preventDefault();
   if (e.repeat || menu.mode !== 'play') return;
   if (document.pointerLockElement) document.exitPointerLock();
   else if (fakeLook) lookOff();
-  else { dragging = false; try { const r = renderer.domElement.requestPointerLock(); if (r && r.catch) r.catch(() => { fakeLook = true; document.body.classList.add('lookc'); }); } catch (_) { fakeLook = true; document.body.classList.add('lookc'); } }
+  else { dragging = false; try { const r = renderer.domElement.requestPointerLock(); if (r && r.catch) r.catch(lookFake); } catch (_) { lookFake(); } }
 });
 addEventListener('keyup', e => { if (e.code === 'AltLeft' || e.code === 'AltRight') e.preventDefault(); });
 addEventListener('mousemove', e => {
-  if (!mlook && !fakeLook) return;
-  if (menu.mode !== 'play') { if (mlook) document.exitPointerLock(); lookOff(); return; }
+  if (fakeLook) { fmx = e.clientX; fmy = e.clientY; return; }
+  if (!mlook) return;
+  if (menu.mode !== 'play') { document.exitPointerLock(); return; }
   targetTheta -= e.movementX * 0.0045 * CFG.sens;
   targetPhi = clampPhi(targetPhi - e.movementY * 0.0045 * CFG.sens * CFG.inv);
 });
+(function fl() {   // modo sem trava: quanto mais longe do centro, mais rápido a câmera gira; no centro ela para
+  requestAnimationFrame(fl);
+  if (!fakeLook) return; if (menu.mode !== 'play') { lookOff(); return; }
+  const f = v => Math.abs(v) < 0.1 ? 0 : (v - Math.sign(v) * 0.1) / 0.9;
+  targetTheta -= f((fmx / innerWidth - 0.5) * 2) * 0.045 * CFG.sens;
+  targetPhi = clampPhi(targetPhi - f((fmy / innerHeight - 0.5) * 2) * 0.03 * CFG.sens * CFG.inv);
+})();
 const joy = { x: 0, y: 0, m: 0, s: 0 };   // joystick virtual (celular): m = força 0..1, s = empurrou além do anel (corrida)
 
 // ---------- Goleiros (IA) ----------
@@ -6584,7 +6593,7 @@ addEventListener('resize', () => {
 
   function startTH(rs) {
     const tk = rs.taker, t = rs.team, at = ATKD(t), bx = ball.position.x, bz = ball.position.z, inw = bz > 0 ? -1 : 1;
-    TH = { rs, tk, t, at, inw, userTaker: !!tk.isU, t0: performance.now(), mates: [], opp: [], sel: 0, saved: null, arrived: false, ev: [], sv: [targetDist, targetPhi], pend: null, setT: 0 };
+    TH = { rs, tk, t, at, inw, userTaker: !!tk.isU, t0: performance.now(), mates: [], opp: [], sel: 0, saved: null, arrived: false, ev: [], introT: performance.now() + 2200, wide: false, sv: [targetDist, targetPhi], pend: null, setT: 0 };
     const free = TM[t].filter(o => o !== tk && !o.isU && !o.out && o.down <= 0.5 && !o.fgt);
     for (const [fx, fz] of SPOTS) {
       const sx = clampN(bx + at * fx, -GOAL_LINE + 6, GOAL_LINE - 6), sz = clampN(bz + inw * fz, -LINE_Z + 6, LINE_Z - 6);
@@ -6604,7 +6613,7 @@ addEventListener('resize', () => {
     lockX = player.position.x; lockZ = player.position.z;
     if (!TH.userTaker && hyp2(lockX - bx, lockZ - bz) < EV) { lockX = clampN(bx + (lockX < bx ? -1 : 1) * EV, -GOAL_LINE + 4, GOAL_LINE - 4); lockZ = ez(lockZ); }
     if (TH.userTaker) {
-      TH.saved = [targetDist, targetPhi]; targetDist = Math.min(CAM_MAX, 27); targetPhi = 0.95;
+      TH.saved = [targetDist, targetPhi]; 
       let bd = 1e9; TH.mates.forEach((m, i) => { const d = hyp2(m.p.x - bx, m.p.z - bz); if (d < bd) { bd = d; TH.sel = i; } });
     }
     document.body.classList.add('throwing');
@@ -6639,6 +6648,10 @@ addEventListener('resize', () => {
   window.moveBot = function (b, dt, live) {
     if (!TH) return oMove(b, dt, live);
     oMove(b, dt, false);
+    if (!b._ts && !b.out && b !== TH.tk && hyp2(b.p.x - ball.position.x, b.p.z - ball.position.z) < 9) {
+      const ox = b.p.x - ball.position.x;
+      b._ts = { x: clampN(ball.position.x + (ox < 0 ? -1 : 1) * 11, -GOAL_LINE + 4, GOAL_LINE - 4), z: clampN(ball.position.z + TH.inw * Math.max(Math.abs(b.p.z - ball.position.z), 3), -LINE_Z + 4, LINE_Z - 4) }; TH.ev.push(b);
+    }
     const s = b._ts; if (!s || b.out) return;
     const dx = s.x - b.p.x, dz = s.z - b.p.z, d = hyp2(dx, dz);
     if (d > 0.15) {
@@ -6703,6 +6716,11 @@ addEventListener('resize', () => {
       if (now >= TH.pend.at) { const m = TH.pend.m; TH.pend = null; userThrow(m); }
       return;
     }
+    if (TH.userTaker && now < TH.introT) {                         // 1) o boneco ajeita a bola, câmera de lado
+      foot(player.rotation.y); targetDist = 7; mks.forEach(m => m.style.display = 'none'); hint.style.display = 'none';
+      if (match.rs && match.rs.t > 1) match.rs.t = 1; return;
+    }
+    if (TH.userTaker && !TH.wide) { TH.wide = true; targetDist = Math.min(CAM_MAX, 27); targetPhi = 0.95; camCut = null; camBehind(player.rotation.y); }   // 2) câmera abre e você escolhe
     if (TH.userTaker && hasBall) {                                 // espera você decidir (sem passe automático)
       if (match.rs && match.rs.t > 5) match.rs.t = 5;
       hint.innerHTML = 'LATERAL! <b>←</b> <b>→</b> escolhem o colega • <b>ESPAÇO</b> lança • ou toque no número';
