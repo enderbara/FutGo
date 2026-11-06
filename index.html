@@ -990,6 +990,21 @@ function idle(mat) {
   return mat;
 }
 
+function blinkEyes(mat, cy) {   // olhos da torcida: mesma balançada do corpo + piscada com ritmo próprio de cada torcedor
+  mat.onBeforeCompile = sh => {
+    sh.uniforms.uTime = FU.uTime; sh.uniforms.uCheer = FU.uCheer;
+    sh.vertexShader = 'attribute float aPhase;\nuniform float uTime;\nuniform float uCheer;\n' +
+      sh.vertexShader.replace('#include <begin_vertex>',
+        'vec3 transformed = vec3(position);\n' +
+        'float bP = 3.0 + fract(aPhase * 7.13) * 3.0; float bf = mod(uTime + aPhase * 5.3, bP);\n' +
+        'float bk = bf < 0.16 ? 1.0 - sin(bf / 0.16 * 3.14159) * 0.92 : 1.0;\n' +
+        'transformed.y = ' + cy.toFixed(4) + ' + (transformed.y - ' + cy.toFixed(4) + ') * bk;\n' +
+        'transformed.y += sin(uTime * 2.0 + aPhase) * 0.04 + abs(sin(uTime * 7.0 + aPhase)) * 1.4 * uCheer;');
+  };
+  mat.customProgramCacheKey = () => 'crowdEyesBlink';
+  return mat;
+}
+
 function crowdHull() {   // contorno da torcida: casca no mundo + empurrão fixo em pixels (aparece em qualquer distância)
   const m = HULL_MAT.clone();
   m.onBeforeCompile = sh => {
@@ -1141,8 +1156,9 @@ const crowdLOD = [];   // contornos/olhos da torcida: somem só quando estão lo
     g.translate(SPEC.head[4], SPEC.head[5], SPEC.head[6]);
     return g;
   }));
+  const eyeCy = (() => { const g = mkEyes(); g.computeBoundingBox(); return (g.boundingBox.min.y + g.boundingBox.max.y) / 2; })();
   const lam = () => idle(new THREE.MeshLambertMaterial());
-  const mats = { prop: idle(new THREE.MeshLambertMaterial({ vertexColors: true })), body: lam(), skin: lam(), shoe: lam(), eyes: idle(new THREE.MeshBasicMaterial({ color: 0x232323 })), hull: crowdHull() };
+  const mats = { prop: idle(new THREE.MeshLambertMaterial({ vertexColors: true })), body: lam(), skin: lam(), shoe: lam(), eyes: blinkEyes(new THREE.MeshBasicMaterial({ color: 0x232323 }), eyeCy), hull: crowdHull() };
   const pick = a => a[Math.floor(Math.random() * a.length)];
   const groups = {};
   crowd.forEach(f => (groups[f.ck] = groups[f.ck] || []).push(f));
@@ -1191,7 +1207,7 @@ function updateCrowdLOD() {
   const k = 1 / 2.15, cx = camera.position.x * k, cy = camera.position.y * k, cz = camera.position.z * k;
   for (const o of crowdLOD) {
     const dx = o.c.x - cx, dy = o.c.y - cy, dz = o.c.z - cz, d = Math.sqrt(dx * dx + dy * dy + dz * dz) - o.r;
-    o.m.visible = true; if (o.e !== o.m) o.e.visible = d < (LOWEND ? 44 : 62);   // contorno sempre desenhado; só os olhos somem longe
+    o.m.visible = true; if (o.e !== o.m) o.e.visible = true;   // contorno sempre desenhado; só os olhos somem longe
   }
 }
 
@@ -1512,7 +1528,7 @@ const handR = part(...SPEC.handR);
 const footL = part(...SPEC.footL);
 const footR = part(...SPEC.footR);
 // cabeça e corpo dividem o mesmo ID de stencil: o contorno fica só na silhueta externa (sem anel da cabeça em cima do torso)
-function shareOutline(h) { const id = h.userData.sid; if (id && h.children[1]) h.children[1].material = charHull(id, 0.7); }   // contorno completo da cabeça, por cima do torso
+function shareOutline(h) { const id = h.userData.sid; if (id && h.children[1]) { h.children[1].material = charHull(id, 1.5); h.children[1].renderOrder = 4; } }   // contorno completo da cabeça, por cima do torso
 model.add(body, head, handL, handR, footL, footR); shareOutline(head);
 
 const eyes = [];
@@ -5166,6 +5182,18 @@ const iPos = new THREE.Vector3(), iTgt = new THREE.Vector3(), iLook = new THREE.
 let introInit = false;
 const IN_TUN_Z = -104;                                           // "túnel": lado do campo oposto à câmera
 const ss01 = x => { x = Math.min(1, Math.max(0, x)); return x * x * (3 - 2 * x); };
+let _tunDark = null;
+function introDark(on) {   // camadas pretas semitransparentes dentro do túnel: quanto mais fundo, mais escuro — o jogador "emerge" da sombra
+  if (!_tunDark) {
+    _tunDark = new THREE.Group();
+    [[-108.6, 0.95], [-101, 0.55], [-97, 0.45], [-93, 0.35], [-90, 0.2]].forEach(([z, o]) => {
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(17.6, 14), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: o, depthWrite: false, side: THREE.DoubleSide }));
+      m.position.set(0, 7, z); m.renderOrder = 40; m.frustumCulled = false; _tunDark.add(m);
+    });
+    scene.add(_tunDark);
+  }
+  _tunDark.visible = on;
+}
 function mkEnt(g, ch, p, team, base, fin) {
   return { g, ch, p, v: new THREE.Vector3(), amp: 0, walkT: 0, dn: 0, down: 0, sl: -1, kickT: -1, av: 0, team, rot: 0, sx: 0, tx: 0, delay: 0, base, fin, chest: 0 };
 }
@@ -5204,7 +5232,7 @@ function startIntro() {
   drawFlag($('inAF').getContext('2d'), 96, 64, intro.ccAway);
   inEl.home.classList.remove('show', 'act'); inEl.away.classList.remove('show', 'act'); inEl.anth.classList.remove('on');
   inEl.title.textContent = 'ENTRADA DAS EQUIPES'; inEl.title.style.opacity = 1;
-  document.body.classList.add('intro');
+  document.body.classList.add('intro'); introDark(true);
   ball.position.set(0, BR, IN_TUN_Z + 2); bv.set(0, 0, 0); bvy = 0; hasBall = false; ballOwner = null; posRingMat.opacity = 0;
   introInit = false; camera.fov = 40; camera.updateProjectionMatrix();
 }
@@ -5229,7 +5257,7 @@ function setIntroPhase(p) {
 function finishIntro() {
   if (!intro.on) return;
   intro.on = false; stopAnthem();
-  document.body.classList.remove('intro');
+  document.body.classList.remove('intro'); introDark(false);
   ['inHome', 'inAway', 'inAnthem', 'inSplash', 'inHL', 'inAL', 'inCount'].forEach(id => $(id).classList.remove('show', 'on', 'act', 'pop'));
   for (const e of intro.ents) { e.g.visible = true; resetCh(e.ch); }
   resetPlayerPose();
@@ -5434,6 +5462,21 @@ function updateTags(dt = 1 / 60) {
   }
 }
 
+const _blk = new WeakMap();
+function blinkCh(ch, T, dt) {
+  let b = _blk.get(ch); if (!b) { b = { n: T + 0.5 + Math.random() * 4, t: -1 }; _blk.set(ch, b); }
+  let k = 1;
+  if (b.t < 0 && T > b.n) b.t = 0;
+  if (b.t >= 0) { b.t += dt; k = 1 - Math.sin(Math.min(b.t / 0.15, 1) * Math.PI) * 0.9; if (b.t > 0.15) { b.t = -1; b.n = T + 2 + Math.random() * 3; k = 1; } }
+  for (const e of ch.eyes) e.scale.y = k;
+}
+function blinkOthers(dt) {
+  const T = performance.now() / 1000;
+  for (const b of bots) if (b.ch) blinkCh(b.ch, T, dt);
+  for (const K of keepers) blinkCh(K.ch, T, dt);
+  if (ref && ref.ch) blinkCh(ref.ch, T, dt);
+}
+
 function animate() {
   requestAnimationFrame(animate);
   if (LOWEND) { const _t = performance.now(), _d = _t - (window.__lr || _t); window.__lr = _t; if (_d > 2 && _d < 50) window.__rd = (window.__rd || 16.7) * 0.9 + _d * 0.1;
@@ -5462,6 +5505,7 @@ function animate() {
   renderer.shadowMap.autoUpdate = false;
   if (menu.mode === 'play' && ++shF % (LOWEND ? 4 : dtSm > 0.022 ? 3 : 2) === 0) renderer.shadowMap.needsUpdate = true;   // sombra a cada 2 quadros (3 se o jogo estiver pesado)
   if ((++lodF & 15) === 0) updateCrowdLOD();
+  blinkOthers(dt);
   if (menu.mode === 'train' && window.__trStep) { window.__trStep(dt); return; }
   if (menu.mode !== 'play') { updateTags(); try { sfxStep(dt); } catch (_) {} menuAcc += dt; if (menuAcc < (document.querySelector('#wrPop.on,#gLogin.on') ? 1 / 2 : 1 / 32)) return; menuStep(menuAcc); menuAcc = 0; return; }
   if (intro.on) { stepIntro(dt); updateTags(dt); stepBubs(dt); stepFans(dt); renderer.render(scene, camera); return; }
@@ -7080,6 +7124,52 @@ addEventListener('resize', () => {
   <div id="gToast" role="alert"></div>
 </div>
 <style>
+  #gMenu { display: none !important; }
+  #gPanel { position: fixed; inset: 0; z-index: 200004; display: none; place-items: center; background: rgba(0,0,0,.7); backdrop-filter: blur(4px); font-family: system-ui; color: #fff; padding: 12px; box-sizing: border-box; }
+  #gPanel.on { display: grid; }
+  #gPanel .gp-c { position: relative; width: min(430px, 100%); max-height: 94vh; overflow: auto; padding: 22px 20px 18px; border-radius: 22px; background: radial-gradient(circle at 50% 0, #4285F444, transparent 60%), #0d1426; border: 2px solid rgba(255,255,255,.2); box-shadow: 0 20px 60px #000b; }
+  #gPanel .gl-x { position: absolute; top: 10px; right: 12px; width: 34px; height: 34px; border: 0; border-radius: 50%; background: rgba(255,255,255,.12); color: #fff; font: 700 18px system-ui; cursor: pointer; }
+  .gp-h { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; padding-right: 30px; }
+  .gp-av { width: 60px; height: 60px; flex: none; border-radius: 50%; background: #fff; overflow: hidden; display: grid; place-items: center; border: 3px solid #fff; }
+  .gp-av img { width: 100%; height: 100%; object-fit: cover; } .gp-av span { width: 30px; height: 30px; display: block; } .gp-av svg { width: 100%; height: 100%; }
+  .gp-h b { display: block; font-size: 19px; } .gp-h small { display: block; opacity: .7; font-size: 12px; margin-top: 2px; }
+  .gp-box { padding: 10px 12px; border-radius: 12px; background: rgba(255,255,255,.08); font: 600 13px/1.4 system-ui; margin-bottom: 12px; }
+  .gp-box small { display: block; opacity: .6; font-weight: 500; margin-top: 2px; }
+  .gp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  #gPanel button.gb { font: 700 13px system-ui; color: #fff; text-align: left; padding: 11px 12px; border-radius: 12px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.22); cursor: pointer; }
+  #gPanel button.gb:hover { background: rgba(255,255,255,.2); } #gPanel button.gb:active { transform: scale(.97); }
+  .gp-tog { display: flex; align-items: center; gap: 10px; padding: 8px 4px; font: 600 14px system-ui; cursor: pointer; }
+  .gp-tog input { width: 18px; height: 18px; accent-color: #4caf50; }
+  .gp-dg { margin-top: 10px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.15); }
+  #gPanel button.gb.red { width: 100%; background: #b71c1c55; border-color: #ef5350; color: #ffcdd2; text-align: center; }
+  #gOutAsk { padding: 12px; border-radius: 12px; background: #b71c1c33; border: 1px solid #ef5350; font: 600 13px/1.45 system-ui; }
+  #gOutAsk[hidden], #gpOut[hidden] { display: none; }
+  #gOutAsk .row { display: flex; gap: 8px; margin-top: 10px; } #gOutAsk .gb { flex: 1; text-align: center !important; }
+  #gOutAsk .gb.red { background: #d32f2f !important; color: #fff !important; }
+</style>
+<div id="gPanel"><div class="gp-c">
+  <button class="gl-x" id="gpX" type="button" aria-label="Fechar">✕</button>
+  <div class="gp-h"><div class="gp-av" id="gpAv"></div><div><b id="gpName"></b><small id="gpSt"></small></div></div>
+  <div class="gp-box"><span id="gpSum"></span><small id="gpTs"></small></div>
+  <div class="gp-grid">
+    <button class="gb" id="gpNow" type="button">☁ Salvar agora</button>
+    <button class="gb" id="gpLoad" type="button">⬇ Carregar da nuvem</button>
+    <button class="gb" id="gpBak" type="button">💾 Baixar backup</button>
+    <button class="gb" id="gpImp" type="button">📂 Importar backup</button>
+    <button class="gb" id="gpCfg" type="button">⚙ Configurações</button>
+    <button class="gb" id="gpRe" type="button" style="display:none">🔄 Reconectar</button>
+  </div>
+  <input type="file" id="gpFile" accept=".json,application/json" hidden>
+  <label class="gp-tog"><input type="checkbox" id="gpAuto" checked> Salvar na nuvem automaticamente</label>
+  <div class="gp-dg">
+    <button class="gb red" id="gpOut" type="button">⎋ Sair da conta</button>
+    <div id="gOutAsk" hidden>
+      <b>Sair da conta?</b><br>Este aparelho volta do zero: você perde o <b>uniforme</b> (volta ao padrão), as melhorias, a reputação e o time daqui. O que está salvo na nuvem continua lá: ao entrar de novo com a mesma conta, tudo volta.
+      <div class="row"><button class="gb" id="gpNo" type="button">Cancelar</button><button class="gb red" id="gpYes" type="button">Sair</button></div>
+    </div>
+  </div>
+</div></div>
+<style>
   #gLogin{position:fixed;inset:0;z-index:200006;display:none;place-items:center;background:rgba(0,0,0,.72);backdrop-filter:blur(5px);font-family:system-ui;color:#fff;padding:12px;box-sizing:border-box}
   #gLogin.on{display:grid}
   #gLogin .gl-c{position:relative;width:min(400px,100%);max-height:94vh;overflow:auto;padding:24px 22px 20px;border-radius:22px;text-align:center;background:radial-gradient(circle at 50% 0,#4285F455,transparent 60%),#0d1426;border:2px solid rgba(255,255,255,.2);box-shadow:0 20px 60px #000b;animation:wrP .35s cubic-bezier(.2,.9,.3,1.3)}
@@ -7121,7 +7211,7 @@ addEventListener('resize', () => {
   const $ = id => document.getElementById(id);
   const LS = localStorage, SP = Storage.prototype, rawSet = SP.setItem, rawRm = SP.removeItem;
   const isSave = k => typeof k === 'string' && k.startsWith('futio_');     // tudo que o jogo grava começa com futio_
-  let sess = null, tok = null, tc = null, waiter = null, fileId = null, pending = false, busy = false, mute = false, timer = 0, status = 'off';
+  let sess = null, tok = null, tc = null, waiter = null, fileId = null, pending = false, busy = false, mute = false, timer = 0, status = 'off', loggingOut = false;
   try { sess = JSON.parse(LS.getItem(K_SESS) || 'null'); } catch (_) {}
   window.GPIC = () => (sess && sess.picture) || '';
   const mkErr = code => Object.assign(new Error(code), { auth: true, code });
@@ -7154,10 +7244,10 @@ addEventListener('resize', () => {
   const LABEL = { off: 'Salvar na nuvem', ok: 'Salvo na nuvem', saving: 'Salvando…', syncing: 'Sincronizando…', pending: 'Alterações pendentes', auth: 'Toque para reconectar', offline: 'Sem conexão', error: 'Erro ao salvar' };
   function render() {
     const acc = $('gAcc'), chip = $('gChip'); acc.dataset.s = sess ? status : 'off';
-    if (!sess) { chip.innerHTML = '<span class="gl">' + GLOGO + '</span>'; chip.title = 'Entrar com Google para salvar o jogo na nuvem'; $('gMenu').classList.remove('on'); return; }
+    if (!sess) { chip.innerHTML = '<span class="gl">' + GLOGO + '</span>'; chip.title = 'Entrar com Google para salvar o jogo na nuvem'; $('gMenu').classList.remove('on'); $('gPanel').classList.remove('on'); return; }
     chip.innerHTML = (sess.picture ? '<img referrerpolicy="no-referrer" alt="">' : '<span class="gl">' + GLOGO + '</span>') + '<i class="dot"></i>';
     const im = chip.querySelector('img'); if (im) im.src = sess.picture;
-    chip.title = (sess.name || 'Jogador') + ' — ' + (LABEL[status] || '');
+    chip.title = (sess.name || 'Jogador') + ' — ' + (LABEL[status] || ''); renderPanel();
     $('gEmail').textContent = (sess.name || '') + ' • ' + (LABEL[status] || '');
     $('gName').textContent = sess.name || 'Jogador'; $('gSt').textContent = LABEL[status] || ''; $('gAv').innerHTML = sess.picture ? '<img referrerpolicy="no-referrer" src="' + sess.picture + '" alt="">' : '<span>' + GLOGO + '</span>'; $('gRe').style.display = tokOk() ? 'none' : 'block';
   }
@@ -7224,13 +7314,14 @@ addEventListener('resize', () => {
   }
   function schedule() {
     if (!sess) return; pending = true; clearTimeout(timer);
+    if (LS.getItem('gsave_auto') === '0') { setStatus('pending'); return; }   // salvar automaticamente desligado
     if (!tokOk()) { setStatus(status === 'auth' ? 'auth' : 'pending'); return; }
     setStatus('pending'); timer = setTimeout(push, 4000);
   }
 
   /* ---------- detecta qualquer gravação do jogo ---------- */
   const touch = k => { if (mute || !isSave(k)) return; rawSet.call(LS, K_TS, String(Date.now())); schedule(); };
-  SP.setItem = function (k, v) { rawSet.call(this, k, v); if (this === LS) touch(k); };
+  SP.setItem = function (k, v) { if (loggingOut && this === LS && isSave(k)) return; rawSet.call(this, k, v); if (this === LS) touch(k); };
   SP.removeItem = function (k) { rawRm.call(this, k); if (this === LS) touch(k); };
 
   /* ---------- reconciliar nuvem x aparelho ---------- */
@@ -7276,15 +7367,52 @@ addEventListener('resize', () => {
     } catch (e) { toast(e); setStatus(sess ? (e.auth ? 'auth' : 'error') : 'off'); }
     finally { busy = false; }
   }
-  function logout() {
-    clearTimeout(timer); try { if (tok && window.google) google.accounts.oauth2.revoke(tok.v, () => {}); } catch (_) {}
+  async function logout() {
+    if (loggingOut) return; loggingOut = true; clearTimeout(timer);
+    try { if (pending && sess && tokOk()) await Promise.race([push(), new Promise(r => setTimeout(r, 6000))]); } catch (_) {}   // guarda o que faltava na nuvem antes de apagar daqui
+    try { if (tok && window.google) google.accounts.oauth2.revoke(tok.v, () => {}); } catch (_) {}
     tok = null; sess = null; fileId = null; pending = false;
     try { const del = []; for (let i = 0; i < LS.length; i++) { const k = LS.key(i); if (isSave(k) || k.startsWith('gsave_')) del.push(k); } del.forEach(k => rawRm.call(LS, k)); } catch (_) {}
-    location.reload();   // volta do zero
+    try { await Promise.race([new Promise(r => { const q = indexedDB.deleteDatabase('futio'); q.onsuccess = q.onerror = q.onblocked = () => r(); }), new Promise(r => setTimeout(r, 1500))]); } catch (_) {}   // hino enviado
+    location.reload();   // volta do zero (uniforme padrão, escala 0...)
   }
+  const fmtTs = () => { const t = +LS.getItem(K_TS); return t ? new Date(t).toLocaleString('pt-BR') : '—'; };
+  function renderPanel() {
+    if (!sess) return;
+    $('gpName').textContent = sess.name || 'Jogador'; $('gpSt').textContent = LABEL[status] || '';
+    $('gpAv').innerHTML = sess.picture ? '<img referrerpolicy="no-referrer" src="' + sess.picture + '" alt="">' : '<span>' + GLOGO + '</span>';
+    $('gpSum').textContent = describe(snapshot().data); $('gpTs').textContent = 'Última alteração: ' + fmtTs();
+    $('gpRe').style.display = tokOk() ? 'none' : ''; $('gpAuto').checked = LS.getItem('gsave_auto') !== '0';
+  }
+  function openPanel() { renderPanel(); $('gOutAsk').hidden = true; $('gpOut').hidden = false; $('gPanel').classList.add('on'); }
+  const closePanel = () => $('gPanel').classList.remove('on');
+  $('gpX').onclick = closePanel;
+  $('gPanel').addEventListener('click', e => { if (e.target.id === 'gPanel') closePanel(); });
+  $('gpNow').onclick = async () => { try { await push(); } catch (e) { toast(e); } renderPanel(); };
+  $('gpLoad').onclick = () => { closePanel(); $('gLoad').onclick(); };
+  $('gpRe').onclick = () => { closePanel(); connect(); };
+  $('gpCfg').onclick = () => { closePanel(); const b = document.getElementById('bCfg'); if (b) b.click(); };
+  $('gpAuto').onchange = e => { rawSet.call(LS, 'gsave_auto', e.target.checked ? '1' : '0'); if (e.target.checked && pending) schedule(); };
+  $('gpBak').onclick = () => {
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(snapshot())], { type: 'application/json' })); a.download = 'kickio-backup.json';
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  };
+  $('gpImp').onclick = () => $('gpFile').click();
+  $('gpFile').onchange = e => {
+    const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+    f.text().then(t => {
+      let j; try { j = JSON.parse(t); } catch (_) { alert('Arquivo de backup inválido.'); return; }
+      const data = {}; if (j && j.data && typeof j.data === 'object') for (const k in j.data) if (isSave(k) && typeof j.data[k] === 'string') data[k] = j.data[k];
+      if (!Object.keys(data).length) { alert('Esse backup não tem dados do jogo.'); return; }
+      if (confirm('Substituir o jogo deste aparelho por este backup?\n\n' + describe(data))) applyCloud({ data, ts: Date.now() });
+    });
+  };
+  $('gpOut').onclick = () => { $('gpOut').hidden = true; $('gOutAsk').hidden = false; };
+  $('gpNo').onclick = () => { $('gOutAsk').hidden = true; $('gpOut').hidden = false; };
+  $('gpYes').onclick = () => { $('gpYes').disabled = true; $('gpYes').textContent = 'Saindo…'; logout(); };
   $('gChip').onclick = () => {
     if (!sess) { $('gLogin').classList.add('on'); return; }
-    render(); $('gMenu').classList.toggle('on');
+    openPanel();
   };
   $('gGo').innerHTML = GLOGO + '<span>Entrar com Google</span>';
   $('gLx').onclick = () => $('gLogin').classList.remove('on');
@@ -7900,6 +8028,15 @@ addEventListener('resize', () => {
     mplan: id => { P.o = .1; const g = new THREE.Group(), b = new THREE.Group(); g.add(b); P(b, id, SPH3, 0xff7043, 0, 0, 0, .74); [-.28, .05, .34].forEach((y, i) => { const r = Math.sqrt(.74 * .74 - y * y) * 1.02; P(b, id, TORt, i === 1 ? 0xffab91 : 0xd84315, 0, y, 0, r, r * .8, r); });
       P(b, id, new THREE.TorusGeometry(1, .13, 10, 44).rotateX(Math.PI / 2), 0xffe082, 0, 0, 0, 1.12, .3, 1.12, .15, 0, .38); P(b, id, SPH3, 0x80d8ff, .78, .5, .3, .16); g.userData.anim = t => { b.rotation.y = t * .6; }; P.o = .05; return g; }
   };
+  const _hmM = {};
+  function HM(hd, o) {   // coloca o acessório na cabeça e "apaga" o contorno da cabeça onde ele cobre (máscara invisível no stencil, desenhada antes do contorno da cabeça)
+    hd.add(o);
+    const H = hd.userData.sid; if (!H) return;
+    const mk = _hmM[H] || (_hmM[H] = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false, stencilWrite: true, stencilFunc: THREE.AlwaysStencilFunc, stencilRef: H, stencilZPass: THREE.ReplaceStencilOp }));
+    const list = [];
+    o.traverse(m => { const t = m.material; if (m.isMesh && t && t.stencilWrite && t.stencilFunc === THREE.AlwaysStencilFunc && !t.transparent && !t.colorWrite === false) list.push(m); });
+    for (const m of list) { const k = new THREE.Mesh(m.geometry, mk); k.renderOrder = 3; k.castShadow = false; m.add(k); }
+  }
   function buildHat(id) { _acc = _np(); try { return buildHat0(id); } finally { _acc = 0; } }
   function buildHat0(id) {
     id = id || 'nimbus';
@@ -8021,6 +8158,7 @@ addEventListener('resize', () => {
     return { on: false, set(v) { this.on = !!v; gL.visible = gR.visible = !!v; [gL, gR].forEach(G => { for (const k in G.userData.ex) G.userData.ex[k].visible = k === v; }); const pl = CPAL[v];
       [gL, gR].forEach(G => G.traverse(m => { if (!m.isMesh || m.renderOrder === 2 || m.material.map || !m.material.color) return; if (m.userData.oc === undefined) m.userData.oc = m.material.color.getHex();
         const o = m.userData.oc; m.material.color.setHex(pl ? (o === 0xf2f2f2 || o === 0xffffff ? pl[0] : o === 0x3a3d4c ? pl[1] : pl[2]) : o); if (m.material.emissive) m.material.emissive.setHex(pl && pl[4] || 0); }));
+      [fl, fr].forEach(f => { f.children[1].visible = !v; f.children[0].material.stencilRef = v ? ID : f.userData.sid; });   // pé entra na mesma silhueta da chuteira; sem círculo padrão
       fl.children[0].material.color.setHex(v ? (pl ? pl[3] : 0x17181f) : ORIG.L); fr.children[0].material.color.setHex(v ? (pl ? pl[3] : 0x17181f) : ORIG.R); } };
   }
 
@@ -8074,7 +8212,7 @@ addEventListener('resize', () => {
   function applyHat(id) {
     if (hat) { head.remove(hat); hat = null; }
     if (!id) return;
-    hat = buildHat(id); hat.position.set(0, HAT_Y, 0); hat.rotation.x = HAT_RX; head.add(hat);
+    hat = buildHat(id); hat.position.set(0, HAT_Y, 0); hat.rotation.x = HAT_RX; HM(head, hat);
   }
   /* ---------- efeitos das chuteiras ao andar ---------- */
   const PFX = { cice: { c: '#bfe9ff', m: 'melt', l: 2.2, s: .55, r: .35 }, clime: { c: '#9cff4a', m: 'melt', l: 1.6, s: .45, r: .3 }, cfire: { c: '#ff7a1a', m: 'rise', a: 1, l: .7, s: .45, r: .8 }, cphx: { c: '#ffb020', m: 'rise', a: 1, l: .9, s: .6, r: 1 },
@@ -8118,7 +8256,7 @@ addEventListener('resize', () => {
     mates().forEach(m => { const w = (on && st[m.i]) || {};
       if (!!w.hat !== !!m.hatObj) {
         if (m.hatObj) { m.head.remove(m.hatObj); m.hatObj = null; }
-        else { const h = buildHat(); h.position.set(0, HAT_Y, 0); h.rotation.x = HAT_RX; m.head.add(h); m.hatObj = h; } }
+        else { const h = buildHat(); h.position.set(0, HAT_Y, 0); h.rotation.x = HAT_RX; HM(m.head, h); m.hatObj = h; } }
       const wm = (pOK.mus() && st[m.i]) || {};
       if (!!wm.mus !== !!m.musObj) {
         if (m.musObj) { m.head.remove(m.musObj); m.musObj = null; } else { m.musObj = buildMus(); m.head.add(m.musObj); } }
@@ -8143,7 +8281,7 @@ addEventListener('resize', () => {
     if (tgt && tgt.skin != null) [ch.head, ch.handL, ch.handR].forEach(p => p.children[0].material.color.set(tgt.skin));
     ch.footL.children[0].material.color.setHex(ORIG.L); ch.footR.children[0].material.color.setHex(ORIG.R);
     ch.kit = cleatKit(ch.footL, ch.footR); ch.kit.set(cleatId);
-    if (hatId) { const h = buildHat(hatId); h.position.set(0, HAT_Y, 0); h.rotation.x = HAT_RX; ch.head.add(h); }
+    if (hatId) { const h = buildHat(hatId); h.position.set(0, HAT_Y, 0); h.rotation.x = HAT_RX; HM(ch.head, h); }
     if (musId) ch.head.add(buildFace(musId));
     return ch;
   }
@@ -8282,7 +8420,7 @@ addEventListener('resize', () => {
     if (!R3) R3 = mkRend(400, 320);
     const sc = new THREE.Scene(); lights(sc); const root = new THREE.Group(); sc.add(root); root.add(floor(2.3));
     const ch = mkChar(null, null); root.add(ch.g); ch.head.rotation.order = 'YXZ';
-    const hat = buildHat(); hat.position.set(0, HAT_Y, 0); hat.rotation.x = HAT_RX; hat.scale.setScalar(.001); ch.head.add(hat);
+    const hat = buildHat(); hat.position.set(0, HAT_Y, 0); hat.rotation.x = HAT_RX; hat.scale.setScalar(.001); HM(ch.head, hat);
     const ph = new THREE.Group(); ch.model.add(ph); ph.scale.setScalar(.6);
     ph.add(new THREE.Mesh(new THREE.BoxGeometry(.95, 1.6, .13), LM({ color: 0x202124 })));
     const cv = document.createElement('canvas'); cv.width = 128; cv.height = 220; const c = cv.getContext('2d'), tex = new THREE.CanvasTexture(cv);
