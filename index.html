@@ -1314,17 +1314,6 @@ function goal(s) {
 }
 goal(1); goal(-1);
 
-// Bandeirinhas de escanteio
-{
-  const FB = newBatch(.035);
-  for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
-    cyl(FB, .04, .04, 1.5, sx * PW / 2, .75, sz * PH / 2, WHITE);
-    const f = new THREE.Mesh(new THREE.PlaneGeometry(.4, .3), new THREE.MeshBasicMaterial({ color: 0xfdd835, side: THREE.DoubleSide }));
-    f.position.set(sx * PW / 2 + .2, 1.35, sz * PH / 2); stadium.add(f);
-  }
-  flush(FB, stadium);
-}
-
 // Refletores
 {
   const LB = newBatch(.1, false);
@@ -6590,13 +6579,18 @@ addEventListener('resize', () => {
   const oMove = moveBot, oCons = constrainPlayerFromGoal, oPass2 = doPass, oShoot2 = shoot;
   const SPOTS = [[4, 8], [-8, 11], [15, 14], [2, 24]];          // [à frente do ataque, para dentro do campo]
   const v3 = new THREE.Vector3();
+  const dirX = (ox, bx) => TH.corner ? (bx > 0 ? -1 : 1) : (ox < 0 ? -1 : 1);
 
   function startTH(rs) {
     const tk = rs.taker, t = rs.team, at = ATKD(t), bx = ball.position.x, bz = ball.position.z, inw = bz > 0 ? -1 : 1;
-    TH = { rs, tk, t, at, inw, userTaker: !!tk.isU, t0: performance.now(), mates: [], opp: [], sel: 0, saved: null, arrived: false, ev: [], introT: performance.now() + 2200, wide: false, sv: [targetDist, targetPhi], pend: null, setT: 0 };
+    TH = { rs, tk, t, at, inw, userTaker: !!tk.isU, t0: performance.now(), mates: [], opp: [], sel: 0, saved: null, arrived: false, corner: rs.type === 'corner', ev: [], introT: performance.now() + 2200, wide: false, sv: [targetDist, targetPhi], pend: null, setT: 0 };
     const free = TM[t].filter(o => o !== tk && !o.isU && !o.out && o.down <= 0.5 && !o.fgt);
-    for (const [fx, fz] of SPOTS) {
-      const sx = clampN(bx + at * fx, -GOAL_LINE + 6, GOAL_LINE - 6), sz = clampN(bz + inw * fz, -LINE_Z + 6, LINE_Z - 6);
+    const used = [];
+    for (const [fx, fz] of (TH.corner ? [] : SPOTS)) {                  // posições espalhadas (nunca amontoadas, mesmo perto do canto)
+      let sx = bx + at * fx; if (Math.abs(sx) > GOAL_LINE - 6) sx = bx - at * fx;
+      sx = clampN(sx, -GOAL_LINE + 6, GOAL_LINE - 6); let sz = clampN(bz + inw * fz, -LINE_Z + 6, LINE_Z - 6);
+      for (let k = 0; k < 6 && used.some(u => hyp2(u[0] - sx, u[1] - sz) < 7); k++) { if (k % 2) sx = clampN(sx - at * 7, -GOAL_LINE + 6, GOAL_LINE - 6); else sz = clampN(sz + inw * 7, -LINE_Z + 6, LINE_Z - 6); }
+      used.push([sx, sz]);
       let best = null, bd = 1e9; for (const o of free) { const d = hyp2(o.p.x - sx, o.p.z - sz); if (d < bd) { bd = d; best = o; } }
       if (!best) break; free.splice(free.indexOf(best), 1);
       best._ts = { x: sx, z: sz }; TH.mates.push(best);
@@ -6608,10 +6602,10 @@ addEventListener('resize', () => {
     for (const o of TM[0].concat(TM[1])) {                       // tira todo mundo de perto da bola (ninguém intercepta a lateral)
       if (o === tk || o.isU || o.out || o._ts || o.fgt) continue;
       const ox = o.p.x - bx; if (hyp2(ox, o.p.z - bz) >= EV) continue;
-      o._ts = { x: clampN(bx + (ox < 0 ? -1 : 1) * EV, -GOAL_LINE + 4, GOAL_LINE - 4), z: ez(o.p.z) }; TH.ev.push(o);
+      o._ts = { x: clampN(bx + dirX(ox, bx) * EV, -GOAL_LINE + 4, GOAL_LINE - 4), z: ez(o.p.z) }; TH.ev.push(o);
     }
     lockX = player.position.x; lockZ = player.position.z;
-    if (!TH.userTaker && hyp2(lockX - bx, lockZ - bz) < EV) { lockX = clampN(bx + (lockX < bx ? -1 : 1) * EV, -GOAL_LINE + 4, GOAL_LINE - 4); lockZ = ez(lockZ); }
+    if (!TH.userTaker && hyp2(lockX - bx, lockZ - bz) < EV) { lockX = clampN(bx + dirX(lockX - bx, bx) * EV, -GOAL_LINE + 4, GOAL_LINE - 4); lockZ = ez(lockZ); }
     if (TH.userTaker) {
       TH.saved = [targetDist, targetPhi]; 
       let bd = 1e9; TH.mates.forEach((m, i) => { const d = hyp2(m.p.x - bx, m.p.z - bz); if (d < bd) { bd = d; TH.sel = i; } });
@@ -6626,19 +6620,20 @@ addEventListener('resize', () => {
     mks.forEach(m => m.style.display = 'none'); hint.style.display = 'none'; document.body.classList.remove('throwing'); TH = null;
   }
   setInterval(() => {
-    const rs = match.rs, on = match.on && menu.mode === 'play' && rs && rs.type === 'throw' && !replay.on && !match.over;
+    const rs = match.rs, on = match.on && menu.mode === 'play' && rs && (rs.type === 'throw' || rs.type === 'corner') && !replay.on && !match.over;
     if (!on) { endTH(); return; }
     if (!TH || TH.rs !== rs) { endTH(); startTH(rs); }
   }, 40);
 
   const oTake = takeBall, oBC = ballContest, oBR = botRestart, oPose = poseBot;
-  window.takeBall = b => { if (CUT && b !== CUT.to) return; return oTake(b); };            // bola da lateral só vai para o escolhido
-  window.ballContest = dt => { if (CUT && CUT.t < 2.5) return; return oBC(dt); };
+  window.takeBall = b => { if (CUT && CUT.to && b !== CUT.to) return; return oTake(b); };            // bola da lateral só vai para o escolhido
+  window.ballContest = dt => { if (CUT && CUT.to && CUT.t < 2.5) return; return oBC(dt); };
   window.botRestart = function (rs) {
     if (TH && rs.type === 'throw' && rs.taker === TH.tk && TH.mates.length) {
       let a = null, bs = -1; for (const m of TH.mates) { const d = nearest(TM[1 - TH.t], m.p)[0]; if (d > bs) { bs = d; a = m; } }
       CUT = { to: a, t: 0, sv: TH.sv }; return botPass(rs.taker, a);
     }
+    if (TH && rs.type === 'corner' && rs.taker === TH.tk) CUT = { to: null, t: 0, sv: TH.sv };
     return oBR(rs);
   };
   window.poseBot = function (b, dt) {                                                         // batedor ajeita a bola com o pé
@@ -6650,7 +6645,7 @@ addEventListener('resize', () => {
     oMove(b, dt, false);
     if (!b._ts && !b.out && b !== TH.tk && hyp2(b.p.x - ball.position.x, b.p.z - ball.position.z) < 9) {
       const ox = b.p.x - ball.position.x;
-      b._ts = { x: clampN(ball.position.x + (ox < 0 ? -1 : 1) * 11, -GOAL_LINE + 4, GOAL_LINE - 4), z: clampN(ball.position.z + TH.inw * Math.max(Math.abs(b.p.z - ball.position.z), 3), -LINE_Z + 4, LINE_Z - 4) }; TH.ev.push(b);
+      b._ts = { x: clampN(ball.position.x + dirX(ox, ball.position.x) * 11, -GOAL_LINE + 4, GOAL_LINE - 4), z: clampN(ball.position.z + TH.inw * Math.max(Math.abs(b.p.z - ball.position.z), 3), -LINE_Z + 4, LINE_Z - 4) }; TH.ev.push(b);
     }
     const s = b._ts; if (!s || b.out) return;
     const dx = s.x - b.p.x, dz = s.z - b.p.z, d = hyp2(dx, dz);
@@ -6662,7 +6657,7 @@ addEventListener('resize', () => {
     b.rot += df * Math.min(1, dt * 6); b.g.rotation.y = b.rot;
   };
   window.constrainPlayerFromGoal = function (pos, v) {
-    if (TH && v && pos === player.position) { const ax = lockX - pos.x, az = lockZ - pos.z, ad = hyp2(ax, az); if (ad > 0.2) { const k = Math.min(ad, 0.15) / ad; pos.x += ax * k; pos.z += az * k; } v.set(0, 0, 0); }
+    if (TH && v && pos === player.position && !(TH.corner && TH.wide)) { const ax = lockX - pos.x, az = lockZ - pos.z, ad = hyp2(ax, az); if (ad > 0.2) { const k = Math.min(ad, 0.15) / ad; pos.x += ax * k; pos.z += az * k; } v.set(0, 0, 0); }
     return oCons(pos, v);
   };
 
@@ -6695,21 +6690,26 @@ addEventListener('resize', () => {
     el.addEventListener('pointerdown', go);
   });
   const cv = new THREE.Vector3(); let cl = 0;
-  const camSide = rot => { let bd = 9; for (const a of [2.0, -2.0]) { let d = rot + a - theta; d = ((d + Math.PI) % TAU + TAU) % TAU - Math.PI; if (Math.abs(d) < Math.abs(bd)) bd = d; } targetTheta = theta + bd; };
+  const camSide = rot => { let bd = 9; for (const a of [1.1, -1.1]) { let d = rot + a - theta; d = ((d + Math.PI) % TAU + TAU) % TAU - Math.PI; if (Math.abs(d) < Math.abs(bd)) bd = d; } targetTheta = theta + bd; };
   const foot = rot => { camSide(rot); targetDist = 6; targetPhi = 1.2; camCut = cv.set(ball.position.x, 0.5, ball.position.z); };
   (function loop() {
     requestAnimationFrame(loop);
     const now = performance.now(), dtc = Math.min(0.05, (now - (cl || now)) / 1000); cl = now;
     if (CUT) {                                                   // câmera acompanha a bola rolando até o escolhido e volta ao normal
       CUT.t += dtc; camCut = cv.set(ball.position.x, 0.8, ball.position.z); targetDist = 9; targetPhi = 1.15;
-      if (CUT.to !== U) kickCd = Math.max(kickCd, 0.05);
-      if (ballOwner === CUT.to || hasBall || CUT.t > 3.2 || (CUT.t > 0.6 && hyp2(bv.x, bv.z) < 1.5)) { targetDist = CUT.sv[0]; targetPhi = CUT.sv[1]; camCut = null; camBehind(player.rotation.y); CUT = null; }
+      if (CUT.to && CUT.to !== U) kickCd = Math.max(kickCd, 0.05);
+      if ((CUT.to ? ballOwner === CUT.to : !!ballOwner) || hasBall || CUT.t > 3.2 || (CUT.t > 0.6 && hyp2(bv.x, bv.z) < 1.5)) { targetDist = CUT.sv[0]; targetPhi = CUT.sv[1]; camCut = null; camBehind(player.rotation.y); CUT = null; }
     }
     if (!TH) return;
     if (!TH.snapped && now - TH.t0 > 4500) {
       TH.snapped = true;
       for (const o of TH.mates.concat(TH.opp, TH.ev)) if (o._ts) { o.p.x = o._ts.x; o.p.z = o._ts.z; o.v.set(0, 0, 0); }
       if (!TH.userTaker) { player.position.x = lockX; player.position.z = lockZ; }
+    }
+    for (const o of TM[0].concat(TM[1])) {
+      if (o === TH.tk || o.isU || o.out) continue;
+      const bx0 = ball.position.x, bz0 = ball.position.z, dx = o.p.x - bx0, dz = o.p.z - bz0;
+      if (hyp2(dx, dz) < 4) { o.p.x = clampN(bx0 + dirX(dx, bx0) * 4.5, -GOAL_LINE + 3, GOAL_LINE - 3); o.p.z = clampN(bz0 + TH.inw * Math.max(Math.abs(dz), 2.5), -LINE_Z + 3, LINE_Z - 3); o.v.set(0, 0, 0); }
     }
     if (TH.pend) {
       foot(player.rotation.y); mks.forEach(m => m.style.display = 'none'); hint.style.display = 'none';
@@ -6720,7 +6720,11 @@ addEventListener('resize', () => {
       foot(player.rotation.y); targetDist = 7; mks.forEach(m => m.style.display = 'none'); hint.style.display = 'none';
       if (match.rs && match.rs.t > 1) match.rs.t = 1; return;
     }
-    if (TH.userTaker && !TH.wide) { TH.wide = true; targetDist = Math.min(CAM_MAX, 27); targetPhi = 0.95; camCut = null; camBehind(player.rotation.y); }   // 2) câmera abre e você escolhe
+    if (TH.corner && TH.userTaker && now >= TH.introT) {            // escanteio do jogador: depois do ajuste, câmera normal e você cruza
+      if (!TH.wide) { TH.wide = true; camCut = null; targetDist = TH.sv[0]; targetPhi = TH.sv[1]; camBehind(player.rotation.y); }
+      return;
+    }
+    if (TH.userTaker && !TH.wide) { TH.wide = true; targetDist = Math.min(CAM_MAX, 27); targetPhi = 0.95; camCut = null; camSide(player.rotation.y); }   // 2) câmera abre (de lado) e você escolhe
     if (TH.userTaker && hasBall) {                                 // espera você decidir (sem passe automático)
       if (match.rs && match.rs.t > 5) match.rs.t = 5;
       hint.innerHTML = 'LATERAL! <b>←</b> <b>→</b> escolhem o colega • <b>ESPAÇO</b> lança • ou toque no número';
