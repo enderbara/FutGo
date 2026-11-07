@@ -580,6 +580,36 @@ html.mob #tcSkip{font-size:13px;padding:8px 14px}
 #mcar .mc-rep{position:absolute!important;top:8px;right:8px;margin:0;z-index:3!important;font-size:10px;padding:3px 8px}
 .mcA{position:absolute;top:50%;transform:translateY(-50%);z-index:5;width:44px;height:44px;border-radius:50%;border:2px solid rgba(255,255,255,.5);background:rgba(10,14,28,.75);color:#fff;font-size:18px;cursor:pointer;backdrop-filter:blur(4px)}
 .mcA:hover{background:#ffd54a;color:#111;border-color:#ffd54a}#mcL{left:-4px}#mcRr{right:-4px}
+/* ===== AJUSTE MOBILE: tela de modos (celular deitado) ===== */
+@media (pointer:coarse) and (max-height:600px) and (orientation:landscape){
+#modePop{grid-template-columns:1fr 1fr!important;gap:6px 10px!important;align-content:start!important;padding:max(6px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left))!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch}
+#modePop h2{font-size:18px!important;letter-spacing:2px!important;text-shadow:0 2px 0 #000!important;margin:0!important}
+#modePop p{display:none!important}
+#modePop #mcw{grid-column:1/-1!important;margin:0!important}
+#modePop #mcar{grid-template-rows:repeat(2,auto)!important;grid-auto-columns:clamp(150px,27vw,210px)!important;gap:8px!important;padding:2px 0 8px!important;scroll-snap-type:x mandatory}
+#modePop #mcar .mcard{height:clamp(88px,26vh,112px)!important;padding:6px 8px!important;border-radius:14px!important;column-gap:7px!important;scroll-snap-align:start;grid-template-rows:auto auto auto!important;contain:layout paint;transition:none!important}
+#modePop #mcar .mcard:hover{transform:none!important}
+#modePop #mcar .mc-ic{width:30px!important;height:30px!important;font-size:14px!important;border-radius:10px!important}
+#modePop #mcar .mcard b{font-size:12px!important;letter-spacing:.5px!important}
+#modePop #mcar .mcard small{display:-webkit-box!important;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:9.5px!important;line-height:1.15!important;grid-row:2!important}
+#modePop #mcar .mc-rep{position:static!important;grid-column:1/-1!important;grid-row:3!important;justify-self:start;margin:2px 0 0!important;padding:1px 6px!important;font-size:8.5px!important;letter-spacing:.3px!important}
+#modePop #mcar .mc-ic{grid-row:1/3!important}
+.mcA{width:34px!important;height:34px!important;font-size:14px!important}
+#mcL{left:2px!important}#mcRr{right:2px!important}
+#modePop>#lvBox:nth-last-of-type(3){grid-column:1!important}
+#modePop>#lvBox:nth-last-of-type(2){grid-column:2!important}
+#modePop>#lvBox{padding:6px 8px!important;border-radius:12px!important;min-width:0}
+#modePop>#lvBox h4{font-size:10px!important;letter-spacing:2px!important;margin:0 0 5px!important}
+#modePop #lvRow,#modePop #psRow{display:flex!important;gap:5px!important}
+#modePop #lvRow button,#modePop #psRow button{flex:1 1 0;min-width:0;padding:5px 2px!important;font-size:10px!important;border-radius:10px!important;display:flex;flex-direction:column;align-items:center;gap:2px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#modePop #lvRow button i,#modePop #psRow button i{font-size:14px!important;margin:0!important}
+#lvSub,#psSub{font-size:10px!important;margin-top:4px!important;min-height:0!important}
+#modePop>div:last-child{grid-column:1/-1!important;margin:0!important;padding:0!important}
+#modePop #bModeBack{padding:6px 22px!important;font-size:13px!important;margin:0!important}
+}
+@media (pointer:coarse) and (orientation:portrait) and (max-width:600px){
+#modePop #mcar{grid-auto-columns:clamp(160px,44vw,220px)!important}
+}
 </style>
 </head>
 <body>
