@@ -8829,9 +8829,12 @@ addEventListener('keydown', e => { if ((e.code === 'KeyT' || e.code === 'Tab') &
     mnova: id => { P.o = .1; const g = new THREE.Group(), b = new THREE.Group(); g.add(b); P(b, id, starGeo(5, 1.2, .62, .5), 0xffca28, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0xff8f00);
       [-1, 1].forEach(sd => { P(b, id, SPH3, 0x2a1a05, sd * .22, .06, .46, .07, .11, .04); P(b, id, SPH3, 0xff7a7a, sd * .4, -.1, .44, .08, .05, .03); }); P(b, id, SPH3, 0x2a1a05, 0, -.1, .46, .1, .04, .03);
       g.userData.anim = t => { b.rotation.z = Math.sin(t * 2) * .08; }; P.o = .05; return g; },
-    megg: id => { P.o = .1; const g = new THREE.Group(), b = new THREE.Group(); g.add(b); P(b, id, eggGeo(), 0xb71c1c, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0x4a0808);
-      [[0, .1, 1], [1.1, -.35, .6], [-1.2, .45, .5], [2.2, .0, .5], [3.3, -.45, .4], [4.4, .4, .5], [5.4, -.1, .4]].forEach(([ph, y, k]) => { const rr = Math.sqrt(Math.max(0, 1 - y * y / 1.17)) * .88; P(b, id, SPH3, 0xffc928, Math.sin(ph) * rr, y, Math.cos(ph) * rr, .15 * k + .06, .15 * k + .06, .08, 0, ph, 0, 0x664400); });
-      P(b, id, TORt, 0xffc928, 0, .55, 0, .76, .76, .76); g.userData.anim = t => { b.rotation.z = Math.sin(t * 3) * .05; }; P.o = .05; return g; },
+    megg: id => { P.o = .1; const g = new THREE.Group(), b = new THREE.Group(); g.add(b); P(b, id, eggGeo(), 0x3a0c0c, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0x1c0000);
+      const er = y => { const c = -y / 1.08, sn = Math.sqrt(Math.max(0, 1 - c * c)); return sn * .88 * (1 - .16 * c); };
+      [-.8, -.4, 0, .4, .75].forEach((y, ri) => { const r = er(y), n = Math.max(5, Math.round(r * 11)); for (let i = 0; i < n; i++) { const ph = (i + (ri % 2) * .5) / n * Math.PI * 2; P(b, id, SPH3, (i + ri) % 2 ? 0x8a1414 : 0x640c0c, Math.sin(ph) * r * .97, y, Math.cos(ph) * r * .97, .2, .17, .09, 0, ph, 0, 0x240000); } });
+      [[-.75, .3], [-.5, .62], [-.25, .3], [0, .62], [.25, .3], [.5, .62], [.72, .4]].forEach(([y, ph]) => { const r = er(y); P(b, id, SPH3, 0xff9100, Math.sin(ph) * r * 1.02, y, Math.cos(ph) * r * 1.02, .09, .09, .06, 0, ph, 0, 0xff6d00); });
+      for (let i = 0; i < 5; i++) { const ph = i / 5 * Math.PI * 2, y = .88, r = er(y) * .85; P(b, id, CONE, 0xffb300, Math.sin(ph) * r, y, Math.cos(ph) * r, .09, .26, .09, 0, 0, 0, 0x7a4a00); }
+      g.userData.anim = t => { b.rotation.z = Math.sin(t * 3) * .05; }; P.o = .05; return g; },
     mplan: id => { P.o = .1; const g = new THREE.Group(), b = new THREE.Group(); g.add(b); P(b, id, SPH3, 0xff7043, 0, 0, 0, .74); [-.28, .05, .34].forEach((y, i) => { const r = Math.sqrt(.74 * .74 - y * y) * 1.02; P(b, id, TORt, i === 1 ? 0xffab91 : 0xd84315, 0, y, 0, r, r * .8, r); });
       P(b, id, new THREE.TorusGeometry(1, .13, 10, 44).rotateX(Math.PI / 2), 0xffe082, 0, 0, 0, 1.12, .3, 1.12, .15, 0, .38); P(b, id, SPH3, 0x80d8ff, .78, .5, .3, .16); g.userData.anim = t => { b.rotation.y = t * .6; }; P.o = .05; return g; }
   };
@@ -9236,7 +9239,7 @@ addEventListener('keydown', e => { if ((e.code === 'KeyT' || e.code === 'Tab') &
         s.material.opacity = Math.sin(u * Math.PI) * .9; s.scale.setScalar(BR * (k === 'fall' ? .4 : .6) * (.6 + .4 * Math.sin(u * Math.PI))); }); }, 33);
     return set; })();
   function applyBall(id) { applyBall.cur = id; if (id === 'classic') { try { DEF_BALL_MAT.color.set(localStorage.getItem('futio_bcol') || '#ffffff'); } catch (_) { } } ballSpin.userData.obj = (MB[id] && MB[id].obj) ? 1 : 0; ballSpin.quaternion.set(0, 0, 0, 1); ballSpin.userData.qw.identity(); ballMesh.visible = !MB[id]; ball.children[0].visible = ball.children[1].visible = !MB[id]; ballMesh.material = BTEX(id) ? ((applyBall.c = applyBall.c || {})[id] || (applyBall.c[id] = ballMat(id, 2))) : DEF_BALL_MAT;
-    if (halo) { ball.remove(halo); halo = null; } goldM = FX[id] && !(MB[id] && MB[id].obj) ? ballMesh.material : null; if (applyBall.mb) { ballSpin.remove(applyBall.mb); applyBall.mb = null; } if (MB[id]) { const o = fitBall(MB[id](2), true, MB[id].obj ? 1 : 0); o.scale.setScalar(BR * .98 * ({ mnova: .72, mball: .85, megg: .85, mplan: .85 }[id] || 1)); ballSpin.add(o); applyBall.mb = o; if (o.userData.anim) { o.userData.idle = 0; HANIM.push(o); } }
+    if (halo) { ball.remove(halo); halo = null; } goldM = FX[id] && !(MB[id] && MB[id].obj) ? ballMesh.material : null; if (applyBall.mb) { ballSpin.remove(applyBall.mb); applyBall.mb = null; } if (MB[id]) { const o = fitBall(MB[id](2), true, MB[id].obj ? 1 : 0); o.scale.setScalar(BR * .98 * ({ mnova: .8, mball: .95, megg: .95, mplan: 1.69 }[id] || 1)); ballSpin.add(o); applyBall.mb = o; if (o.userData.anim) { o.userData.idle = 0; HANIM.push(o); } }
     if (goldM && ['gold', 'bfire', 'bgal', 'bplasma', 'btoxic', 'brain', 'mball', 'mnova', 'megg', 'mplan'].includes(id)) { halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: haloTex(FX[id][1]), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); halo.scale.setScalar(BR * 5); ball.add(halo); } OVL(id); }
   setInterval(() => { const t = performance.now() / 300; if (goldM) { goldM.emissiveIntensity = .5 + .3 * Math.sin(t); { const T = goldM.map, A = TA[applyBall.cur]; if (T && A) { T.offset.x = (T.offset.x + A[0]) % 1; T.offset.y = A[1] ? Math.sin(t / 3) * A[1] : 0; if (A[2]) T.offset.x += (Math.random() - .5) * A[2]; } } if (applyBall.cur === 'brain' || applyBall.cur === 'mball') { goldM.emissive.setHSL((t / 14) % 1, 1, .5); if (halo) halo.material.color.setHSL((t / 14) % 1, 1, .6); } } if (halo) halo.material.opacity = .65 + .3 * Math.sin(t); }, 50);
   function applyMus(id) { if (musO) { head.remove(musO); musO = null; } if (id) { musO = buildFace(id); head.add(musO); } }
@@ -9370,7 +9373,7 @@ addEventListener('keydown', e => { if ((e.code === 'KeyT' || e.code === 'Tab') &
     const g = part(0xf8f9fa, BR, BR, BR, 0, 0, 0, 51), spin = new THREE.Group(); g.add(spin);
     const m = new THREE.Mesh(BALL_GEO, stencilize(new THREE.MeshLambertMaterial(kind === 'gold' ? { map: BTEX(kind), emissive: 0xffa000, emissiveIntensity: .6 } : BTEX(kind) ? { map: BTEX(kind) } : { color: kind === 'classic' ? new THREE.Color(localStorage.getItem('futio_bcol') || '#f8f9fa') : 0xf8f9fa }), 51));
     m.scale.setScalar(BR + .004); m.renderOrder = 1; spin.add(m);
-    if (MB[kind]) { g.children.forEach(c => c.visible = false); const o = fitBall(MB[kind](51), false, MB[kind].obj ? 1 : 0); o.scale.setScalar(BR * .98 * ({ mnova: .72, mball: .85, megg: .85, mplan: .85 }[kind] || 1)); if (o.userData.anim) { o.userData.idle = 0; HANIM.push(o); } g.add(o); g.userData.ob = o; }
+    if (MB[kind]) { g.children.forEach(c => c.visible = false); const o = fitBall(MB[kind](51), false, MB[kind].obj ? 1 : 0); o.scale.setScalar(BR * .98 * ({ mnova: .8, mball: .95, megg: .95, mplan: 1.69 }[kind] || 1)); if (o.userData.anim) { o.userData.idle = 0; HANIM.push(o); } g.add(o); g.userData.ob = o; }
     return { g, spin };
   }
   const mkRend = (w, h, aa) => { const r = new THREE.WebGLRenderer({ alpha: true, antialias: aa !== false, stencil: true, preserveDrawingBuffer: true }); r.setSize(w, h, false); r.setPixelRatio(1); r.setClearColor(0, 0); const _rr = r.render.bind(r); r.render = (sc, cam) => { PXU.value.set(w, h); GND.value = 0; try { _rr(sc, cam); } finally { PXU.value.set(innerWidth, innerHeight); GND.value = 1; } }; return r; };
@@ -9388,7 +9391,7 @@ addEventListener('keydown', e => { if ((e.code === 'KeyT' || e.code === 'Tab') &
     if (kind === 'cel') { const cs = celScene(id), cx = canvas.getContext('2d'); return { draw(t) { cs.render(t, R1, 1); cx.clearRect(0, 0, 220, 220); cx.drawImage(R1.domElement, 0, 0, 220, 220); } }; }   // 'ball' = bola; 'hat' = boneco com chapéu; 'cleat' = pés com chuteira
     const sc = new THREE.Scene(), root = new THREE.Group(); sc.add(root); lights(sc);
     const isB = kind === 'ball', cam = new THREE.PerspectiveCamera(30, 1, .1, 60);
-    if (isB) { const b = mkBall(id); b.g.scale.setScalar(MB[id] ? (MB[id].obj ? 1.5 : id === 'mnova' ? 2.4 : 2.1) : 2.1); root.add(b.g); cam.position.set(0, 0, 5.2); cam.lookAt(0, 0, 0); }
+    if (isB) { const b = mkBall(id); b.g.scale.setScalar(MB[id] ? (MB[id].obj ? 1.5 : id === 'mnova' ? 2.3 : id === 'mplan' ? 1.35 : 2.0) : 2.1); root.add(b.g); cam.position.set(0, 0, 5.2); cam.lookAt(0, 0, 0); }
     else if (kind === 'mus') { root.add(mkChar(null, null, id).g); cam.position.set(0, 3.0, 5.2); cam.lookAt(0, 2.85, .3); }
     else if (kind === 'hat') { root.add(mkChar(id, null).g); cam.position.set(0, 2.6, 6.6); cam.lookAt(0, 2.45, 0); }
     else { root.add(mkChar(null, id).g); cam.position.set(0, .85, 4.4); cam.lookAt(0, .75, 0); }
@@ -9412,7 +9415,7 @@ addEventListener('keydown', e => { if ((e.code === 'KeyT' || e.code === 'Tab') &
       cv.addEventListener('dblclick', () => { VW.yaw = 0; VW.pit = 0; VW.z = 1; VW.auto = true; }); }
     const e = pvE(), sc = new THREE.Scene(); lights(sc); sc.add(floor(3));
     const ch = mkChar(e.hat, e.cleat, e.mus); ch.g.position.x = -1.5; sc.add(ch.g);
-    const b = mkBall(e.ball); { const k = MB[e.ball] ? (MB[e.ball].obj ? 1.5 : e.ball === 'mnova' ? 2.1 : 1.9) : 1.7; b.g.scale.setScalar(k); b.g.position.set(1.7, .45 * k, .6); const ob = b.g.userData.ob; if (ob) { b.g.updateMatrixWorld(true); const bx = new THREE.Box3().setFromObject(ob); if (!bx.isEmpty()) b.g.position.y -= bx.min.y; } } b.g.visible = !tgt; sc.add(b.g);
+    const b = mkBall(e.ball); { const k = MB[e.ball] ? (MB[e.ball].obj ? 1.5 : e.ball === 'mplan' ? 1.2 : e.ball === 'mnova' ? 2.0 : 1.8) : 1.7; b.g.scale.setScalar(k); b.g.position.set(1.7, .45 * k, .6); const ob = b.g.userData.ob; if (ob) { b.g.updateMatrixWorld(true); const bx = new THREE.Box3().setFromObject(ob); if (!bx.isEmpty()) b.g.position.y -= bx.min.y; } } b.g.visible = !tgt; sc.add(b.g);
     const cam = new THREE.PerspectiveCamera(32, 560 / 454, .1, 60);
     return { draw(t) { const ya = VW.yaw + (VW.auto ? Math.sin(t * .9) * .7 : 0), k = Math.max(0, Math.min(1, (1 - VW.z) / .7)), d = 9.6 * VW.z, tx = -1.5 * k, ty = 1.8 + .75 * k, cp = Math.cos(VW.pit);
       cam.position.set(tx + Math.sin(ya) * cp * d, ty + .2 + Math.sin(VW.pit) * d, Math.cos(ya) * cp * d); cam.lookAt(tx, ty, 0); b.g.rotation.y = Math.sin(t * .8) * .5; R2.render(sc, cam); } };
