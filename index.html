@@ -9370,7 +9370,7 @@ addEventListener('keydown', e => { if ((e.code === 'KeyT' || e.code === 'Tab') &
     const g = part(0xf8f9fa, BR, BR, BR, 0, 0, 0, 51), spin = new THREE.Group(); g.add(spin);
     const m = new THREE.Mesh(BALL_GEO, stencilize(new THREE.MeshLambertMaterial(kind === 'gold' ? { map: BTEX(kind), emissive: 0xffa000, emissiveIntensity: .6 } : BTEX(kind) ? { map: BTEX(kind) } : { color: kind === 'classic' ? new THREE.Color(localStorage.getItem('futio_bcol') || '#f8f9fa') : 0xf8f9fa }), 51));
     m.scale.setScalar(BR + .004); m.renderOrder = 1; spin.add(m);
-    if (MB[kind]) { g.children.forEach(c => c.visible = false); const o = fitBall(MB[kind](51), false, MB[kind].obj ? 1 : 0); o.scale.setScalar(BR * .98 * ({ mnova: .72, mball: .85, megg: .85, mplan: .85 }[kind] || 1)); if (o.userData.anim) { o.userData.idle = 0; HANIM.push(o); } g.add(o); }
+    if (MB[kind]) { g.children.forEach(c => c.visible = false); const o = fitBall(MB[kind](51), false, MB[kind].obj ? 1 : 0); o.scale.setScalar(BR * .98 * ({ mnova: .72, mball: .85, megg: .85, mplan: .85 }[kind] || 1)); if (o.userData.anim) { o.userData.idle = 0; HANIM.push(o); } g.add(o); g.userData.ob = o; }
     return { g, spin };
   }
   const mkRend = (w, h, aa) => { const r = new THREE.WebGLRenderer({ alpha: true, antialias: aa !== false, stencil: true, preserveDrawingBuffer: true }); r.setSize(w, h, false); r.setPixelRatio(1); r.setClearColor(0, 0); const _rr = r.render.bind(r); r.render = (sc, cam) => { PXU.value.set(w, h); GND.value = 0; try { _rr(sc, cam); } finally { PXU.value.set(innerWidth, innerHeight); GND.value = 1; } }; return r; };
@@ -9388,7 +9388,7 @@ addEventListener('keydown', e => { if ((e.code === 'KeyT' || e.code === 'Tab') &
     if (kind === 'cel') { const cs = celScene(id), cx = canvas.getContext('2d'); return { draw(t) { cs.render(t, R1, 1); cx.clearRect(0, 0, 220, 220); cx.drawImage(R1.domElement, 0, 0, 220, 220); } }; }   // 'ball' = bola; 'hat' = boneco com chapéu; 'cleat' = pés com chuteira
     const sc = new THREE.Scene(), root = new THREE.Group(); sc.add(root); lights(sc);
     const isB = kind === 'ball', cam = new THREE.PerspectiveCamera(30, 1, .1, 60);
-    if (isB) { const b = mkBall(id); b.g.scale.setScalar(MB[id] ? (MB[id].obj ? 1.15 : 1.45) : 1.7); root.add(b.g); cam.position.set(0, 0, 5.2); cam.lookAt(0, 0, 0); }
+    if (isB) { const b = mkBall(id); b.g.scale.setScalar(MB[id] ? (MB[id].obj ? 1.5 : id === 'mnova' ? 2.4 : 2.1) : 2.1); root.add(b.g); cam.position.set(0, 0, 5.2); cam.lookAt(0, 0, 0); }
     else if (kind === 'mus') { root.add(mkChar(null, null, id).g); cam.position.set(0, 3.0, 5.2); cam.lookAt(0, 2.85, .3); }
     else if (kind === 'hat') { root.add(mkChar(id, null).g); cam.position.set(0, 2.6, 6.6); cam.lookAt(0, 2.45, 0); }
     else { root.add(mkChar(null, id).g); cam.position.set(0, .85, 4.4); cam.lookAt(0, .75, 0); }
@@ -9412,7 +9412,7 @@ addEventListener('keydown', e => { if ((e.code === 'KeyT' || e.code === 'Tab') &
       cv.addEventListener('dblclick', () => { VW.yaw = 0; VW.pit = 0; VW.z = 1; VW.auto = true; }); }
     const e = pvE(), sc = new THREE.Scene(); lights(sc); sc.add(floor(3));
     const ch = mkChar(e.hat, e.cleat, e.mus); ch.g.position.x = -1.5; sc.add(ch.g);
-    const b = mkBall(e.ball); b.g.scale.setScalar(MB[e.ball] ? (MB[e.ball].obj ? 1.1 : 1.4) : 1.7); b.g.position.set(1.7, .45 * 1.7, .6); b.g.visible = !tgt; sc.add(b.g);
+    const b = mkBall(e.ball); { const k = MB[e.ball] ? (MB[e.ball].obj ? 1.5 : e.ball === 'mnova' ? 2.1 : 1.9) : 1.7; b.g.scale.setScalar(k); b.g.position.set(1.7, .45 * k, .6); const ob = b.g.userData.ob; if (ob) { b.g.updateMatrixWorld(true); const bx = new THREE.Box3().setFromObject(ob); if (!bx.isEmpty()) b.g.position.y -= bx.min.y; } } b.g.visible = !tgt; sc.add(b.g);
     const cam = new THREE.PerspectiveCamera(32, 560 / 454, .1, 60);
     return { draw(t) { const ya = VW.yaw + (VW.auto ? Math.sin(t * .9) * .7 : 0), k = Math.max(0, Math.min(1, (1 - VW.z) / .7)), d = 9.6 * VW.z, tx = -1.5 * k, ty = 1.8 + .75 * k, cp = Math.cos(VW.pit);
       cam.position.set(tx + Math.sin(ya) * cp * d, ty + .2 + Math.sin(VW.pit) * d, Math.cos(ya) * cp * d); cam.lookAt(tx, ty, 0); b.g.rotation.y = Math.sin(t * .8) * .5; R2.render(sc, cam); } };
