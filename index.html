@@ -1649,6 +1649,11 @@ ballSpin.quaternion.premultiply = function (q) { const W = ballSpin.userData.qw;
   else W.premultiply(q).normalize();
   _syncSpin(); return this; };
 scene.add(ball);
+
+/* normaliza as bolas-objeto: mesmo tamanho (2 de diâmetro, como a bola) e apoiadas no chão (não ficam voando) */
+window.fitBall = (o, ground = true) => { o.updateMatrixWorld(true); const box = new THREE.Box3(), b2 = new THREE.Box3(); o.traverse(m => { if (m.isMesh && m.geometry) { b2.setFromObject(m); if (!b2.isEmpty()) box.union(b2); } });
+  if (box.isEmpty()) return o; const sz = box.getSize(new THREE.Vector3()), k = 2 / (Math.max(sz.x, sz.y, sz.z) || 1), c = box.getCenter(new THREE.Vector3());
+  const W = new THREE.Group(), F = new THREE.Group(); F.scale.setScalar(k); o.position.set(-c.x, ground ? -box.min.y - 1 / k : -c.y, -c.z); F.add(o); W.add(F); W.userData = o.userData; return W; };
 const BALL_GEO = new THREE.SphereGeometry(1, 40, 28);
 // Bola de futebol de verdade: 12 pentágonos + 20 hexágonos (icosaedro truncado) desenhados numa textura
 function makeBallTex(pcs, hc, sc) {
@@ -9231,7 +9236,7 @@ addEventListener('keydown', e => { if ((e.code === 'KeyT' || e.code === 'Tab') &
         s.material.opacity = Math.sin(u * Math.PI) * .9; s.scale.setScalar(BR * (k === 'fall' ? .4 : .6) * (.6 + .4 * Math.sin(u * Math.PI))); }); }, 33);
     return set; })();
   function applyBall(id) { applyBall.cur = id; if (id === 'classic') { try { DEF_BALL_MAT.color.set(localStorage.getItem('futio_bcol') || '#ffffff'); } catch (_) { } } ballSpin.userData.obj = (MB[id] && MB[id].obj) ? 1 : 0; ballSpin.quaternion.set(0, 0, 0, 1); ballSpin.userData.qw.identity(); ballMesh.visible = !MB[id]; ball.children[0].visible = ball.children[1].visible = !MB[id]; ballMesh.material = BTEX(id) ? ((applyBall.c = applyBall.c || {})[id] || (applyBall.c[id] = ballMat(id, 2))) : DEF_BALL_MAT;
-    if (halo) { ball.remove(halo); halo = null; } goldM = FX[id] && !(MB[id] && MB[id].obj) ? ballMesh.material : null; if (applyBall.mb) { ballSpin.remove(applyBall.mb); applyBall.mb = null; } if (MB[id]) { const o = MB[id](2); o.scale.setScalar(BR * .98); ballSpin.add(o); applyBall.mb = o; if (o.userData.anim) { o.userData.idle = 0; HANIM.push(o); } }
+    if (halo) { ball.remove(halo); halo = null; } goldM = FX[id] && !(MB[id] && MB[id].obj) ? ballMesh.material : null; if (applyBall.mb) { ballSpin.remove(applyBall.mb); applyBall.mb = null; } if (MB[id]) { const o = fitBall(MB[id](2)); o.scale.setScalar(BR * .98); ballSpin.add(o); applyBall.mb = o; if (o.userData.anim) { o.userData.idle = 0; HANIM.push(o); } }
     if (goldM && ['gold', 'bfire', 'bgal', 'bplasma', 'btoxic', 'brain', 'mball', 'mnova', 'megg', 'mplan'].includes(id)) { halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: haloTex(FX[id][1]), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); halo.scale.setScalar(BR * 5); ball.add(halo); } OVL(id); }
   setInterval(() => { const t = performance.now() / 300; if (goldM) { goldM.emissiveIntensity = .5 + .3 * Math.sin(t); { const T = goldM.map, A = TA[applyBall.cur]; if (T && A) { T.offset.x = (T.offset.x + A[0]) % 1; T.offset.y = A[1] ? Math.sin(t / 3) * A[1] : 0; if (A[2]) T.offset.x += (Math.random() - .5) * A[2]; } } if (applyBall.cur === 'brain' || applyBall.cur === 'mball') { goldM.emissive.setHSL((t / 14) % 1, 1, .5); if (halo) halo.material.color.setHSL((t / 14) % 1, 1, .6); } } if (halo) halo.material.opacity = .65 + .3 * Math.sin(t); }, 50);
   function applyMus(id) { if (musO) { head.remove(musO); musO = null; } if (id) { musO = buildFace(id); head.add(musO); } }
@@ -9365,7 +9370,7 @@ addEventListener('keydown', e => { if ((e.code === 'KeyT' || e.code === 'Tab') &
     const g = part(0xf8f9fa, BR, BR, BR, 0, 0, 0, 51), spin = new THREE.Group(); g.add(spin);
     const m = new THREE.Mesh(BALL_GEO, stencilize(new THREE.MeshLambertMaterial(kind === 'gold' ? { map: BTEX(kind), emissive: 0xffa000, emissiveIntensity: .6 } : BTEX(kind) ? { map: BTEX(kind) } : { color: kind === 'classic' ? new THREE.Color(localStorage.getItem('futio_bcol') || '#f8f9fa') : 0xf8f9fa }), 51));
     m.scale.setScalar(BR + .004); m.renderOrder = 1; spin.add(m);
-    if (MB[kind]) { g.children.forEach(c => c.visible = false); const o = MB[kind](51); o.scale.setScalar(BR * .98); if (o.userData.anim) { o.userData.idle = 0; HANIM.push(o); } g.add(o); }
+    if (MB[kind]) { g.children.forEach(c => c.visible = false); const o = fitBall(MB[kind](51), false); o.scale.setScalar(BR * .98); if (o.userData.anim) { o.userData.idle = 0; HANIM.push(o); } g.add(o); }
     return { g, spin };
   }
   const mkRend = (w, h, aa) => { const r = new THREE.WebGLRenderer({ alpha: true, antialias: aa !== false, stencil: true, preserveDrawingBuffer: true }); r.setSize(w, h, false); r.setPixelRatio(1); r.setClearColor(0, 0); const _rr = r.render.bind(r); r.render = (sc, cam) => { PXU.value.set(w, h); GND.value = 0; try { _rr(sc, cam); } finally { PXU.value.set(innerWidth, innerHeight); GND.value = 1; } }; return r; };
