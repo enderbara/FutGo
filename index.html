@@ -642,7 +642,7 @@ html.mob #tcSkip{font-size:13px;padding:8px 14px}
 </style>
 </head>
 <body>
-<div id="ver">Kick.io v1.3.9</div>
+<div id="ver">Kick.io v1.4.0</div>
 <div id="splash"><div class="sp-bar t"></div><div class="sp-bar b"></div><div class="sp-line"></div>
 
 <div class="sp-c"><div class="sp-by">UM JOGO DE</div><i class="fa-solid fa-gamepad sp-lg"></i><div class="sp-nm"><span>FunTudio</span></div></div>
@@ -1917,15 +1917,48 @@ function keeperGrab(K) {
 }
 
 // ---------- camada TOON: squash & stretch, respiração, balanço e cabeça com atraso (somada à pose existente) ----------
-function toonFX(model, head, hL, hR, wt, amp, run, ph, w) {
-  const t = performance.now() / 1000, idle = (1 - amp) * w, mv = amp * w, br = Math.sin(t * 2.4 + ph);
-  const sy = 1 + idle * br * .035 + mv * Math.cos(wt * 2) * (.04 + .04 * run), sxz = 1 / Math.sqrt(sy);
+function gaitRate(sp) { return Math.min(19, 4 + sp * 0.7); }   // ritmo da passada: acompanha a velocidade, mas não vira "pernas de liquidificador" na corrida
+function toonFX(model, head, hL, hR, wt, amp, run, ph, w, fL, fR) {
+  const t = performance.now() / 1000, idle = (1 - amp) * w, mv = amp * w, rn = run * mv, br = Math.sin(t * 2.4 + ph), sw = Math.sin(wt);
+  const sy = 1 + idle * br * .03 + mv * Math.cos(wt * 2) * (.012 + .022 * run), sxz = 1 / Math.sqrt(sy);
   model.scale.set(sxz, sy, sxz);
-  model.rotation.z += Math.sin(wt) * .05 * mv * (1 + run) + idle * Math.sin(t * 1.1 + ph) * .035;
-  model.rotation.y += Math.sin(wt) * .09 * mv;
-  head.rotation.z = Math.sin(wt - .7) * .07 * mv + idle * Math.sin(t * 1.4 + ph) * .06;   // atribui (nao soma): evita acumular e girar a cabeca
-  hL.position.y += idle * Math.sin(t * 2.4 + ph + .6) * .07; hR.position.y += idle * Math.sin(t * 2.4 + ph + 1.2) * .07;
-  hL.position.x -= mv * run * .12; hR.position.x += mv * run * .12;
+  head.scale.set(1 / sxz, 1 / sy, 1 / sxz);                                  // a cabeça não estica nem amassa junto com o corpo
+  model.rotation.x += rn * .05 + mv * .02;                                   // leve inclinação para frente ao correr
+  model.rotation.z += sw * .015 * mv + idle * Math.sin(t * 1.1 + ph) * .03;
+  model.rotation.y += sw * (.03 + .04 * run) * mv;                           // giro de ombros curto
+  head.rotation.z = Math.sin(wt - .7) * .03 * mv + idle * Math.sin(t * 1.4 + ph) * .05;
+  hL.position.y += idle * Math.sin(t * 2.4 + ph + .6) * .07 + Math.max(0, -sw) * .1 * rn; hR.position.y += idle * Math.sin(t * 2.4 + ph + 1.2) * .07 + Math.max(0, sw) * .1 * rn;
+  hL.position.z -= sw * (.05 * mv + .14 * rn); hR.position.z += sw * (.05 * mv + .14 * rn);   // braços acompanham a passada
+  hL.position.x -= rn * .05; hR.position.x += rn * .05;
+  if (fL) { fL.position.y += Math.max(0, Math.cos(wt)) * .08 * rn; fR.position.y += Math.max(0, -Math.cos(wt)) * .08 * rn; fL.position.z += sw * .06 * rn; fR.position.z -= sw * .06 * rn; }
+}
+function toonFall(c, t, D, ph) {   // queda de desenho animado: voa girando, quica, fica tonto e levanta com animação
+  const A = .36, B = .28, G = .8, L = Math.max(0, D - A - B - G), T = A + B + L + G;
+  if (t >= T) { c.model.scale.set(1, 1, 1); return true; }
+  const m = c.model, sd = Math.sin(ph * 7.1) > 0 ? 1 : -1, ez = x => x * x * (3 - 2 * x);
+  let gu = -1, rx = 0, y = 0, sy = 1, ry = 0, rz = 0, fl = 0, lf = 0;
+  if (t < A) { const u = t / A; rx = -1.45 * ez(u) - .7 * Math.sin(u * Math.PI); y = 1.1 * 4 * u * (1 - u); sy = 1 + .1 * Math.sin(u * Math.PI); ry = sd * 3.1416 * ez(u); rz = sd * .2 * Math.sin(u * Math.PI); fl = 1; lf = ez(u); }
+  else if (t < A + B) { const v = (t - A) / B; rx = -1.45; y = .22 * 4 * v * (1 - v); sy = 1 - .18 * Math.pow(1 - v, 2) + .05 * Math.sin(v * Math.PI); fl = .6 * (1 - v); lf = 1; }
+  else if (t < A + B + L) { const w = t - A - B; rx = -1.45 + Math.sin(w * 3) * .03; sy = 1 + Math.sin(w * 4) * .02; fl = .25; lf = 1; }
+  else {   // levanta com apoio: senta (mãos atrás no chão), encolhe as pernas, empurra o chão e se ergue
+    const g = (t - A - B - L) / G, a1 = ez(Math.min(1, g / .35)), a2 = ez(Math.min(1, Math.max(0, (g - .35) / .35))), a3 = ez(Math.max(0, (g - .7) / .3)); gu = g;
+    rx = -1.45 + .75 * a1 + .95 * a2 - .25 * a3; lf = 1 - a1; fl = 0;
+    y = -.1 * Math.sin(a2 * Math.PI) * (1 - a3) + .08 * Math.sin(a3 * Math.PI);
+    sy = 1 - .06 * Math.sin(a2 * Math.PI) + .05 * Math.sin(a3 * Math.PI); rz = 0; ry = 0;
+  }
+  const sxz = 1 / Math.sqrt(sy);
+  m.rotation.set(rx, ry, rz); m.position.y = y + .54 * lf; m.scale.set(sxz, sy, sxz); c.head.scale.set(1, 1, 1);
+  const fw = Math.sin(t * 28 + ph) * fl;
+  c.handL.position.set(-HAND_X - .35 * fl, HAND_Y + 1.1 * fl + fw * .4, .25); c.handR.position.set(HAND_X + .35 * fl, HAND_Y + 1.1 * fl - fw * .4, .25);
+  c.footL.position.set(-FOOT_X, FOOT_Y + .5 * fl + fw * .25, .1 + fw * .3); c.footR.position.set(FOOT_X, FOOT_Y + .5 * fl - fw * .25, .1 - fw * .3);
+  c.head.rotation.z = Math.sin(t * 9 + ph) * .18 * (t > A + B ? 1 : .3);
+  if (gu >= 0) {
+    const a1 = ez(Math.min(1, gu / .35)), a2 = ez(Math.min(1, Math.max(0, (gu - .35) / .35))), a3 = ez(Math.max(0, (gu - .7) / .3)), k = a1 * (1 - a3), w2 = Math.sin(a2 * Math.PI);
+    c.handL.position.set(-HAND_X - .1 * k, HAND_Y - .55 * k, .25 * (1 - k) + (-.9 + 1.8 * a2) * k); c.handR.position.set(HAND_X + .1 * k, HAND_Y - .55 * k, .25 * (1 - k) + (-.9 + 1.8 * a2) * k);
+    c.footL.position.set(-FOOT_X, FOOT_Y + .3 * w2, .1 - .2 * w2); c.footR.position.set(FOOT_X, FOOT_Y + .3 * w2, .1 - .2 * w2);
+    c.head.rotation.z = Math.sin(t * 6) * .05 * (1 - a2); c.head.rotation.x = .2 * a2 * (1 - a3);
+  }
+  return false;
 }
 function updateKeeper(K, dt) {
   const s = K.s, g = K.g, bp = ball.position, live = goalLock <= 0;
@@ -2031,20 +2064,21 @@ function updateKeeper(K, dt) {
     K.yaw += (want - K.yaw) * Math.min(1, dt * (K.state === 'idle' ? 7 : 14));
     g.rotation.y = base + K.yaw;
   }
-  ch.model.rotation.set(-K.down * 1.45, 0, -K.lean * 1.35 * K.diveDir * s);
-  ch.model.position.y = K.lean * 0.9 + K.down * 0.72 + Math.sin(K.idleT * 2.2) * 0.03;
-  ch.footL.position.set(-FOOT_X - 0.08, FOOT_Y + Math.max(0, cs) * 0.25 * amp, 0.02 + sn * 0.4 * amp);
-  ch.footR.position.set(FOOT_X + 0.08, FOOT_Y + Math.max(0, -cs) * 0.25 * amp, 0.06 - sn * 0.4 * amp);
+  const ry = g.rotation.y, sp0 = Math.max(speed, 1e-3), dt0 = Math.max(dt, 1e-4), fr = (mvx * Math.sin(ry) + mvz * Math.cos(ry)) / dt0 / sp0, lr = (mvx * Math.cos(ry) - mvz * Math.sin(ry)) / dt0 / sp0;   // andar pra frente/trás x deslocar de lado
+  ch.model.rotation.set(-K.down * 1.45, 0, -K.lean * 1.35 * K.diveDir * s - lr * .2 * K.amp * (1 - K.down));
+  ch.model.position.y = K.lean * 0.9 + K.down * 0.72 + Math.sin(K.idleT * 2.2) * 0.03 + Math.abs(sn) * (.08 + .08 * Math.abs(lr)) * amp;
+  ch.footL.position.set(-FOOT_X - 0.08 + sn * .55 * amp * lr, FOOT_Y + Math.max(0, cs) * (.22 + .2 * Math.abs(lr)) * amp, 0.02 + sn * 0.4 * amp * fr);
+  ch.footR.position.set(FOOT_X + 0.08 - sn * .55 * amp * lr, FOOT_Y + Math.max(0, -cs) * (.22 + .2 * Math.abs(lr)) * amp, 0.06 - sn * 0.4 * amp * fr);
   const hx = HAND_X + 0.3 - K.hold * (HAND_X + 0.3 - 0.55);
   const hy = HAND_Y + 0.3 + Math.sin(K.idleT * 3) * 0.05 + K.hold * 0.4 + K.lean * 1.5;
   const hz = 0.1 + K.hold * 0.95 + K.lean * 0.45;
-  ch.handL.position.set(-hx, hy, hz - sn * 0.3 * amp);
-  ch.handR.position.set(hx, hy, hz + sn * 0.3 * amp);
+  ch.handL.position.set(-hx + lr * amp * .25, hy + Math.max(0, -cs) * .15 * amp, hz - sn * 0.3 * amp * (.4 + Math.abs(fr)));
+  ch.handR.position.set(hx + lr * amp * .25, hy + Math.max(0, cs) * .15 * amp, hz + sn * 0.3 * amp * (.4 + Math.abs(fr)));
   let ang = Math.atan2(bp.x - g.position.x, bp.z - g.position.z) - g.rotation.y;
   while (ang > Math.PI) ang -= TAU; while (ang < -Math.PI) ang += TAU;
   ch.head.rotation.y += (THREE.MathUtils.clamp(ang, -0.8, 0.8) - ch.head.rotation.y) * k10;
   { const w = K.state === 'down' ? 0 : K.state === 'dive' ? .3 : 1, idle = K.state === 'idle' ? 1 : 0, it = K.idleT;
-    toonFX(ch.model, ch.head, ch.handL, ch.handR, K.walkT, K.amp, 0, it * .3, w);
+    toonFX(ch.model, ch.head, ch.handL, ch.handR, K.walkT, K.amp, Math.min(1, Math.max(0, (speed - 8) / 12)), it * .3, w, ch.footL, ch.footR);
     ch.model.position.y += idle * (1 - K.amp) * Math.abs(Math.sin(it * 4)) * .07;                       // posição de espera: quica na ponta dos pés
     ch.handL.position.y += idle * Math.sin(it * 5) * .09; ch.handR.position.y += idle * Math.sin(it * 5 + Math.PI) * .09;
     ch.footL.position.y += idle * Math.max(0, Math.sin(it * 4)) * .08; ch.footR.position.y += idle * Math.max(0, -Math.sin(it * 4)) * .08;
@@ -2878,11 +2912,12 @@ function constrainPlayerFromGoal(pos, v) {
   }
 }
 function pushFromBodies(pos, v) {
-  const R = 1.15, obs = [];
+  const R = 1.55, obs = [];
   if (!dummyRagdoll) obs.push(dummy.position);
+  if (match.on && ref.g.visible && ref.down <= 0) obs.push(ref.p);
   if (match.on) for (const b of bots) if (b.down <= 0) obs.push(b.p);
   for (const K of keepers) if (K.state !== 'down') obs.push(K.g.position);
-  for (const o of obs) {
+  for (let it = 0; it < 2; it++) for (const o of obs) {   // 2 passadas: sair de um não joga dentro de outro
     const dx = pos.x - o.x, dz = pos.z - o.z, d = hyp2(dx, dz);
     if (d >= R || d < 1e-4) continue;
     const nx = dx / d, nz = dz / d;
@@ -2898,7 +2933,7 @@ function resetPlayerPose() {
   model.scale.set(1, 1, 1);
   body.position.set(SPEC.body[4], SPEC.body[5], SPEC.body[6]);
   head.position.set(SPEC.head[4], SPEC.head[5], SPEC.head[6]);
-  head.rotation.set(0, 0, 0);
+  head.rotation.set(0, 0, 0); head.scale.set(1, 1, 1);
   handL.position.set(SPEC.handL[4], SPEC.handL[5], SPEC.handL[6]);
   handR.position.set(SPEC.handR[4], SPEC.handR[5], SPEC.handR[6]);
   footL.position.set(SPEC.footL[4], SPEC.footL[5], SPEC.footL[6]);
@@ -4594,9 +4629,9 @@ function slideContact(b) {
   const foe = TM[1 - b.t];
   for (const o of foe) {                                     // choque com adversário
     if (o.down > 0.5 || o.out) continue;
-    if (dd(o.p, b.p) > 2.1) continue;
+    if (dd(o.p, b.p) > 2.5) continue;
     const holds = o === C.holder, near = dd(bp, b.p) < 3.4;
-    b.slHit = true; if (!o.isU) o.ang = (o.ang || 0) + 0.08;
+    b.slHit = true; hitAt(o.p, o.isU ? 1.2 : 0.95); if (!o.isU) o.ang = (o.ang || 0) + 0.08;
     if ((holds && near && Math.random() < 0.85) || (!holds && near && Math.random() < 0.9)) {   // chegou na bola: desarme limpo
       if (holds) {
         if (o.isU) { hasBall = false; kickCd = 0.5; } else { ballOwner = null; o.cd = 1; o.down = 0.5; o.v.set(sd.x * 6, 0, sd.z * 6); }
@@ -4680,13 +4715,13 @@ function moveBot(b, dt, live) {
 }
 function poseBot(b, dt) {
   const c = b.ch, sp = hyp2(b.v.x, b.v.z), k = Math.min(1, dt * 10);
-  b.amp += (Math.min(1, sp / 10.5) - b.amp) * k; b.walkT += dt * sp * 1.2;
+  b.amp += (Math.min(1, sp / 10.5) - b.amp) * k; b.walkT += dt * gaitRate(sp);
   b.dn += ((b.down > 0.35 ? 1 : 0) - b.dn) * k;
   const sn = Math.sin(b.walkT), cs = Math.cos(b.walkT), a = b.amp, run = clampN((sp - 10.5) / 8, 0, 1);
-  const st = 0.45 + 0.3 * run, lf = 0.22 + 0.3 * run, arm = 0.38 + 0.3 * run;
+  const st = 0.45 + 0.2 * run, lf = 0.22 + 0.22 * run, arm = 0.38 + 0.22 * run;
   if (b.sl >= 0) {                                           // pose de carrinho (a mesma do jogador)
     const p = Math.min(b.sl / 0.6, 1), kk = p < 0.25 ? p / 0.25 : p < 0.8 ? 1 : 1 - (p - 0.8) / 0.2;
-    slidePose(c, kk);
+    slidePose(c, kk); b._sl = 1;
     return;
   }
   c.head.position.set(SPEC.head[4], SPEC.head[5], SPEC.head[6]); if (c.head.rotation.x > 0.005) c.head.rotation.x = Math.max(0, c.head.rotation.x - dt * 4);
@@ -4696,10 +4731,12 @@ function poseBot(b, dt) {
   c.handL.position.set(-HAND_X, HAND_Y + 0.2 * run * a, -0.05 - sn * arm * a);
   c.handR.position.set(HAND_X, HAND_Y + 0.2 * run * a, 0.2 + sn * arm * a);
   const lean = clampN(-(b.av || 0) * 0.03, -0.22, 0.22) * a;   // inclina o corpo para dentro da curva
-  c.model.rotation.set(-b.dn * 1.45 + (0.08 + 0.2 * run) * a, 0, lean);
-  c.model.position.y = b.dn * 0.72 + (1 - Math.abs(sn)) * (0.13 + 0.12 * run) * a;
+  c.model.rotation.set(-b.dn * 1.45 + (0.06 + 0.12 * run) * a, 0, lean);
+  c.model.position.y = b.dn * 0.54 + (1 - Math.abs(sn)) * (0.13 + 0.12 * run) * a;
   { const ia = (1 - a) * (1 - b.dn), ti = performance.now() / 1000, ph = ((c.g && c.g.id) || (b.i || 0)) * 1.7; c.model.position.y += ia * Math.sin(ti * 2.2 + ph) * 0.03; c.model.rotation.z += ia * Math.sin(ti * 0.9 + ph) * 0.03; c.handL.position.y += ia * Math.sin(ti * 2.2 + ph + 0.6) * 0.05; c.handR.position.y += ia * Math.sin(ti * 2.2 + ph + 1.2) * 0.05; c.handL.position.z += ia * Math.sin(ti * 1.3 + ph) * 0.06; c.handR.position.z -= ia * Math.sin(ti * 1.3 + ph) * 0.06; c.head.rotation.y = ia * Math.sin(ti * 0.55 + ph) * 0.35; }
-  toonFX(c.model, c.head, c.handL, c.handR, b.walkT, a, run, b.ph || 0, 1 - b.dn);
+  toonFX(c.model, c.head, c.handL, c.handR, b.walkT, a, run, b.ph || 0, 1 - b.dn, c.footL, c.footR);
+  if (b.down > 0 && b._fT == null) { if (b._sl) { b._fT = .64; b._fD = 1.14; } else { b._fT = 0; b._fD = b.down > 100 ? 1e9 : Math.min(b.down + .2, 4); } b._sl = 0; }
+  if (b._fT != null) { b._fT += dt; if (toonFall(c, b._fT, b._fD, b.ph || 0)) b._fT = null; }
   const G = b.fgt;
   if (G && b.dn < 0.4) {
     const tm = performance.now() / 1000;
@@ -4803,7 +4840,7 @@ function knockBot(b, d) {
   if (ballOwner === b) { ballOwner = null; bv.set(d.x * 12, 0, d.z * 12); bvy = 3; }
 }
 // carrinho do JOGADOR contra um bot: desarme limpo se chegou na bola, falta se pegou o adversário sem a bola
-function userSlideHit(b, d) { if (window.__prog) __prog.slide();
+function userSlideHit(b, d) { if (window.__prog) __prog.slide(); hitAt(b.p, 1.1);
   curse(b); b.ang = (b.ang || 0) + 0.3; U.heat = (U.heat || 0) + 0.6;
   const bp = ball.position, holds = b === ballOwner, near = hyp2(bp.x - player.position.x, bp.z - player.position.z) < 3.6;
   if (near) { knockBot(b, d); return; }                                        // chegou na bola → lance normal
@@ -5136,7 +5173,7 @@ const uSlideCh = { model, head, handL, handR, footL, footR };
 function slidePose(c, kk) {
   kk = kk * kk * (3 - 2 * kk);
   const th = 1.32 * kk, ct = Math.cos(th), st = Math.sin(th), lift = Math.max(0, 0.72 - 1.52 * ct) * kk;
-  c.model.position.y = lift; c.model.rotation.set(-th, 0, 0);
+  c.model.position.y = lift; c.model.rotation.set(-th, 0, 0); c.model.scale.set(1, 1, 1); c.head.scale.set(1, 1, 1);   // sem esticar o corpo (era isso que alongava a cabeça)
   // posiciona uma peça pela altura/avanço desejados no mundo (inverte a rotação do tronco)
   const put = (o, x, yw, f) => { const h = yw - lift; o.position.set(x, h * ct - f * st, h * st + f * ct); };
   const L = (a, b) => a + (b - a) * kk;
@@ -5144,8 +5181,10 @@ function slidePose(c, kk) {
   put(c.footR, FOOT_X * 0.8, L(FOOT_Y, 0.62), L(SPEC.footR[6], 1.25));     // perna da frente esticada, pé erguido
   put(c.handL, -HAND_X - 0.15 * kk, L(HAND_Y, 0.32), L(SPEC.handL[6], -1.5));  // mão de apoio no gramado
   put(c.handR, HAND_X + 0.2 * kk, L(HAND_Y, 1.15), L(SPEC.handR[6], -0.15));   // outra mão sobe para equilibrar
-  c.head.position.set(SPEC.head[4], SPEC.head[5], L(SPEC.head[6], 0.5));
-  c.head.rotation.x = Math.max(0, th - 0.35 * kk);                          // cabeça continua olhando para frente
+  // cabeça: aproxima do corpo (sem "pescoço" comprido) e fica levantada, olhando para frente
+  c.head.position.set(SPEC.head[4], L(SPEC.head[5], 2.95), L(SPEC.head[6], 0.3));
+  c.head.rotation.set(th * 0.8, 0, 0);
+  { const sw = Math.sin(performance.now() / 1000 * 9 + (c.id || 0)) * kk; c.model.rotation.z = sw * .03; c.head.rotation.z = -sw * .05; c.handL.position.y += sw * .06; c.handR.position.y -= sw * .06; c.model.position.y += kk * (1 - kk) * .5; }   // leve balanço e um pulinho na entrada
 }
 // ---------- mira livre: o chute/passe/chapéu vai para onde o mouse (ou a câmera, no Alt) aponta ----------
 let mAimX = -1, mAimY = -1;
@@ -5208,7 +5247,7 @@ function stepBubs(dt) {
 // carrinho no juiz: ele cai, xinga, apita e depois de levantar mostra cartão para você
 function refHit(d) {
   if (ref.down > 0 || !match.on) return;
-  ref.down = 2.0; ref.v.set(d.x * 7, 0, d.z * 7); ref.kickT = -1;
+  ref.down = 2.0; ref.v.set(d.x * 7, 0, d.z * 7); ref.kickT = -1; hitAt(ref.p, 1.2);
   say(ref.g, rnd(INSULTS_REF), 2.4); whistle(0.7); spawnDust(ref.p.clone(), 4, 0.3);
   giveCard(U, 'yellow', 'Derrubou o juiz');
 }
@@ -5958,28 +5997,28 @@ function animate() {
       player.position.addScaledVector(slideDir, (1 - p) * slideV0 * dt);
       player.position.x = Math.max(-119, Math.min(119, player.position.x));
       player.position.z = Math.max(-82, Math.min(82, player.position.z));
-      constrainPlayerFromGoal(player.position);
+      constrainPlayerFromGoal(player.position); pushFromBodies(player.position, vel);
       vel.copy(slideDir).multiplyScalar((1 - p) * slideV0); sp = vel.length();     // a velocidade acompanha o carrinho (antes voltava a antiga no fim)
 
       // k: 0 = em pé, 1 = deitado deslizando.
       // Deitado (rotação -90° em X): y local vira -z, z local vira altura.
       // Por isso pés ficam com y negativo (à frente) e z negativo (rente ao chão),
       // e o corpo sobe 0.72 para NÃO afundar no gramado (era isso que sujava o contorno).
-      const k = p < 0.25 ? p / 0.25 : p < 0.8 ? 1 : 1 - (p - 0.8) / 0.2;
+      const k = p < 0.25 ? p / 0.25 : 1;
       slidePose(uSlideCh, k);
 
       if (Math.random() < 0.3) spawnDust(player.position.clone(), 1, 0.2);
 
       // Colisão com o NPC
       if (player.position.distanceTo(dummy.position) < 2.2 && !dummyRagdoll) {
-        dummyRagdoll = true; if (window.__prog) __prog.slide();
+        dummyRagdoll = true; if (window.__prog) __prog.slide(); hitAt(dummy.position, 1);
         dummyRagdollTimer = 2.5;
         dummyVel.copy(slideDir).multiplyScalar(22).add(new THREE.Vector3(0, 8, 0));
       }
 
-      for (const K of keepers) if (K.state !== 'down' && player.position.distanceTo(K.g.position) < 2.4) { if (window.__prog) __prog.slide(); knockKeeper(K, slideDir.x, slideDir.z); say(K.g, rnd(INSULTS), 1.9); }
-      if (match.on && match.freeze <= 0) for (const b of bots) if (b.t === 1 && !b.out && b.down <= 0 && b.sl < 0 && player.position.distanceTo(b.p) < 2.4) userSlideHit(b, slideDir);
-      if (match.on && ref.g.visible && ref.down <= 0 && player.position.distanceTo(ref.p) < 2.4) refHit(slideDir);
+      for (const K of keepers) if (K.state !== 'down' && player.position.distanceTo(K.g.position) < 2.8) { if (window.__prog) __prog.slide(); knockKeeper(K, slideDir.x, slideDir.z); say(K.g, rnd(INSULTS), 1.9); hitAt(K.g.position, 1.1); }
+      if (match.on && match.freeze <= 0) for (const b of bots) if (b.t === 1 && !b.out && b.down <= 0 && b.sl < 0 && player.position.distanceTo(b.p) < 2.8) userSlideHit(b, slideDir);
+      if (match.on && ref.g.visible && ref.down <= 0 && player.position.distanceTo(ref.p) < 2.8) refHit(slideDir);
 
       const bdx = ball.position.x - player.position.x;
       const bdz = ball.position.z - player.position.z;
@@ -5989,6 +6028,13 @@ function animate() {
         bvy = 7.5;
         spawnDust(ball.position.clone(), 4, 0.3);
       }
+    } else if (slideT < 0.6 + 0.5) {                      // levantando: senta, apoia a mão, puxa a perna e se ergue
+      vel.set(0, 0, 0); sp = 0; const u = (slideT - 0.6) / 0.5, e = u * u * (3 - 2 * u);
+      slidePose(uSlideCh, 1 - e);
+      const w = Math.sin(u * Math.PI), m = uSlideCh;
+      m.model.rotation.x += 0.4 * w; m.model.position.y -= 0.12 * w;
+      m.handL.position.z += 0.5 * w; m.handL.position.y -= 0.15 * w * (1 - u); m.head.rotation.x -= 0.2 * w;
+      m.footL.position.z += 0.45 * w * (1 - u);
     } else {
       slideT = -1;
       resetPlayerPose();
@@ -6053,7 +6099,7 @@ function animate() {
     pushFromBodies(player.position, vel);
     sp = vel.length();
 
-    walkT += dt * sp * 1.2;
+    walkT += dt * gaitRate(sp);
     amp += (Math.min(1, sp / WALK) - amp) * Math.min(1, dt * 12);
     runAmp += (Math.max(0, Math.min(1, (sp - WALK) / (RUN - WALK))) - runAmp) * Math.min(1, dt * 8);
     ballAnimAmp += ((hasBall ? 1 : 0) - ballAnimAmp) * Math.min(1, dt * 10);
@@ -6070,8 +6116,8 @@ function animate() {
 
     const s = Math.sin(walkT);
     const c = Math.cos(walkT);
-    const STEP = (0.45 + 0.35 * runAmp);
-    const LIFT = (0.22 + 0.34 * runAmp);
+    const STEP = (0.45 + 0.2 * runAmp);
+    const LIFT = (0.22 + 0.22 * runAmp);
     const ARM = (0.38 + 0.32 * runAmp);
 
     celebT = Math.max(0, celebT - dt);
@@ -6106,7 +6152,7 @@ function animate() {
           if (ballOwner) { ballOwner.cd = 0.8; ballOwner = null; } match.last = 0; lastToucher = U;
           const power = 30 + sp * 0.6;
           bv.set(Math.sin(player.rotation.y) * power, 0, Math.cos(player.rotation.y) * power);
-          bvy = 5.2; kickCd = 0.3; bcurve = 0; if (match.on) { match.last = 0; afterKick(U); }
+          bvy = 5.2; kickCd = 0.3; bcurve = 0; shake = Math.max(shake, 0.1 + sp * 0.004); punch = Math.max(punch, 1.5); spawnDust(ball.position.clone(), 3, 0.25); if (match.on) { match.last = 0; afterKick(U); }
         } else { try { sfxOne('swing', player.position, 1.0 * CFG.vol, 0.95 + Math.random() * 0.1); } catch (_) {} }
       }
       if (kickT > 0.38) { kickT = -1; kLean = 0; }
@@ -6114,7 +6160,7 @@ function animate() {
 
     model.position.y = (1 - Math.abs(s)) * (0.13 + 0.12 * runAmp) * amp
                      + Math.abs(Math.sin(idleT * 9)) * 0.5 * celAmp;
-    model.rotation.x = (0.08 + 0.20 * runAmp) * amp;
+    model.rotation.x = (0.06 + 0.12 * runAmp) * amp;
     model.rotation.z = s * 0.025 * amp * (1 + runAmp);
     model.scale.y = 1 + Math.sin(idleT * 2.2) * 0.012 * (1 - amp);
 
@@ -6129,7 +6175,7 @@ function animate() {
 
     head.rotation.z = -s * 0.03 * amp;
     { const ia = (1 - amp) * (celAmp > 0.1 ? 0 : 1); model.position.y += ia * Math.sin(idleT * 2.2) * 0.03; model.rotation.z += ia * Math.sin(idleT * 0.9) * 0.03; handL.position.y += ia * Math.sin(idleT * 2.2 + 0.6) * 0.05; handR.position.y += ia * Math.sin(idleT * 2.2 + 1.2) * 0.05; handL.position.z += ia * Math.sin(idleT * 1.3) * 0.06; handR.position.z -= ia * Math.sin(idleT * 1.3) * 0.06; head.rotation.y = ia * Math.sin(idleT * 0.55) * 0.3; }
-    if (celAmp < 0.1 && slideT < 0) toonFX(model, head, handL, handR, walkT, amp, runAmp, 0, 1);
+    if (celAmp < 0.1 && slideT < 0) toonFX(model, head, handL, handR, walkT, amp, runAmp, 0, 1, footL, footR);
     head.rotation.x = 0;
     head.position.set(SPEC.head[4], 3.12 + Math.sin(walkT * 2 - 0.6) * 0.03 * amp, SPEC.head[6]);
     sadAmp += ((celebT > 0 && ownGoal ? 1 : 0) - sadAmp) * Math.min(1, dt * 6);
@@ -6142,6 +6188,9 @@ function animate() {
     model.rotation.y = 0;
     if (kickT >= 0) {                                           // corpo acompanha o chute: tronco inclina, braços balançam, cabeça olha a bola
       model.rotation.x += kLean; model.rotation.y = kLean * 0.5;
+      { const u2 = Math.min(kickT / 0.38, 1), ky2 = u2 < .45 ? -.08 * (u2 / .45) : u2 < .65 ? -.08 + .22 * ((u2 - .45) / .2) : .14 * (1 - (u2 - .65) / .35), kx2 = 1 / Math.sqrt(1 + ky2);   // toon: agacha, estica no chute, volta
+        model.scale.set(kx2, 1 + ky2, kx2); head.scale.set(1 / kx2, 1 / (1 + ky2), 1 / kx2);
+        if (u2 > .45) { const hp = Math.sin(Math.min(1, (u2 - .45) / .55) * Math.PI); model.position.y += .35 * hp; handL.position.y += .3 * hp; handR.position.y += .3 * hp; } }
       const sg = Math.sin(Math.min(kickT / 0.38, 1) * Math.PI);
       handL.position.x -= sg * 0.3; handR.position.x += sg * 0.3; handL.position.z -= kLean * 2.2; handR.position.z += kLean * 2.2;
       head.rotation.x = 0.15 * sg;
@@ -6320,7 +6369,7 @@ function animate() {
     }
   }
 
-  updateDust(dt);
+  updateDust(dt); stepImpacts(dt);
   updateConfetti(dt); updateTears(dt);
 
   const sunF = match.brawl ? _camT.set(match.brawl.cx, 0, match.brawl.cz) : player.position;
@@ -6372,7 +6421,7 @@ shadowPlane.matrixAutoUpdate = false; ground.matrixAutoUpdate = false;
 //  SONS (kick.mp3, ambience.wav, walk.wav, crowd.mp3 — na mesma pasta do index.html), 3D e com fades
 // ======================================================================
 const SFX = { buf: {}, el: {}, lp: {}, started: false, ambV: 0, crowdV: 0, crowdT: 0 };
-const SND = { kick: 'kick.mp3', amb: 'ambience.wav', walk: 'walk.wav', crowd: 'crowd.mp3', swing: 'swing.mp3', slide: 'deslizar.mp3' };
+const SND = { kick: 'kick.mp3', amb: 'ambience.wav', walk: 'walk.wav', crowd: 'crowd.mp3', swing: 'swing.mp3', slide: 'deslizar.mp3', hit: 'hit.mp3' };
 const _sfxD = new THREE.Vector3(), clamp01 = v => Math.max(0, Math.min(1, v));
 function mkPan(ac) { const p = ac.createPanner(); p.panningModel = 'equalpower'; p.distanceModel = 'inverse'; p.refDistance = 16; p.rolloffFactor = 1.1; p.maxDistance = 400; return p; }
 function setPan(p, x, y, z) { if (p.positionX) { p.positionX.value = x; p.positionY.value = y; p.positionZ.value = z; } else p.setPosition(x, y, z); }
@@ -6412,6 +6461,32 @@ function sfxSlide(pos, vol) {                                         // som do 
   } else if (SFX.el.slide) {
     const a = SFX.el.slide.cloneNode(), top = clamp01(vol * atten(pos)), t0 = performance.now(); a.volume = 0; a.play().catch(() => {});
     const iv = setInterval(() => { const e = (performance.now() - t0) / 1000; a.volume = clamp01(top * Math.min(1, e / 0.14, Math.max(0, (0.9 - e) / 0.14))); if (e >= 0.9) { a.pause(); clearInterval(iv); } }, 30);
+  }
+}
+// ---------- batida do carrinho: hit.mp3 + câmera treme + soco de zoom + estrela de impacto ----------
+const _hp = new THREE.Vector3(); let hitLast = 0;
+const IMP_STAR = (() => { const sh = new THREE.Shape(), n = 8; for (let i = 0; i < n * 2; i++) { const r = i % 2 ? 0.5 : 1, a = i / (n * 2) * Math.PI * 2; if (i) sh.lineTo(Math.cos(a) * r, Math.sin(a) * r); else sh.moveTo(Math.cos(a) * r, Math.sin(a) * r); } sh.closePath(); return new THREE.ShapeGeometry(sh); })();
+const impacts = [];
+for (let i = 0; i < 6; i++) {
+  const g = new THREE.Group(), mk = (col, sc, z) => { const m = new THREE.Mesh(IMP_STAR, new THREE.MeshBasicMaterial({ color: col, transparent: true, depthWrite: false, depthTest: false })); m.scale.setScalar(sc); m.position.z = z; m.renderOrder = 999 + z * 100; g.add(m); return m; };
+  const o = mk(0x232323, 1.25, -0.01), f = mk(0xffd54a, 1, 0), c = mk(0xffffff, 0.45, 0.01);
+  g.visible = false; scene.add(g); impacts.push({ g, parts: [o, f, c], t: -1, s: 1, spin: 0 });
+}
+function hitFX(pos, pw) {
+  const now = performance.now(); if (now - hitLast < 200) return; hitLast = now; pw = pw || 1;
+  const d = pos.distanceTo(camera.position), near = 1 / (1 + Math.max(0, d - 25) / 45);
+  try { sfxOne('hit', pos, Math.min(1.6, 0.9 + 0.4 * pw) * CFG.vol, 0.94 + Math.random() * 0.12); } catch (_) {}
+  shake = Math.max(shake, 0.6 * pw * near); punch = Math.max(punch, 4 * pw * near);
+  spawnDust(pos, 5, 0.3);
+}
+function hitAt(p, pw) { _hp.set(p.x, 1.8, p.z); hitFX(_hp, pw); }
+function stepImpacts(dt) {
+  for (const e of impacts) {
+    if (e.t < 0) continue; e.t += dt; const u = e.t / 0.38;
+    if (u >= 1) { e.t = -1; e.g.visible = false; continue; }
+    const k = e.s * (0.35 + 0.9 * (1 - Math.pow(1 - Math.min(1, u * 2.2), 3))) * (1 - 0.25 * u);
+    e.g.quaternion.copy(camera.quaternion); e.g.scale.setScalar(k); e.g.rotateZ(e.spin * u);
+    const op = u < 0.55 ? 1 : 1 - (u - 0.55) / 0.45; for (const m of e.parts) m.material.opacity = op;
   }
 }
 function sfxCrowd(on) { if (!SFX.started) return; if (on) { loopStop('crowd'); SFX.crowdV = 0; loopStart('crowd'); } SFX.crowdT = on ? 1 : 0; }
@@ -9898,12 +9973,9 @@ body:has(#splash) #ver,body:has(#splash) #gAcc{display:none!important}
 }
 #modePop{overflow-y:auto!important;max-height:100dvh}
 </style>
-<div id="news"><div class="nw"><h2>O QUE HÁ DE NOVO</h2><div class="nv">KICK.IO v1.3.9</div><ul>
-<li><i class="fa-solid fa-medal"></i><div><b>PATENTES</b><span>Modos de jogo agora destravam conforme sua patente. Painel do time reorganizado: patente, prêmios e missões cabem sem rolar, e os escudos ficam alinhados em 2 fileiras.</span></div></li>
-<li><i class="fa-solid fa-dumbbell"></i><div><b>TREINO POR TEMPO</b><span>Pague reputação e espere o treino acabar (conta até com o jogo fechado). O tempo dobra a cada nível e para em 24h.</span></div></li>
-<li><i class="fa-solid fa-trophy"></i><div><b>FIM DE JOGO</b><span>Nova tela de vitória, derrota e empate com câmera girando e os jogadores comemorando, cabisbaixos ou se cumprimentando.</span></div></li>
-<li><i class="fa-solid fa-scale-balanced"></i><div><b>AJUSTES</b><span>Treino agora dá o mesmo bônus ao seu time e aos rivais. O Visual do jogador abre o Vestiário.</span></div></li>
-<li><i class="fa-solid fa-bug"></i><div><b>CORREÇÕES</b><span>Jogadores não deslizam mais ao abrir Equipe, menos travadas na resolução e animações mais leves.</span></div></li>
+<div id="news"><div class="nw"><h2>O QUE HÁ DE NOVO</h2><div class="nv">KICK.IO v1.4.0</div><ul>
+<li><i class="fa-solid fa-person-running"></i><div><b>ANIMAÇÕES</b><span>Corrida, carrinho, queda, levantar e chute mais naturais e com mais personalidade.</span></div></li>
+<li><i class="fa-solid fa-bug"></i><div><b>CORREÇÕES</b><span>Colisões entre jogadores, goleiros e juiz corrigidas, e outros bugs resolvidos.</span></div></li>
 </ul><button id="newsOk">CONTINUAR</button></div></div>
 <script>
 (()=>{const n=document.getElementById('news'),ok=document.getElementById('newsOk'),sp=document.getElementById('splash');
