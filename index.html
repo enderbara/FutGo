@@ -1923,8 +1923,7 @@ function toonFX(model, head, hL, hR, wt, amp, run, ph, w) {
   model.scale.set(sxz, sy, sxz);
   model.rotation.z += Math.sin(wt) * .05 * mv * (1 + run) + idle * Math.sin(t * 1.1 + ph) * .035;
   model.rotation.y += Math.sin(wt) * .09 * mv;
-  head.rotation.z += Math.sin(wt - .7) * .07 * mv + idle * Math.sin(t * 1.4 + ph) * .06;
-  head.rotation.x += idle * Math.sin(t * .9 + ph) * .04 + mv * Math.abs(Math.sin(wt)) * .04;
+  head.rotation.z = Math.sin(wt - .7) * .07 * mv + idle * Math.sin(t * 1.4 + ph) * .06;   // atribui (nao soma): evita acumular e girar a cabeca
   hL.position.y += idle * Math.sin(t * 2.4 + ph + .6) * .07; hR.position.y += idle * Math.sin(t * 2.4 + ph + 1.2) * .07;
   hL.position.x -= mv * run * .12; hR.position.x += mv * run * .12;
 }
