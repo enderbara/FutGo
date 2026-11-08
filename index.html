@@ -10179,7 +10179,7 @@ new MutationObserver((m,o)=>{if(sp.classList.contains('out')){on=false;o.disconn
   const RANK_URL = 'https://script.google.com/macros/s/AKfycbxJj8gfuqHMlYS99etb4d-kMkDB7sDE_tyqa0AE3ov2ySxurf_8y12JLGz6Zkm5CnHL2g/exec';
   const $ = id => document.getElementById(id), box = $('rkBox'), pop = $('rkPop');
   let rows = [], warn = '', lastSig = '', nameTaken = false, chkT = 0, chkSeq = 0, chkC = new Map(), lastPub = 0, cache = null;
-  const saveC = () => { try { localStorage.setItem('rk_c', JSON.stringify(cache)); } catch (_) {} };
+  const saveC = () => { try { localStorage.setItem('rk_c2', JSON.stringify(cache)); } catch (_) {} };
   const ok = () => /^https:\/\/script\.google(usercontent)?\.com\//.test(RANK_URL);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const img = u => /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+\/=]+$/.test(u || '') ? u : '';
@@ -10226,7 +10226,7 @@ new MutationObserver((m,o)=>{if(sp.classList.contains('out')){on=false;o.disconn
       squad: members.map(m => ({ n: m.isU ? first : String(m.name).slice(0, 20), k: m.num, p: m.pos, s: m.skin || null })) };
     const sig = JSON.stringify(d); if (sig === lastSig) return; lastSig = sig;
     const r = await call({ a: 'put', t, d });
-    if (r.err === 'taken') { lastSig = ''; warn = `O nome "${esc(team.name)}" já é de outro time no rank. Renomeie seu time para aparecer.`; } else if (r.err) { lastSig = ''; } else { warn = ''; lastPub = Date.now(); try { localStorage.removeItem('rk_c'); } catch (_) {} }
+    if (r.err === 'taken') { lastSig = ''; warn = `O nome "${esc(team.name)}" já é de outro time no rank. Renomeie seu time para aparecer.`; } else if (r.err) { lastSig = ''; } else { warn = ''; lastPub = Date.now(); try { localStorage.removeItem('rk_c2'); } catch (_) {} }
   }
   setInterval(() => { try { if (ok() && window.GTOKQ) publish(GTOKQ()).catch(() => {}); } catch (_) {} }, 300000);
 
@@ -10259,14 +10259,14 @@ new MutationObserver((m,o)=>{if(sp.classList.contains('out')){on=false;o.disconn
       return;
     }
     const em = window.GMAIL ? GMAIL() : '';
-    try { cache = JSON.parse(localStorage.getItem('rk_c') || 'null'); } catch (_) { cache = null; }
+    try { cache = JSON.parse(localStorage.getItem('rk_c2') || 'null'); } catch (_) { cache = null; }
     if (cache && cache.em !== em) cache = null;
-    if (cache && Date.now() - cache.ts < 60000) { rows = cache.rows; return list(); }     // lista recente: nem chama o servidor
+    if (cache && cache.rows.length && Date.now() - cache.ts < 60000) { rows = cache.rows; return list(); }     // lista recente: nem chama o servidor
     msg('RANK GLOBAL', 'Carregando…');
     try {
       const t = await GTOK(); await publish(t);
-      if (!cache || Date.now() - cache.ts >= 60000) {
-        const r = await call({ a: 'list', t, v: cache && cache.v }); if (r.err) throw new Error(r.err);
+      if (!cache || !cache.rows.length || Date.now() - cache.ts >= 60000) {
+        const r = await call({ a: 'list', t, v: cache && cache.rows.length ? cache.v : undefined }); if (r.err) throw new Error(r.err);
         cache = r.same && cache ? { ...cache, ts: Date.now() } : { em, v: r.v, ts: Date.now(), rows: r.rows || [], det: {} }; saveC();
       }
       rows = cache.rows; list();
