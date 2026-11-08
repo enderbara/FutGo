@@ -10184,7 +10184,7 @@ new MutationObserver((m,o)=>{if(sp.classList.contains('out')){on=false;o.disconn
 .rk2R .ow{overflow:hidden;text-overflow:ellipsis;opacity:.75}.rk2R .ow i{margin-right:3px;font-size:9px}
 .rk2R .p{text-align:right;flex:none;font:400 14px 'Bungee',Impact,system-ui;color:#ffd54a;text-shadow:0 2px 0 #0a0e1a}.rk2R.mine .p{color:#14182a;text-shadow:none}.rk2R .p i{font-size:10px;margin-right:3px}
 .rk2R .p .mv{display:block;text-shadow:none}.rk2R.mine .up{color:#0a7a35}.rk2R.mine .dn{color:#b00020}
-.rk2M{text-align:center;padding:10px 6px;color:#dfe6ff;font:600 12px/1.45 system-ui}.rk2M>i{display:block;font-size:26px;color:#ffd54a;margin-bottom:6px}.rk2M b{color:#ffd54a}.rk2M button{margin-top:6px}.rkInv{margin:0 0 8px;border-radius:12px;background:rgba(255,213,74,.1);border:2px dashed rgba(255,213,74,.5)}.rkInv>i{font-size:18px;display:inline;margin-right:6px}
+.rk2M{text-align:center;padding:10px 6px;color:#dfe6ff;font:600 12px/1.45 system-ui}.rk2M>i{display:block;font-size:26px;color:#ffd54a;margin-bottom:6px}.rk2M b{color:#ffd54a}.rk2M button{margin-top:6px}.rk2R[data-k],.rkPc[data-k]{cursor:pointer}.rk2R[data-k]:active{transform:translateY(2px)}@media (hover:hover){.rk2R[data-k]:hover{filter:brightness(1.12)}}body.rkView #iTabs button[data-t="v"],body.rkView #iTabs button[data-t="s"],body.rkView #inspector .irow,body.rkView #iRand{display:none!important}body.rkView #iSkin{pointer-events:none}.tile.lock{opacity:.45;filter:grayscale(1);cursor:not-allowed;pointer-events:none}.rkInv{margin:0 0 8px;border-radius:12px;background:rgba(255,213,74,.1);border:2px dashed rgba(255,213,74,.5)}.rkInv>i{font-size:18px;display:inline;margin-right:6px}
 /* Painel do time: mais respiro no celular */
 #teamPop>div{-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 @media (max-height:540px),(max-width:700px){
@@ -10203,7 +10203,7 @@ new MutationObserver((m,o)=>{if(sp.classList.contains('out')){on=false;o.disconn
   // ===== COLE AQUI a URL do seu App da Web (Google Apps Script ligado a uma planilha; veja rank-apps-script.gs) =====
   const RANK_URL = 'https://script.google.com/macros/s/AKfycbxJj8gfuqHMlYS99etb4d-kMkDB7sDE_tyqa0AE3ov2ySxurf_8y12JLGz6Zkm5CnHL2g/exec';
   const $ = id => document.getElementById(id);
-  let rows = [], warn = '', lastSig = '', nameTaken = false, chkT = 0, chkSeq = 0, chkC = new Map(), lastPub = 0, cache = null, wait = 0, busy = 0;
+  let rows = [], warn = '', lastSig = '', nameTaken = false, chkT = 0, chkSeq = 0, chkC = new Map(), lastPub = 0, cache = null, wait = 0, busy = 0, viewing = null;
   const saveC = () => { try { localStorage.setItem('rk_c2', JSON.stringify(cache)); } catch (_) {} };
   const ok = () => /^https:\/\/script\.google(usercontent)?\.com\//.test(RANK_URL);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -10241,9 +10241,9 @@ new MutationObserver((m,o)=>{if(sp.classList.contains('out')){on=false;o.disconn
   const crestThumb = src => new Promise(r => { if (!src) return r(''); const i = new Image(); i.onload = () => { const o = document.createElement('canvas'); o.width = o.height = 64; o.getContext('2d').drawImage(i, 0, 0, 64, 64); r(o.toDataURL('image/webp', 0.8)); }; i.onerror = () => r(''); i.src = src; });
   async function publish(t) {
     try { if (typeof team !== 'undefined' && team) localStorage.removeItem('rk_del'); } catch (_) {}   // entrou em novo time: cancela remoção pendente
-    if (!t || typeof team === 'undefined' || !team || Date.now() - lastPub < 15000) return;   // no máximo 1 envio a cada 15s
+    if (viewing || !t || typeof team === 'undefined' || !team || Date.now() - lastPub < 15000) return;   // no máximo 1 envio a cada 15s
     const first = ((JSON.parse(localStorage.getItem('gsave_sess') || '{}').name) || 'Jogador').split(' ')[0], [kf, kb] = kitThumbs({ ...kitSaved, num: String(members[USER_SLOT].num) });
-    const d = { name: String(team.name).slice(0, 30), crest: await crestThumb(team.crest), kitF: kf, kitB: kb, rep: stats.rep | 0, tier: TIERS[tierOf(stats.rep)][1],
+    const d = { name: String(team.name).slice(0, 30), crest: await crestThumb(team.crest), kitF: kf, kitB: kb, rep: stats.rep | 0, kit: { ...kitSaved }, tier: TIERS[tierOf(stats.rep)][1],
       st: { j: stats.j | 0, v: stats.v | 0, e: stats.e | 0, d: stats.d | 0, gp: stats.gp | 0, gc: stats.gc | 0 }, owner: first,
       squad: members.map(m => ({ n: m.isU ? first : String(m.name).slice(0, 20), k: m.num, p: m.pos, s: m.skin || null })) };
     const sig = JSON.stringify(d); if (sig === lastSig) return; lastSig = sig;
@@ -10275,8 +10275,8 @@ new MutationObserver((m,o)=>{if(sp.classList.contains('out')){on=false;o.disconn
   const TC = { bronze: '#e0955a', prata: '#d5dcea', ouro: '#ffd54a', platina: '#7ee8e0', diamante: '#6fc3ff', mestre: '#c58bff', campe: '#ff7a7a', lend: '#ff9bf0' };
   const tcol = t => { const k = Object.keys(TC).find(k => nkey(t).startsWith(k)); return TC[k] || '#ffd54a'; };
   const mvH = m => m ? `<span class="mv ${m > 0 ? 'up' : 'dn'}"><i class="fa-solid fa-caret-${m > 0 ? 'up' : 'down'}"></i>${Math.abs(m)}</span>` : '';
-  const pod = (r, i) => `<div class="rkPc p${i + 1}${r.mine ? ' mine' : ''}"><div class="cr">${i === 0 ? '<i class="fa-solid fa-crown"></i>' : ''}<img src="${img(r.d.crest)}"></div><b>${esc(r.d.name)}</b><small>${esc(r.d.tier)}</small><div class="pt"><i class="fa-solid fa-star"></i>${r.d.rep | 0}</div>${mvH(mv[r.k])}<div class="bar">${i + 1}</div></div>`;
-  const row = (r, i) => `<div class="rk2R${r.mine ? ' mine' : ''}"><span class="n">${i + 1}</span><img src="${img(r.d.crest)}"><span class="t"><b>${esc(r.d.name)}</b><small><span class="tr" style="--tc:${tcol(r.d.tier)}"><i class="fa-solid fa-gem"></i>${esc(r.d.tier)}</span><span class="ow"><i class="fa-solid fa-user"></i>${esc(r.d.owner)}</span></small></span><span class="p"><i class="fa-solid fa-star"></i>${r.d.rep | 0}${mvH(mv[r.k])}</span></div>`;
+  const pod = (r, i) => `<div class="rkPc p${i + 1}${r.mine ? ' mine' : ''}" data-k="${esc(r.k)}"><div class="cr">${i === 0 ? '<i class="fa-solid fa-crown"></i>' : ''}<img src="${img(r.d.crest)}"></div><b>${esc(r.d.name)}</b><small>${esc(r.d.tier)}</small><div class="pt"><i class="fa-solid fa-star"></i>${r.d.rep | 0}</div>${mvH(mv[r.k])}<div class="bar">${i + 1}</div></div>`;
+  const row = (r, i) => `<div class="rk2R${r.mine ? ' mine' : ''}" data-k="${esc(r.k)}"><span class="n">${i + 1}</span><img src="${img(r.d.crest)}"><span class="t"><b>${esc(r.d.name)}</b><small><span class="tr" style="--tc:${tcol(r.d.tier)}"><i class="fa-solid fa-gem"></i>${esc(r.d.tier)}</span><span class="ow"><i class="fa-solid fa-user"></i>${esc(r.d.owner)}</span></small></span><span class="p"><i class="fa-solid fa-star"></i>${r.d.rep | 0}${mvH(mv[r.k])}</span></div>`;
   function render(force) {
     const sig = JSON.stringify(rows.map(r => [r.k, r.d.rep, r.d.name, r.d.tier, r.d.crest ? 1 : 0, r.mine])) + warn + logged();
     if (!force && sig === lastR) return; lastR = sig;
@@ -10284,7 +10284,7 @@ new MutationObserver((m,o)=>{if(sp.classList.contains('out')){on=false;o.disconn
     if (Object.keys(prevPos).length) { mv = {}; rows.forEach((r, i) => { if (prevPos[r.k] != null && prevPos[r.k] !== i) mv[r.k] = prevPos[r.k] - i; }); }
     prevPos = np;
     const l = L(), st = l.scrollTop, me = rows.findIndex(r => r.mine), box = $('rkMe');
-    if (me >= 0) { const gap = me > 0 ? (rows[me - 1].d.rep | 0) - (rows[me].d.rep | 0) : 0; box.style.display = 'flex'; box.innerHTML = `<span class="pos">#${me + 1}</span><span>SEU TIME<small>${me > 0 ? '<i class="fa-solid fa-arrow-up"></i> Faltam ' + (gap + 1) + ' pts para o #' + me : '<i class="fa-solid fa-crown"></i> Você lidera o rank!'}</small></span><i class="fa-solid fa-location-crosshairs"></i>`; box.onclick = () => { const m = l.querySelector('.mine'); if (m) m.scrollIntoView({ block: 'center', behavior: 'smooth' }); }; $('rkCnt').textContent = rows.length + ' times no ranking'; }
+    if (me >= 0) { const gap = me > 0 ? (rows[me - 1].d.rep | 0) - (rows[me].d.rep | 0) : 0; box.style.display = 'flex'; box.innerHTML = `<span class="pos">#${me + 1}</span><span>SEU TIME<small>${me > 0 ? '<i class="fa-solid fa-arrow-up"></i> Faltam ' + (gap + 1) + ' pts para o #' + me : '<i class="fa-solid fa-crown"></i> Você lidera o rank!'}</small></span><i class="fa-solid fa-location-crosshairs"></i>`; box.onclick = () => { const m = l.querySelector('.mine'); if (m) m.scrollIntoView({ block: 'center', behavior: 'smooth' }); }; $('rkCnt').textContent = rows.length + ' times • toque para ver a equipe'; }
     else box.style.display = 'none';
     const upd = (typeof team !== 'undefined' && team && !(window.GTOKQ && GTOKQ()) && Date.now() - (+localStorage.getItem('rk_pubts') || 0) > 864e5) ? '<div class="rk2M"><button id="rkU">Atualizar meu time no rank</button></div>' : '';
     const inv = logged() ? '' : '<div class="rk2M rkInv"><i class="fa-solid fa-lock"></i>Entre com sua conta Google para seu time aparecer no rank.<br><button id="rkG"><i class="fa-brands fa-google"></i> Entrar com Google</button></div>';
@@ -10319,12 +10319,44 @@ new MutationObserver((m,o)=>{if(sp.classList.contains('out')){on=false;o.disconn
     delTeam(); publish(window.GTOKQ ? GTOKQ() : null).catch(() => {});   // só publica se já houver token válido
     tick();
   }
-  function openRank() { isOpen = true; P().classList.add('on'); start(); }
+  function openRank() { if (!logged()) return; isOpen = true; P().classList.add('on'); start(); }
   function closeRank() { isOpen = false; clearTimeout(tm); clearInterval(wait); P().classList.remove('on'); }
   $('rkX').onclick = closeRank;
   P().addEventListener('click', e => { if (e.target === P()) closeRank(); });
   document.addEventListener('keydown', e => { if (isOpen && e.key === 'Escape') { e.stopPropagation(); closeRank(); } }, true);
+  // ---- ver a equipe de outro time (somente leitura) ----
+  const _si = Storage.prototype.setItem; Storage.prototype.setItem = function (k, v) { if (viewing && k === LSKEY) return; return _si.apply(this, arguments); };   // nada do time visitado é salvo no seu save
+  const lockInsp = on => { for (const id of ['iName', 'iNum']) { const e = $(id); if (e) e.disabled = on; } };
+  const oi = window.openInspector; window.openInspector = function () { oi.apply(this, arguments); if (viewing) { lockInsp(true); $('iPos').textContent = members[focusIdx].pos; const t = $('iTabs').querySelector('[data-t="p"]'); if (t) t.click(); } };
+  function applyForeign(d) {
+    (d.squad || []).forEach((q, i) => { const m = members[i]; if (!m || !q) return; m.name = String(q.n || m.name).slice(0, 16); if (Number.isInteger(q.k) && q.k >= 1 && q.k <= 99) m.num = q.k; if (!m.isU && q.s != null) setSkin(m, q.s); setLab(m); });
+    const kit = { ...KIT_DEFAULT, ...(d.kit || {}) }; kit.num = String(members[USER_SLOT].num); kitSaved = kit; UK = { ...kit };
+    setCrestImg(d.crest || null); redraw(); refreshShirts();
+    $('sName').textContent = d.name || ''; setCrestEl($('sCrest'), d.crest || null);
+    $('sHint').innerHTML = '<i class="fa-solid fa-eye"></i> Só visualização • clique em um jogador';
+  }
+  function exitView() {
+    const o = viewing; if (!o) return; viewing = null; document.body.classList.remove('rkView'); lockInsp(false);
+    members.forEach((m, i) => { m.name = o.names[i]; m.num = o.nums[i]; if (o.skins[i] != null) setSkin(m, o.skins[i]); setLab(m); });
+    kitSaved = o.kit; UK = o.uk; setCrestImg(team ? team.crest : null); redraw(); refreshShirts();
+    $('sName').textContent = team ? team.name : ''; setCrestEl($('sCrest'), team ? team.crest : null); $('sHint').textContent = 'Clique em um jogador';
+  }
+  let vBusy = 0;
+  async function viewTeam(k) {
+    if (viewing || vBusy) return; vBusy = 1; const cn = $('rkCnt'), old = cn.textContent; cn.textContent = 'Abrindo equipe…';
+    try {
+      const r = await call({ a: 'get', k }); if (!r.d) throw new Error('none');
+      viewing = { names: members.map(m => m.name), nums: members.map(m => m.num), skins: members.map(m => m.skin), kit: { ...kitSaved }, uk: { ...UK } };
+      document.body.classList.add('rkView'); closeRank(); applyForeign(r.d); setMode('squad');
+    } catch (e) { cn.textContent = 'Não consegui abrir esse time'; setTimeout(() => { if (isOpen) cn.textContent = old; }, 2000); }
+    vBusy = 0;
+  }
+  L().addEventListener('click', e => { const el = e.target.closest('[data-k]'); if (el) viewTeam(el.dataset.k); });
+  const sb = $('sBack'), ob = sb.onclick; sb.onclick = function () { if (viewing && menu.mode === 'squad') { exitView(); setMode('team'); openRank(); return; } return ob.apply(this, arguments); };
   const bR = $('bRank'); if (bR) bR.onclick = openRank;
+  let lastLg = null;
+  const sync = () => { const lg = logged(); if (lg === lastLg) return; lastLg = lg; if (bR) { bR.disabled = !lg; bR.classList.toggle('lock', !lg); bR.title = lg ? '' : 'Entre com sua conta Google para ver o rank'; bR.innerHTML = `<i class="fa-solid fa-${lg ? 'trophy' : 'lock'}"></i>Rank`; } if (!lg && isOpen) closeRank(); };
+  sync(); setInterval(sync, 1000);
   new MutationObserver(() => { if (!onTeam() && isOpen) closeRank(); }).observe(document.body, { attributes: true, attributeFilter: ['data-m'] });
 })();
 </script>
