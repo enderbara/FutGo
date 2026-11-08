@@ -1820,6 +1820,9 @@ const clampPhi = v => Math.min(Math.max(v, 0.2), Math.PI / 2 - 0.03);
 
 const camPos = new THREE.Vector3();
 const camTarget = new THREE.Vector3();
+// ---- Câmera confortável + primeira pessoa (tecla R) ----
+let fpv = false, fpMix = 0, fpH = 2.1, fpSavePhi = 1.3, fpSaveDist = 13, camNear = 0.5, lkX = 0, lkZ = 0, pvX = 0, pvZ = 0, pvOk = false;
+const _fpP = new THREE.Vector3(), _fpL = new THREE.Vector3();
 
 renderer.domElement.addEventListener('mousedown', e => { if (menu.mode !== 'play' || e.button !== 0) return; dragging = true; lx = e.clientX; ly = e.clientY; });
 addEventListener('mouseup', () => dragging = false);
@@ -6385,31 +6388,60 @@ function animate() {
   phi += (targetPhi - phi) * dampK;
   dist += (targetDist - dist) * dampK;
 
-  punch *= Math.exp(-3 * dt);
-  fov += ((CFG.fov + 7 * runAmp + punch) - fov) * Math.min(1, dt * 6);
-  camera.fov = fov; camera.updateProjectionMatrix();
+  // velocidade suave do jogador -> câmera "olha à frente" (mais conforto ao correr)
+  if (!pvOk || dt <= 0) { pvX = player.position.x; pvZ = player.position.z; pvOk = true; }
+  const vkx = (player.position.x - pvX) / Math.max(dt, 1e-3), vkz = (player.position.z - pvZ) / Math.max(dt, 1e-3);
+  pvX = player.position.x; pvZ = player.position.z;
+  const la = 1 - Math.exp(-3 * dt), vm = Math.hypot(vkx, vkz), vs = vm > 40 ? 40 / vm : 1;   // ignora teleportes/kickoff
+  lkX += (vkx * vs * 0.1 - lkX) * la; lkZ += (vkz * vs * 0.1 - lkZ) * la;
+  const lkm = Math.hypot(lkX, lkZ), lkc = lkm > 2.4 ? 2.4 / lkm : 1;
 
-  const desiredTarget = _camT.copy(player.position); desiredTarget.y += 1.4;
+  // primeira pessoa só no jogo normal (cutscenes, expulso e briga voltam pra 3ª pessoa)
+  const fpOk = fpv && !camCut && !U.out && !match.brawl && goalLock <= 0;
+  fpMix += ((fpOk ? 1 : 0) - fpMix) * Math.min(1, dt * 9); if (!fpOk && fpMix < 0.01) fpMix = 0;
+  const fe = fpMix * fpMix * (3 - 2 * fpMix);                // suaviza a transição 3ª <-> 1ª
+
+  punch *= Math.exp(-3 * dt);
+  const baseFov = CFG.fov + 7 * runAmp + punch;
+  fov += ((baseFov + (76 + 6 * runAmp + punch - baseFov) * fe) - fov) * Math.min(1, dt * 6);
+  camera.fov = fov;
+  const wantNear = fpMix > 0.01 ? 0.1 : 0.5; if (wantNear !== camNear) camNear = camera.near = wantNear;
+  camera.updateProjectionMatrix();
+  head.visible = fpMix < 0.5;                                // cabeça some na 1ª pessoa (vê do tronco pra baixo)
+
+  const desiredTarget = _camT.copy(player.position); desiredTarget.y += 1.5;
+  desiredTarget.x += lkX * lkc; desiredTarget.z += lkZ * lkc;
   if (U.out && U.exit && U.exit.done) desiredTarget.set(ball.position.x, 1.4, ball.position.z);   // expulso: assiste o jogo
   if (match.brawl && match.brawl.ph !== 'reset') desiredTarget.set(match.brawl.cx, 1.5, match.brawl.cz);   // câmera vai pra briga
   if (camCut) desiredTarget.copy(camCut);
-  camTarget.lerp(desiredTarget, dampK);
+  camTarget.lerp(desiredTarget, 1 - Math.exp(-10 * dt));
 
+  const dEff = dist * (1 + 0.07 * runAmp);                   // afasta um pouco ao correr
   camPos.set(
-    camTarget.x + dist * Math.sin(phi) * Math.sin(theta),
-    camTarget.y + dist * Math.cos(phi),
-    camTarget.z + dist * Math.sin(phi) * Math.cos(theta)
+    camTarget.x + dEff * Math.sin(phi) * Math.sin(theta),
+    camTarget.y + dEff * Math.cos(phi),
+    camTarget.z + dEff * Math.sin(phi) * Math.cos(theta)
   );
 
   camPos.x = Math.max(-CAM_X, Math.min(CAM_X, camPos.x));
   camPos.z = Math.max(-CAM_Z, Math.min(CAM_Z, camPos.z));
-  camPos.y = Math.max(0.6, camPos.y);
+  camPos.y = Math.max(0.9, camPos.y);
+  _fpL.copy(camTarget);
+  if (fpMix > 0) {
+    fpH += ((slideT >= 0 ? 1.1 : 2.1) - fpH) * Math.min(1, dt * 10);
+    const sp_ = Math.sin(phi), dx = -sp_ * Math.sin(theta), dy = -Math.cos(phi), dz = -sp_ * Math.cos(theta);
+    const bob = Math.sin(walkT * 2) * 0.035 * runAmp;
+    _fpP.set(player.position.x - dx * 0.12, player.position.y + fpH + bob, player.position.z - dz * 0.12);   // na altura da cabeça, sem atraso
+    camPos.lerp(_fpP, fe);
+    _fpL.set(_fpP.x + dx * 10, _fpP.y + dy * 10, _fpP.z + dz * 10); _fpL.lerp(camTarget, 1 - fe);
+  }
   if (shake > 0.01) {
-    camPos.x += (Math.random() - .5) * shake; camPos.y += (Math.random() - .5) * shake; camPos.z += (Math.random() - .5) * shake;
+    const k = shake * (1 - 0.7 * fe);
+    camPos.x += (Math.random() - .5) * k; camPos.y += (Math.random() - .5) * k; camPos.z += (Math.random() - .5) * k;
     shake *= Math.exp(-5 * dt);
   }
   camera.position.copy(camPos);
-  camera.lookAt(camTarget); updateTags(dt); stepShout(dt); stepBubs(dt); stepAim(); stepFans(dt); sfxStep(dt);
+  camera.lookAt(_fpL); updateTags(dt); stepShout(dt); stepBubs(dt); stepAim(); stepFans(dt); sfxStep(dt);
 
   renderer.render(scene, camera);
 }
@@ -7995,6 +8027,7 @@ addEventListener('keydown', e => { if ((e.code === 'KeyT' || e.code === 'Tab') &
   let sess = null, tok = null, tc = null, waiter = null, fileId = null, pending = false, busy = false, mute = false, timer = 0, status = 'off', loggingOut = false;
   try { sess = JSON.parse(LS.getItem(K_SESS) || 'null'); } catch (_) {}
   window.GPIC = () => (sess && sess.picture) || '';
+  window.GTOK = () => getToken(); window.GTOKQ = () => (tokOk() ? tok.v : null); window.GMAIL = () => (sess && sess.email) || '';
   const mkErr = code => Object.assign(new Error(code), { auth: true, code });
   let toastT = 0;
   function toast(e) {
@@ -10104,5 +10137,134 @@ new MutationObserver((m,o)=>{if(sp.classList.contains('out')){on=false;o.disconn
 #gGo:hover{filter:brightness(1.08);transform:translateY(-2px)}#gGo:active{transform:translateY(2px)!important}
 #gLogin .gl-n{color:#aab6e6;opacity:.8!important}
 </style>
+<style>
+/* painel do Rank: mesmo estilo arcade do menu (Bungee, contorno escuro grosso, sombra 3D, amarelo) */
+#rkPop{position:fixed;inset:0;z-index:99999;display:none;align-items:center;justify-content:center;background:repeating-linear-gradient(115deg,rgba(255,255,255,.03) 0 30px,transparent 30px 60px),rgba(6,10,22,.82);backdrop-filter:blur(5px);font-family:system-ui,sans-serif;color:#fff}
+#rkPop.on{display:flex}
+#rkBox{width:min(640px,94vw);max-height:90vh;overflow:auto;box-sizing:border-box;background:linear-gradient(180deg,rgba(32,42,72,.97),rgba(18,24,44,.97));border:3px solid #0a0e1a;border-radius:20px;padding:18px;box-shadow:0 7px 0 #0a0e1a,0 18px 40px rgba(0,0,0,.55)}
+#rkBox h2{margin:0 0 10px;font:400 clamp(18px,3vw,24px) 'Bungee',Impact,system-ui;letter-spacing:2px;color:#fff;text-shadow:0 3px 0 #0a0e1a;display:flex;justify-content:space-between;align-items:center;gap:10px}
+#rkBox h2::after{content:none}
+#rkBox h2>span{display:flex;align-items:center;gap:10px;min-width:0}
+#rkBox h4{display:flex;align-items:center;gap:10px;margin:16px 0 8px;font:400 12px 'Bungee',Impact,system-ui;letter-spacing:3px;color:#ffd54a;text-shadow:0 2px 0 #0a0e1a}
+#rkBox h4::after{content:"";flex:1;height:3px;border-radius:3px;background:linear-gradient(90deg,rgba(255,213,74,.55),transparent)}
+#rkBox button{font:400 13px 'Bungee',Impact,system-ui;letter-spacing:1px;border:3px solid #0a0e1a;border-radius:14px;padding:8px 14px;cursor:pointer;color:#fff;background:linear-gradient(180deg,#2d3a62,#1d2744);box-shadow:0 4px 0 #0a0e1a;transition:transform .12s,box-shadow .12s,filter .12s}
+#rkBox button:hover{transform:translateY(-2px);box-shadow:0 6px 0 #0a0e1a;filter:brightness(1.12)}
+#rkBox button:active{transform:translateY(3px);box-shadow:0 1px 0 #0a0e1a}
+#rkBox #rkX{width:40px;height:40px;padding:0;border-radius:50%;background:#ffd54a;color:#14182a;flex:none}
+#rkBox #rkB{padding:6px 12px;background:#ffd54a;color:#14182a}
+#rkBox button.g{background:linear-gradient(180deg,#5fd86b,#2f9e3f);border-color:#0b3a16;box-shadow:0 6px 0 #0b3a16;padding:14px 22px;font-size:15px}
+#rkBox button.g:hover{box-shadow:0 8px 0 #0b3a16}
+.rkR{display:flex;align-items:center;gap:12px;padding:9px 12px;margin:8px 0;border-radius:16px;border:3px solid #0a0e1a;background:linear-gradient(180deg,#2d3a62,#1d2744);box-shadow:0 4px 0 #0a0e1a;cursor:pointer;transition:transform .12s,box-shadow .12s,filter .12s}
+.rkR:hover{transform:translateY(-3px);box-shadow:0 7px 0 #0a0e1a;filter:brightness(1.1)}
+.rkR.mine{background:linear-gradient(180deg,#ffe58a,#ffc107);color:#1b1500;box-shadow:0 4px 0 #6b4e00}
+.rkR .n{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;flex:none;background:#ffd54a;color:#14182a;font:400 15px 'Bungee',Impact,system-ui;box-shadow:inset 0 -3px 0 rgba(0,0,0,.2)}
+.rkR:nth-child(-n+3) .n{box-shadow:inset 0 -3px 0 rgba(0,0,0,.2),0 0 0 3px #fff}
+.rkR.mine .n{background:#14182a;color:#ffd54a}
+.rkR img{width:40px;height:40px;object-fit:contain;border-radius:50%;background:rgba(0,0,0,.25);box-shadow:0 0 0 2px #ffd54a}
+.rkR .t{flex:1;min-width:0}.rkR .t b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font:400 15px 'Bungee',Impact,system-ui;letter-spacing:.5px}
+.rkR small,.rkM{opacity:.72;font:600 12px system-ui}.rkR .p{font:400 17px 'Bungee',Impact,system-ui;color:#ffd54a;text-shadow:0 2px 0 #0a0e1a}
+.rkR.mine .p{color:#14182a;text-shadow:none}
+.rkK{display:flex;gap:14px;justify-content:center;margin:14px 0}.rkK img{width:130px;height:130px;object-fit:contain;background:rgba(0,0,0,.3);border:3px solid #0a0e1a;border-radius:18px;box-shadow:0 4px 0 #0a0e1a}
+.rkS{display:grid;grid-template-columns:repeat(2,1fr);gap:8px 12px;font:700 13px system-ui}
+.rkS div{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:12px;border:2px solid #0a0e1a;background:linear-gradient(180deg,#2d3a62,#1d2744);box-shadow:0 3px 0 #0a0e1a}
+.rkS i{width:14px;height:14px;border-radius:50%;display:inline-block;border:2px solid #0a0e1a;flex:none}
+.rkMsg{text-align:center;padding:24px 8px;color:#dfe6ff;font:600 14px/1.5 system-ui}.rkMsg b{color:#ffd54a}
+.rkMsg code{display:block;text-align:left;background:rgba(0,0,0,.4);border:2px solid #0a0e1a;padding:8px;border-radius:10px;font-size:11px;white-space:pre-wrap;margin:8px 0;color:#9fe}
+@media (max-height:520px),(max-width:720px){#rkBox{padding:12px;border-radius:16px}.rkR{padding:6px 9px;margin:6px 0;gap:9px}.rkR .n{width:30px;height:30px;font-size:12px}.rkR img{width:32px;height:32px}.rkR .t b{font-size:12px}.rkK img{width:96px;height:96px}.rkS{grid-template-columns:1fr}}
+</style>
+<div id="rkPop"><div id="rkBox"></div></div>
+<script>
+(() => {
+  // ===== COLE AQUI a URL do seu App da Web (Google Apps Script ligado a uma planilha; veja rank-apps-script.gs) =====
+  const RANK_URL = 'https://script.google.com/macros/s/AKfycbxJj8gfuqHMlYS99etb4d-kMkDB7sDE_tyqa0AE3ov2ySxurf_8y12JLGz6Zkm5CnHL2g/exec';
+  const $ = id => document.getElementById(id), box = $('rkBox'), pop = $('rkPop');
+  let rows = [], warn = '', lastSig = '', nameTaken = false, chkT = 0, chkSeq = 0;
+  const ok = () => /^https:\/\/script\.google(usercontent)?\.com\//.test(RANK_URL);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const img = u => /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+\/=]+$/.test(u || '') ? u : '';
+  const hex = c => /^#[0-9a-f]{3,8}$/i.test(c || '') ? c : '#888';
+  const logged = () => { try { return !!localStorage.getItem('gsave_sess'); } catch (_) { return false; } };
+  async function call(q) { const r = await fetch(RANK_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(q) }); return r.json(); }
+  const head = t => `<h2><span>🏆 ${t}</span><button id="rkX">✕</button></h2>`;
+  const bind = () => { const x = $('rkX'); if (x) x.onclick = () => pop.classList.remove('on'); };
+  const msg = (h, body) => { box.innerHTML = head(h) + `<div class="rkMsg">${body}</div>`; bind(); };
+
+  // ---- nomes únicos: mesma regra do servidor (sem acento, maiúscula, espaço ou símbolo) ----
+  const nkey = n => String(n || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
+  const lockOk = () => { const b = $('jOk'); if (b && nameTaken) b.disabled = true; };
+  if (typeof refreshJoin === 'function') { const rj = refreshJoin; window.refreshJoin = function () { rj.apply(this, arguments); lockOk(); }; }
+  const inp = $('jName');
+  if (inp) {
+    inp.insertAdjacentHTML('afterend', '<small id="jNameMsg" style="display:block;min-height:14px;margin-top:3px;font-weight:700"></small>');
+    inp.addEventListener('input', () => {
+      const m = $('jNameMsg'), n = inp.value, k = nkey(n); clearTimeout(chkT); nameTaken = false; m.textContent = '';
+      if (!ok() || k.length < 2) return;
+      const my = ++chkSeq;
+      chkT = setTimeout(async () => {
+        try { const r = await call({ a: 'chk', n, me: window.GMAIL ? GMAIL() : '' }); if (my !== chkSeq) return; nameTaken = !!r.taken; }
+        catch (_) { return; }
+        m.textContent = nameTaken ? '✖ Esse nome já existe no rank. Escolha outro.' : '✔ Nome disponível'; m.style.color = nameTaken ? '#ff6b6b' : '#6bff9a'; lockOk();
+        if (!nameTaken && typeof refreshJoin === 'function') refreshJoin();
+      }, 450);
+    });
+  }
+
+  // ---- miniaturas (uniforme frente/costas e escudo) geradas no navegador ----
+  function kitThumbs(kit) {
+    const c = document.createElement('canvas'); c.width = 512; c.height = 256; renderKit(c.getContext('2d'), kit, { w: 512 });
+    const cut = x => { const o = document.createElement('canvas'); o.width = o.height = 112; o.getContext('2d').drawImage(c, x, 0, 256, 256, 0, 0, 112, 112); return o.toDataURL('image/jpeg', 0.75); };
+    return [cut(0), cut(256)];
+  }
+  const crestThumb = src => new Promise(r => { if (!src) return r(''); const i = new Image(); i.onload = () => { const o = document.createElement('canvas'); o.width = o.height = 64; o.getContext('2d').drawImage(i, 0, 0, 64, 64); r(o.toDataURL('image/webp', 0.8)); }; i.onerror = () => r(''); i.src = src; });
+
+  async function publish(t) {
+    if (!t || typeof team === 'undefined' || !team) return;
+    const first = ((JSON.parse(localStorage.getItem('gsave_sess') || '{}').name) || 'Jogador').split(' ')[0], [kf, kb] = kitThumbs({ ...kitSaved, num: String(members[USER_SLOT].num) });
+    const d = { name: String(team.name).slice(0, 30), crest: await crestThumb(team.crest), kitF: kf, kitB: kb, rep: stats.rep | 0, tier: TIERS[tierOf(stats.rep)][1],
+      st: { j: stats.j | 0, v: stats.v | 0, e: stats.e | 0, d: stats.d | 0, gp: stats.gp | 0, gc: stats.gc | 0 }, owner: first,
+      squad: members.map(m => ({ n: m.isU ? first : String(m.name).slice(0, 20), k: m.num, p: m.pos, s: m.skin || null })) };
+    const sig = JSON.stringify(d); if (sig === lastSig) return; lastSig = sig;
+    const r = await call({ a: 'put', t, d });
+    if (r.err === 'taken') { lastSig = ''; warn = `O nome "${esc(team.name)}" já é de outro time no rank. Renomeie seu time para aparecer.`; } else if (r.err) { lastSig = ''; } else warn = '';
+  }
+  setInterval(() => { try { if (ok() && window.GTOKQ) publish(GTOKQ()).catch(() => {}); } catch (_) {} }, 60000);
+
+  function detail(t, pos) {
+    const st = t.st || {}, sq = (t.squad || []).map(m => `<div><i style="background:${hex(m.s || '#ffdbac')}"></i>#${esc(m.k)} ${esc(m.n)} <span class="rkM">${esc(m.p)}</span></div>`).join('');
+    box.innerHTML = `<h2><span><button id="rkB">←</button> ${esc(t.name)}</span><button id="rkX">✕</button></h2>
+      <div class="rkMsg" style="padding:10px 0 0">#${pos} • ${esc(t.tier)} • <b>${t.rep | 0} pts</b> • técnico ${esc(t.owner)}</div>
+      <div class="rkK"><img src="${img(t.kitF)}"><img src="${img(t.kitB)}"></div>
+      <div class="rkMsg" style="padding:2px">J ${st.j | 0} • V ${st.v | 0} • E ${st.e | 0} • D ${st.d | 0} • Gols ${st.gp | 0}/${st.gc | 0}</div>
+      <h4 style="margin:14px 0 6px">EQUIPE</h4><div class="rkS">${sq}</div>`;
+    bind(); $('rkB').onclick = list;
+  }
+  function list() {
+    box.innerHTML = head('RANK GLOBAL') + (warn ? `<div class="rkMsg" style="padding:8px;color:#ffb74d">${warn}</div>` : '') +
+      (rows.length ? rows.map((r, i) => `<div class="rkR${r.mine ? ' mine' : ''}" data-i="${i}"><span class="n">${i + 1}</span><img src="${img(r.d.crest)}"><span class="t"><b>${esc(r.d.name)}</b><small>${esc(r.d.tier)} • ${esc(r.d.owner)}</small></span><span class="p">${r.d.rep | 0}</span></div>`).join('') : '<div class="rkMsg">Nenhum time no rank ainda. Crie seu time para aparecer!</div>');
+    bind(); box.querySelectorAll('.rkR').forEach(el => el.onclick = () => detail(rows[+el.dataset.i].d, +el.dataset.i + 1));
+  }
+  let poll = 0;
+  async function view() {
+    clearInterval(poll);
+    if (!ok()) return msg('RANK GLOBAL', 'Falta configurar a planilha (grátis, sem Node):<br>1) Crie uma Planilha Google → Extensões → Apps Script.<br>2) Cole o código do arquivo <b>rank-apps-script.gs</b> → Implantar → App da Web (Executar como: Eu • Acesso: Qualquer pessoa).<br>3) Copie a URL gerada para <b>RANK_URL</b> no fim do index.html.');
+    if (!logged()) {
+      msg('RANK GLOBAL', 'Entre com sua conta Google para ver o rank dos melhores times do mundo e aparecer nele.<br><br><button class="g" id="rkG">Entrar com Google</button>');
+      $('rkG').onclick = () => { const c = $('gChip'); if (c) c.click(); pop.classList.remove('on'); };
+      poll = setInterval(() => { if (!pop.classList.contains('on')) clearInterval(poll); else if (logged()) view(); }, 1000);
+      return;
+    }
+    msg('RANK GLOBAL', 'Carregando…');
+    try {
+      const t = await GTOK(); await publish(t);
+      const r = await call({ a: 'list', t }); if (r.err) throw new Error(r.err);
+      rows = r.rows || []; list();
+    } catch (e) { msg('RANK GLOBAL', 'Não consegui carregar o rank (' + esc(e.code || e.message) + '). Confira a URL do App da Web, se o acesso está como "Qualquer pessoa", e o login do Google.<br><br><button class="g" id="rkR2">Tentar de novo</button>'); $('rkR2').onclick = view; }
+  }
+  const row = document.querySelector('#menu .mrow');
+  if (row) { const b = document.createElement('button'); b.className = 'mbtn mini'; b.id = 'bRank'; b.innerHTML = '<span class="ic"><i class="fa-solid fa-trophy"></i></span><span><b>RANK</b><small>Melhores times</small></span>'; row.appendChild(b); b.onclick = () => { pop.classList.add('on'); view(); }; }
+  pop.addEventListener('mousedown', e => { if (e.target === pop) pop.classList.remove('on'); });
+  addEventListener('keydown', e => { if (e.code === 'Escape' && pop.classList.contains('on')) { e.stopImmediatePropagation(); e.preventDefault(); pop.classList.remove('on'); } }, true);
+})();
+</script>
 </body>
 </html>
