@@ -3625,6 +3625,7 @@ $('bLeave').onclick = () => { if (team) $('leavePop').classList.add('on'); };
 $('lvNo').onclick = () => $('leavePop').classList.remove('on');
 $('lvYes').onclick = () => {
   $('leavePop').classList.remove('on');
+  try { localStorage.setItem('rk_del', '1'); } catch (e) {} if (window.__rankDel) window.__rankDel();   // tira o time do rank global
   team = null; anthemUrl = null; idbDel(); setCrestImg(null);
   kitSaved = { ...KIT_DEFAULT }; UK = { ...KIT_DEFAULT };
   members.forEach((m, i) => { m.name = m.isU ? 'Você' : randName(); m.num = m.isK ? 1 : DEF_NUMS[i]; if (!m.isU) setSkin(m, rnd(SKIN_TONES)); setLab(m); });
@@ -10200,6 +10201,7 @@ new MutationObserver((m,o)=>{if(sp.classList.contains('out')){on=false;o.disconn
   }
   const crestThumb = src => new Promise(r => { if (!src) return r(''); const i = new Image(); i.onload = () => { const o = document.createElement('canvas'); o.width = o.height = 64; o.getContext('2d').drawImage(i, 0, 0, 64, 64); r(o.toDataURL('image/webp', 0.8)); }; i.onerror = () => r(''); i.src = src; });
   async function publish(t) {
+    try { if (typeof team !== 'undefined' && team) localStorage.removeItem('rk_del'); } catch (_) {}   // entrou em novo time: cancela remoção pendente
     if (!t || typeof team === 'undefined' || !team || Date.now() - lastPub < 180000) return;   // no máximo 1 envio a cada 3 min
     const first = ((JSON.parse(localStorage.getItem('gsave_sess') || '{}').name) || 'Jogador').split(' ')[0], [kf, kb] = kitThumbs({ ...kitSaved, num: String(members[USER_SLOT].num) });
     const d = { name: String(team.name).slice(0, 30), crest: await crestThumb(team.crest), kitF: kf, kitB: kb, rep: stats.rep | 0, tier: TIERS[tierOf(stats.rep)][1],
@@ -10211,7 +10213,18 @@ new MutationObserver((m,o)=>{if(sp.classList.contains('out')){on=false;o.disconn
     else if (r.err) { lastSig = ''; }
     else { warn = ''; lastPub = Date.now(); try { localStorage.setItem('rk_pubts', Date.now()); localStorage.removeItem('rk_c2'); } catch (_) {} }
   }
-  setInterval(() => { try { if (ok() && window.GTOKQ) publish(GTOKQ()).catch(() => {}); } catch (_) {} }, 300000);
+  // ---- sair do time: remove do rank (se não houver token agora, tenta de novo depois) ----
+  async function delTeam() {
+    try {
+      if (!ok() || localStorage.getItem('rk_del') !== '1' || (typeof team !== 'undefined' && team)) return;
+      const t = window.GTOKQ ? GTOKQ() : null; if (!t) return;
+      const r = await call({ a: 'del', t }); if (r.err) return;
+      localStorage.removeItem('rk_del'); localStorage.removeItem('rk_c2'); localStorage.removeItem('rk_pubts'); cache = null; lastSig = ''; lastPub = 0; warn = '';
+    } catch (_) {}
+  }
+  window.__rankDel = delTeam;
+  setTimeout(delTeam, 4000);
+  setInterval(() => { try { delTeam(); if (ok() && window.GTOKQ) publish(GTOKQ()).catch(() => {}); } catch (_) {} }, 300000);
 
   // ---- seção "Rank global" dentro do painel do time ----
   const dm = $('dmBox');
@@ -10226,6 +10239,7 @@ new MutationObserver((m,o)=>{if(sp.classList.contains('out')){on=false;o.disconn
   }
   async function view() {
     if (!L() || busy) return; clearInterval(wait);
+    await delTeam();
     if (!ok()) return msg('Falta configurar a planilha do rank (veja rank-apps-script.gs e RANK_URL no index.html).');
     if (!logged()) {   // sem login: abre o painel "Entrar com Google" do jogo e, ao logar, o rank aparece sozinho
       msg('Entre com sua conta Google para ver o rank dos melhores times do mundo e aparecer nele.<br><button id="rkG">Entrar com Google</button>');
