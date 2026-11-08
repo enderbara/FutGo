@@ -1841,7 +1841,8 @@ function keyXlate(e) {
 }
 addEventListener('keydown', keyXlate, true); addEventListener('keyup', keyXlate, true);
 
-const CAM_MIN = 4, CAM_MAX = 48;
+const CAM_MIN = 7, CAM_MAX = 48;
+let fixDist = 38; const FIX_MIN = 26, FIX_MAX = 50;   // câmera fixa: mais perto por padrão; zoom limitado (não chega muito perto)
 const CAM_X = 120.4, CAM_Z = 82.9;
 let theta = 0, phi = 1.35, dist = 12;
 let targetTheta = 0, targetPhi = 1.35, targetDist = 12;
@@ -1868,8 +1869,9 @@ addEventListener('mousemove', e => {
   lx = e.clientX; ly = e.clientY;
 });
 addEventListener('wheel', e => {
-  if (menu.mode !== 'play' || CFG.fix) return;
-  targetDist = Math.min(Math.max(targetDist * (1 + Math.sign(e.deltaY) * 0.08 * CFG.zoom), CAM_MIN), CAM_MAX);
+  if (menu.mode !== 'play') return;
+  const zf = 1 + Math.sign(e.deltaY) * 0.08 * CFG.zoom;
+  if (CFG.fix) fixDist = Math.min(Math.max(fixDist * zf, FIX_MIN), FIX_MAX); else targetDist = Math.min(Math.max(targetDist * zf, CAM_MIN), CAM_MAX);
 });
 
 // ---------- Mouse-look (tecla Alt liga/desliga): cursor some e mexer o mouse gira a câmera ----------
@@ -3036,7 +3038,7 @@ const mCamPos = new THREE.Vector3(), mCamTgt = new THREE.Vector3(), gPos = new T
 let mInit = false, focusIdx = -1;
 const LSKEY = 'futio_time_v1';
 const edOff = () => { try { if (!document.documentElement.classList.contains('mob')) return; if (menu.mode === 'edit') camera.setViewOffset(innerWidth, innerHeight, innerWidth * 0.2, 0, innerWidth, innerHeight); else if (camera.view && camera.view.enabled) camera.clearViewOffset(); } catch (_) {} };
-const setMode = m => { menu.mode = m; document.body.dataset.m = m; edOff(); };
+const setMode = m => { menu.mode = m; document.body.dataset.m = m; edOff(); if (m === 'menu') { try { menuClean(); } catch (_) {} } };
 addEventListener('resize', () => setTimeout(edOff, 50));
 const fadeTo = fn => { const f = $('fade'); f.style.opacity = 1; setTimeout(() => { fn(); f.style.opacity = 0; }, 380); };
 
@@ -5401,6 +5403,14 @@ const aimArrow = new THREE.Group();
 { const sh = new THREE.Shape(); sh.moveTo(0, 5.4); sh.lineTo(-0.95, 3.7); sh.lineTo(-0.36, 3.7); sh.lineTo(-0.36, 1.5); sh.lineTo(0.36, 1.5); sh.lineTo(0.36, 3.7); sh.lineTo(0.95, 3.7); sh.closePath();
   const m = new THREE.Mesh(new THREE.ShapeGeometry(sh), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5, depthWrite: false, side: THREE.DoubleSide }));
   m.rotation.x = -Math.PI / 2; aimArrow.add(m); aimArrow.visible = false; scene.add(aimArrow); }
+function hideFx() {   // some com anéis, setas, ícone e contorno branco (replay / menu); voltam sozinhos no jogo
+  if (_olPrev) { setOutline(_olPrev, false); _olPrev = null; }
+  ballIcon.visible = false; ballArrow.visible = false; ballArrow.userData.a = 0; aimArrow.visible = false; posRingMat.opacity = 0; carrierRing.visible = false;
+}
+function menuClean() {   // ao voltar pro menu: nada de contorno branco / anel / rotação torta no jogador
+  hideFx(); setOutline(player, false); bots.forEach(b => setOutline(b.g, false)); keepers.forEach(K => setOutline(K.g, false));
+  ballAnimAmp = 0; runAmp = 0; amp = 0; player.rotation.x = 0; player.rotation.z = 0; resetPlayerPose();
+}
 function stepAim() {
   const on = CFG.aim && hasBall && match.on && menu.mode === 'play' && !replay.on && !intro.on && slideT < 0;
   aimArrow.visible = on; if (!on) return;
@@ -5700,7 +5710,7 @@ function matchSetup() {
   resetPlayerPose(); slideT = -1; kickT = -1; kickCd = 0; goalLock = 0; celebT = 0; ownGoal = false; savedDist = 0; scoreEl.style.opacity = 0;
   for (const b of bots) { b.g.visible = true; b.g.scale.setScalar(CHAR_SCALE); if (b.m) b.m.vis = 1; }
   kickoff();
-  theta = targetTheta = -Math.PI / 2; phi = targetPhi = 1.3; dist = targetDist = 13; fov = 38;      // câmera atrás do jogador, olhando para o gol adversário
+  theta = targetTheta = -Math.PI / 2; phi = targetPhi = 1.3; dist = targetDist = 11.5; fov = 38;      // câmera atrás do jogador, olhando para o gol adversário
   camTarget.copy(player.position); camTarget.y += 1.4;
   members.forEach(m => { m.lab.style.display = 'none'; });
   startIntro();
@@ -5813,7 +5823,7 @@ function finishIntro() {
   camera.fov = 38; camera.updateProjectionMatrix(); fov = 38;
   for (const k in keys) keys[k] = false;
   kickoff();
-  theta = targetTheta = 0; phi = targetPhi = 0.86; dist = targetDist = 50; window._fixZ = 1;
+  theta = targetTheta = 0; phi = targetPhi = 0.86; dist = targetDist = fixDist; window._fixZ = 1;
   camTarget.set((player.position.x + ball.position.x) / 2, 1.5, (player.position.z + ball.position.z) / 2);
 }
 function skipIntro() { if (!intro.on || intro.fin) return; intro.fin = true; stopAnthem(); fadeTo(finishIntro); }
@@ -6175,6 +6185,7 @@ function animate() {
   if (menu.mode !== 'play') { updateTags(); try { sfxStep(dt); } catch (_) {} menuAcc += dt; if (menuAcc < (document.querySelector('#wrPop.on,#gLogin.on') ? 1 / 2 : document.body.dataset.m === 'mode' ? 1 / 5 : 1 / 32)) return; menuStep(menuAcc); menuAcc = 0; return; }
   if (intro.on) { stepIntro(dt); updateTags(dt); stepBubs(dt); stepFans(dt); renderer.render(scene, camera); return; }
 
+  if (replay.on || cel.on) hideFx();
   if (replay.on) {
     stepReplay(dt);
     if (replay.on) { updateTags(dt); stepBubs(dt); stepFans(dt); renderer.render(scene, camera); return; }
@@ -6598,7 +6609,7 @@ function animate() {
   // Câmera
   const dampK = 1 - Math.exp(-12 * dt);
   if (!CFG.fix && goalLock > 0 && sp < 1) targetTheta += dt * 0.4;     // câmera orbita na comemoração
-  if (CFG.fix && menu.mode === 'play' && match.on && !intro.on && !replay.on && !match.brawl && !(U.out && U.exit && U.exit.done)) { targetTheta = 0; targetPhi = 0.86; window._fixZ = 1; targetDist = 50; }   // câmera fixa: visão de TV lateral (seu time ataca para a direita; W = para cima na tela): ângulo travado atrás/acima, só segue o jogador (zoom continua livre)
+  if (CFG.fix && menu.mode === 'play' && match.on && !intro.on && !replay.on && !match.brawl && !(U.out && U.exit && U.exit.done)) { targetTheta = 0; targetPhi = 0.86; window._fixZ = 1; targetDist = fixDist; }   // câmera fixa: visão de TV lateral (seu time ataca para a direita; W = para cima na tela): ângulo travado atrás/acima, só segue o jogador (zoom continua livre)
   theta += (targetTheta - theta) * dampK;
   phi += (targetPhi - phi) * dampK;
   dist += (targetDist - dist) * dampK;
@@ -7090,7 +7101,6 @@ if (IS_MOBILE) (function () {
   mkBtn('CHUTE', 'Space', 'hold', pos(1, 2, 21), 'big');
   mkBtn('CARRINHO', 'KeyC', 'tap', pos(24, 3, 14));
   mkBtn('PEDIR', 'KeyE', 'tap', pos(4, 25, 14));
-  mkBtn('CÂMERA', 'KeyG', 'tap', pos(39, 19, 14));
   mkBtn('TROCAR', 'KeyT', 'tap', pos(24, 19, 14));
   const pz = mk('div', 'tcPause', tc); pz.className = 'tb'; pz.innerHTML = '<i class="fa-solid fa-pause"></i>';
   pz.style.cssText = 'left:calc(env(safe-area-inset-left,0px) + 2vw);top:calc(env(safe-area-inset-top,0px) + 2vh);width:9vh;height:9vh;font-size:3.4vh;opacity:.85';
@@ -7111,13 +7121,13 @@ if (IS_MOBILE) (function () {
     const t = tp.get(e.pointerId); if (!t) return; e.preventDefault();
     const dx = e.clientX - t.x, dy = e.clientY - t.y; t.x = e.clientX; t.y = e.clientY;
     if (tp.size === 1) { targetTheta -= dx * 0.0055 * CFG.sens; targetPhi = clampPhi(targetPhi - dy * 0.0055 * CFG.sens * CFG.inv); }
-    else if (tp.size === 2 && !CFG.fix) { const d = pdist(); targetDist = Math.min(Math.max(targetDist * pd / d, CAM_MIN), CAM_MAX); pd = d; }
+    else if (tp.size === 2) { const d = pdist(), zf = pd / d; if (CFG.fix) fixDist = Math.min(Math.max(fixDist * zf, FIX_MIN), FIX_MAX); else targetDist = Math.min(Math.max(targetDist * zf, CAM_MIN), CAM_MAX); pd = d; }
   });
   const cup = e => { tp.delete(e.pointerId); if (tp.size === 1) pd = 0; };
   cv.addEventListener('pointerup', cup); cv.addEventListener('pointercancel', cup);
   document.addEventListener('gesturestart', e => e.preventDefault());
   document.addEventListener('contextmenu', e => { if (!(e.target && e.target.tagName === 'INPUT')) e.preventDefault(); });
-  dist = targetDist = 15;                                       // um pouco mais afastada em tela pequena
+  dist = targetDist = 12.5;                                       // um pouco mais afastada em tela pequena
 
   // ---------- aviso: gire o celular + tela cheia obrigatória ----------
   const ov = mk('div', 'rotOv');
