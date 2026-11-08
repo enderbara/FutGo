@@ -970,9 +970,11 @@ const camera = new THREE.PerspectiveCamera(38, innerWidth / innerHeight, 0.5, 15
 const LOWEND = /Android|iPhone|iPod|Mobile/i.test(navigator.userAgent) || matchMedia("(pointer: coarse)").matches || (navigator.hardwareConcurrency || 8) <= 4;
 const renderer = new THREE.WebGLRenderer({ antialias: true, stencil: true, alpha: false, powerPreference: "high-performance", precision: "highp" });
 renderer.setSize(innerWidth, innerHeight);
-renderer.setPixelRatio(Math.min(Math.max(devicePixelRatio, LOWEND ? 1 : 1.5), LOWEND ? 1.6 : 2));   // nunca abaixo da resolução nativa + MSAA: sem serrilhado/pixel   // começa leve; se a máquina aguentar, o ajuste automático sobe até 1.25
+const MOBILE = /Android|iPhone|iPod|iPad|Mobile/i.test(navigator.userAgent) || matchMedia("(pointer: coarse)").matches;
+const QMAXPR = MOBILE ? Math.min(Math.max(devicePixelRatio, 1.5), 2.5) : Math.min(Math.max(devicePixelRatio, 2), 3), QMINPR = MOBILE ? 1.25 : 1.5;
+renderer.setPixelRatio(QMAXPR);   // nunca abaixo da resolução nativa + MSAA: sem serrilhado/pixel   // começa leve; se a máquina aguentar, o ajuste automático sobe até 1.25
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFShadowMap;            // bem mais barata que a "Soft" e quase igual no estilo toon
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;            // bem mais barata que a "Soft" e quase igual no estilo toon
 document.body.appendChild(renderer.domElement);
 
 const _toonMap = new THREE.DataTexture(new Uint8Array([115,115,115,255, 205,205,205,255, 255,255,255,255]), 3, 1, THREE.RGBAFormat);
@@ -983,7 +985,7 @@ const sun = new THREE.DirectionalLight(0xfff6e6, 0.56);
 const fillL = new THREE.DirectionalLight(0xdde8ff, 0.1); fillL.position.set(-8, 6, -6); scene.add(fillL);
 { const vg = document.createElement('div'); vg.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:1;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 62%,rgba(40,30,90,.08) 100%)'; document.body.appendChild(vg); }
 sun.castShadow = true;
-sun.shadow.mapSize.set(LOWEND ? 512 : 1024, LOWEND ? 512 : 1024);
+sun.shadow.mapSize.set(MOBILE ? 1024 : LOWEND ? 1024 : 2048, MOBILE ? 1024 : LOWEND ? 1024 : 2048);
 sun.shadow.camera.left = -12; sun.shadow.camera.right = 12;
 sun.shadow.camera.top = 12;   sun.shadow.camera.bottom = -12;
 sun.shadow.camera.near = 1;    sun.shadow.camera.far = 60;
@@ -1253,7 +1255,7 @@ function pitchTex() {
     g.beginPath(); g.arc(x, y, K, q * Math.PI / 2, (q + 1) * Math.PI / 2); g.stroke();
   });
   const t = new THREE.CanvasTexture(c);
-  t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  t.anisotropy = renderer.capabilities.getMaxAnisotropy();
   return t;
 }
 
@@ -1432,7 +1434,7 @@ const BOARD_TILE = 5.4;            // largura de 1 repetição do texto, em unid
 const boardTex = [];
 function boards(len, x, z, ry) {
   const t = new THREE.CanvasTexture(bc); t.wrapS = THREE.RepeatWrapping; t.repeat.x = len / BOARD_TILE;
-  t.anisotropy = 4;
+  t.anisotropy = renderer.capabilities.getMaxAnisotropy();
   boardTex.push(t);
   const side = new THREE.MeshLambertMaterial({ color: 0x1565c0 });
   const g = new THREE.Group(); g.position.set(x, .45, z); g.rotation.y = ry;
@@ -1455,7 +1457,7 @@ function createNetTexture() {
   }
   const tex = new THREE.CanvasTexture(canvas);
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
   return tex;
 }
 const netTexture = createNetTexture();
@@ -1699,7 +1701,7 @@ function makeBallTex(pcs, hc, sc) {
     d[o] = SC[0] + (base[0] - SC[0]) * f; d[o + 1] = SC[1] + (base[1] - SC[1]) * f; d[o + 2] = SC[2] + (base[2] - SC[2]) * f; d[o + 3] = 255;
   }
   c.putImageData(im, 0, 0);
-  const tex = new THREE.CanvasTexture(cv); tex.anisotropy = 4;
+  const tex = new THREE.CanvasTexture(cv); tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
   if (THREE.SRGBColorSpace && THREE.ColorManagement && THREE.ColorManagement.enabled) tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
 }
@@ -3043,7 +3045,7 @@ const fadeTo = fn => { const f = $('fade'); f.style.opacity = 1; setTimeout(() =
 // camisa: textura pintável aplicada na esfera do corpo (começa branca)
 const shirtCv = document.createElement('canvas'); shirtCv.width = 1024; shirtCv.height = 512;
 const sctx = shirtCv.getContext('2d');
-const shirtTex = new THREE.CanvasTexture(shirtCv); shirtTex.anisotropy = 4;
+const shirtTex = new THREE.CanvasTexture(shirtCv); shirtTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
 const shirtWhite = () => { sctx.globalCompositeOperation = 'source-over'; sctx.fillStyle = '#fff'; sctx.fillRect(0, 0, 1024, 512); shirtTex.needsUpdate = true; };
 const shirtFrom = url => { if (!url) return shirtWhite(); const im = new Image(); im.onload = () => { shirtWhite(); sctx.drawImage(im, 0, 0); shirtTex.needsUpdate = true; }; im.src = url; };
 const useShirt = fill => { const m = fill.material; m.color.set(0xffffff); m.map = shirtTex; m.needsUpdate = true; };
@@ -3772,7 +3774,7 @@ const resetCh = ch => {
 // camisas: cada jogador tem a sua textura (com o próprio número)
 function giveShirt(fill, kit) {
   const cv = document.createElement('canvas'); cv.width = 512; cv.height = 256;
-  const tex = new THREE.CanvasTexture(cv); tex.anisotropy = 2;
+  const tex = new THREE.CanvasTexture(cv); tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
   fill.material.color.set(0xffffff); fill.material.map = tex; fill.material.needsUpdate = true;
   const o = { cv, tex }; paintShirt(o, kit); return o;
 }
@@ -6019,7 +6021,7 @@ function startBot() {
 loadSaved();
 
 let menuAcc = 0, menuFrame = 0, qPR = renderer.getPixelRatio(), qN = 0, qT = performance.now(), qWarm = 0;
-const qMax = Math.min(Math.max(devicePixelRatio, LOWEND ? 1 : 1.5), LOWEND ? 1.6 : 2); let qPeak = 0, qGood = 0, qNoUp = LOWEND, shF = 0, dtSm = 1 / 60;
+const qMax = QMAXPR; let qPeak = 0, qGood = 0, qNoUp = LOWEND, shF = 0, dtSm = 1 / 60;
 const fpsEl = document.getElementById('fps');
 addEventListener('keydown', e => { if (e.code === 'F3') { e.preventDefault(); fpsEl.style.display = fpsEl.style.display === 'block' ? 'none' : 'block'; } });
 const _pv = new THREE.Vector3();
@@ -6152,7 +6154,7 @@ function animate() {
     if (fps > qPeak && fps < 250) qPeak = fps;                                   // pico medido ≈ taxa de atualização da tela
     if (++qWarm > 3 && _n - qT < 2500 && menu.mode === 'play') {
       const low = LOWEND ? Math.min(56, qPeak * 0.9) : Math.max(40, qPeak * 0.88), pk = LOWEND ? Math.min(qPeak, 60) : qPeak;
-      if (fps < low && qPR > 0.8) { qPR = Math.max(0.8, qPR - 0.25); renderer.setPixelRatio(qPR); qGood = 0; qNoUp = true; }
+      if (fps < low && qPR > QMINPR) { qPR = Math.max(QMINPR, qPR - 0.25); renderer.setPixelRatio(qPR); qGood = 0; qNoUp = true; }
       else if (fps >= pk * 0.95 && qPR < qMax && !qNoUp && ++qGood >= 10) { qPR = Math.min(qMax, qPR + 0.1); renderer.setPixelRatio(qPR); qGood = 0; }
       else if (fps < pk * 0.95) qGood = 0;
     }
@@ -8785,7 +8787,7 @@ addEventListener('keydown', e => { if ((e.code === 'KeyT' || e.code === 'Tab') &
       const ph = (x + .5) / W * Math.PI * 2, th = (y + .5) / H * Math.PI, sx = -Math.cos(ph) * Math.sin(th), sy = Math.cos(th), sz = Math.sin(ph) * Math.sin(th), px = sz < 0 ? -sx : sx;
       const u = Math.min(S - 1, Math.max(0, (px / .9 * .5 + .5) * S | 0)), v = Math.min(S - 1, Math.max(0, (-sy / .9 * .5 + .5) * S | 0)), i = (v * S + u) * 4, o = (y * W + x) * 4;
       d[o] = pd[i]; d[o + 1] = pd[i + 1]; d[o + 2] = pd[i + 2]; d[o + 3] = 255; }
-    c.putImageData(im, 0, 0); const t = new THREE.CanvasTexture(cv); t.anisotropy = 4; t.wrapS = THREE.RepeatWrapping; return t; }
+    c.putImageData(im, 0, 0); const t = new THREE.CanvasTexture(cv); t.anisotropy = renderer.capabilities.getMaxAnisotropy(); t.wrapS = THREE.RepeatWrapping; return t; }
   const drawMus = (p, cx, cy, k, col) => { p.fillStyle = col; p.beginPath(); p.moveTo(cx, cy - .14 * k);
     p.bezierCurveTo(cx + .3 * k, cy - .4 * k, cx + .7 * k, cy - .2 * k, cx + k, cy - .55 * k); p.bezierCurveTo(cx + k, cy + .15 * k, cx + .55 * k, cy + .32 * k, cx + .12 * k, cy + .2 * k);
     p.quadraticCurveTo(cx, cy + .26 * k, cx - .12 * k, cy + .2 * k); p.bezierCurveTo(cx - .55 * k, cy + .32 * k, cx - k, cy + .15 * k, cx - k, cy - .55 * k);
@@ -9660,7 +9662,7 @@ addEventListener('keydown', e => { if ((e.code === 'KeyT' || e.code === 'Tab') &
   /* ---------- aplicar no jogo ---------- */
   let gDecals = [], origPatch = null, hat = null, realKit = null, musO = null;
   const NC = document.createElement('canvas'); NC.width = 1024; NC.height = 512;
-  const NT = new THREE.CanvasTexture(NC); NT.anisotropy = 4; const nimTex = () => NT;
+  const NT = new THREE.CanvasTexture(NC); NT.anisotropy = renderer.capabilities.getMaxAnisotropy(); const nimTex = () => NT;
   function paintNim(src) {   // foto de perfil (ou avatar padrão) aplicada na frente e nas costas da bola
     const S = 256, pc = document.createElement('canvas'); pc.width = pc.height = S; const p = pc.getContext('2d');
     if (src) p.drawImage(src, 0, 0, S, S);
