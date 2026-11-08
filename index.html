@@ -3041,19 +3041,21 @@ const RKP = { Bronze: ['#f6c28f', '#cd7f32', '#6e3f14'], Prata: ['#ffffff', '#c9
 const _rkc = {}, _rkI = { n: 0 };
 const rkBadge = (i, h) => _rkc[i + '|' + h] || (_rkc[i + '|' + h] = (() => {
   const nm = TIERS[i][1].split(' '), f = nm[0], lv = nm[1] ? nm[1].length : 3, P = RKP[f], id = 'rg' + (++_rkI.n), L = i === TIERS.length - 1, u = '#' + id;
-  const SH = 'M32 2L45 6.5L58 5V34C58 52 47 65 32 74C17 65 6 52 6 34V5L19 6.5Z';
-  const star = (cx, cy, r, fill, stk) => { const p = []; for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, q = k % 2 ? r * .45 : r; p.push((cx + q * Math.cos(a)).toFixed(1) + ',' + (cy + q * Math.sin(a)).toFixed(1)); } return '<polygon points="' + p.join(' ') + '" fill="' + fill + '"' + (stk ? ' stroke="' + stk + '" stroke-width="1.2" stroke-linejoin="round"' : '') + '/>'; };
-  const chev = y => '<path d="M19 ' + (y + 10) + 'L32 ' + y + 'L45 ' + (y + 10) + '" fill="none" stroke="' + P[2] + '" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 ' + (y + 10) + 'L32 ' + y + 'L45 ' + (y + 10) + '" fill="none" stroke="#fff" stroke-width="3.8" stroke-linecap="round" stroke-linejoin="round"/>';
-  const gem = '<path d="M32 17l13 11-13 22-13-22z" fill="#fff" stroke="' + P[2] + '" stroke-width="1.6" stroke-linejoin="round"/><path d="M19 28h26M32 17l-5 11 5 22 5-22z" fill="none" stroke="' + P[1] + '" stroke-width="1.3"/><path d="M32 17l-5 11h-8z" fill="' + P[0] + '" fill-opacity=".8"/>';
-  const crown = '<path d="M18 46l-2-20 9 8 7-13 7 13 9-8-2 20z" fill="#fff" stroke="' + P[2] + '" stroke-width="1.6" stroke-linejoin="round"/><path d="M18 46h28" stroke="' + P[1] + '" stroke-width="3"/><circle cx="32" cy="21" r="2.6" fill="#fff" stroke="' + P[2] + '" stroke-width="1"/><circle cx="16" cy="25" r="2.2" fill="#fff" stroke="' + P[2] + '" stroke-width="1"/><circle cx="48" cy="25" r="2.2" fill="#fff" stroke="' + P[2] + '" stroke-width="1"/>';
-  const laurel = '<path d="M13 22C8 30 9 42 17 52M51 22c5 8 4 20-4 30" fill="none" stroke="' + P[0] + '" stroke-width="2.2" stroke-linecap="round"/>' + [[11, 28], [10, 36], [13, 44], [53, 28], [54, 36], [51, 44]].map(p => '<ellipse cx="' + p[0] + '" cy="' + p[1] + '" rx="2.6" ry="1.5" fill="' + P[0] + '" transform="rotate(' + (p[0] < 32 ? -35 : 35) + ' ' + p[0] + ' ' + p[1] + ')"/>').join('');
-  const em = f === 'Bronze' ? chev(21) + chev(32) : f === 'Prata' ? chev(17) + chev(27) + chev(37) : f === 'Ouro' ? star(32, 33, 17, '#fff', P[2]) : f === 'Platina' ? gem : f === 'Diamante' ? gem + star(13, 20, 3.4, '#fff') + star(51, 20, 3.4, '#fff') : f === 'Mestre' ? crown : crown + laurel;
-  const wings = L ? '<path d="M6 28C-4 26-6 14 0 4c8 3 12 9 12 18zM58 28c10-2 12-14 6-24-8 3-12 9-12 18z" fill="url(' + u + 'a)" stroke="' + P[2] + '" stroke-width="1.4"/><path d="M4 20C0 18-1 12 1 8M60 20c4-2 5-8 3-12" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="1.2"/>' : '';
-  const pips = '<rect x="15" y="55" width="34" height="11" rx="5.5" fill="' + P[2] + '" fill-opacity=".9" stroke="#fff" stroke-opacity=".5" stroke-width=".9"/>' + [...Array(lv)].map((_, k) => star(32 + (k - (lv - 1) / 2) * 9.5, 60.6, 3.7, '#ffe27a', '#6b4300')).join('');
-  return '<svg class="rkb' + (L ? ' rkL' : '') + '" viewBox="' + (L ? '-8 0 80 76' : '0 0 64 76') + '" height="' + h + '" width="' + Math.round(h * (L ? 80 / 76 : 64 / 76)) + '"><defs><linearGradient id="' + id + 'a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + P[0] + '"/><stop offset=".45" stop-color="' + P[1] + '"/><stop offset="1" stop-color="' + P[2] + '"/></linearGradient><linearGradient id="' + id + 'b" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="' + P[2] + '"/><stop offset=".7" stop-color="' + P[1] + '"/><stop offset="1" stop-color="' + P[0] + '"/></linearGradient><clipPath id="' + id + 'c"><path d="' + SH + '"/></clipPath></defs>' + wings
-    + '<path d="' + SH + '" fill="url(' + u + 'a)" stroke="' + P[2] + '" stroke-width="2.4" stroke-linejoin="round"/>'
-    + '<path d="' + SH + '" transform="translate(5.76 6.84) scale(.82)" fill="url(' + u + 'b)" stroke="#fff" stroke-opacity=".6" stroke-width="1.4"/>'
-    + '<g clip-path="url(' + u + 'c)"><path d="M0 0H64V30C46 22 18 22 0 32Z" fill="#fff" fill-opacity=".2"/></g>' + em + pips + '</svg>'; })());
+  const SH = 'M32 3L47 8L60 6V34C60 50 48 60 32 68C16 60 4 50 4 34V6L17 8Z';   // escudo mais largo e baixo
+  const K = '#0a0e1a';   // estilo toon: cores chapadas, contorno grosso, sombra de "cel shading"
+  const star = (cx, cy, r, fill, sw) => { const p = []; for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, q = k % 2 ? r * .5 : r; p.push((cx + q * Math.cos(a)).toFixed(1) + ',' + (cy + q * Math.sin(a)).toFixed(1)); } return '<polygon points="' + p.join(' ') + '" fill="' + fill + '" stroke="' + K + '" stroke-width="' + (sw || 3) + '" stroke-linejoin="round"/>'; };
+  const chev = y => { const d = 'M18 ' + (y + 10) + 'L32 ' + y + 'L46 ' + (y + 10); return '<path d="' + d + '" fill="none" stroke="' + K + '" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path d="' + d + '" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>'; };
+  const gem = '<path d="M32 15l15 13-15 25-15-25z" fill="#fff" stroke="' + K + '" stroke-width="3.4" stroke-linejoin="round"/><path d="M17 28L32 15l-6 13z" fill="' + P[0] + '"/><path d="M26 28h12L32 53z" fill="' + P[1] + '"/><path d="M17 28h30" stroke="' + K + '" stroke-width="2.4"/>';
+  const crown = '<path d="M16 47l-3-23 12 9 7-14 7 14 12-9-3 23z" fill="#ffd54a" stroke="' + K + '" stroke-width="3.4" stroke-linejoin="round"/><path d="M17 47h30" stroke="' + K + '" stroke-width="3"/><path d="M18 40h28v5H18z" fill="' + P[0] + '"/><circle cx="32" cy="20" r="3.2" fill="#fff" stroke="' + K + '" stroke-width="2.4"/><circle cx="13" cy="22" r="3" fill="#fff" stroke="' + K + '" stroke-width="2.4"/><circle cx="51" cy="22" r="3" fill="#fff" stroke="' + K + '" stroke-width="2.4"/>';
+  const em = f === 'Bronze' ? chev(21) + chev(32) : f === 'Prata' ? chev(17) + chev(27) + chev(37) : f === 'Ouro' ? star(32, 33, 19, '#fff', 3.4) : f === 'Platina' ? gem : f === 'Diamante' ? gem + star(11, 19, 5, '#fff', 2.4) + star(53, 19, 5, '#fff', 2.4) : crown;
+  const wings = L ? '<path d="M6 30C-6 30-8 14 -2 2c9 2 14 10 14 20z" fill="' + P[1] + '" stroke="' + K + '" stroke-width="3.4" stroke-linejoin="round"/><path d="M58 30c12 0 14-16 8-28-9 2-14 10-14 20z" fill="' + P[1] + '" stroke="' + K + '" stroke-width="3.4" stroke-linejoin="round"/>' : '';
+  const pips = [...Array(lv)].map((_, k) => star(32 + (k - (lv - 1) / 2) * 12, 50.5, 6.2, '#ffd54a', 2.4)).join('');
+  return '<svg class="rkb' + (L ? ' rkL' : '') + '" viewBox="' + (L ? '-12 -1 88 73' : '-4 -1 72 73') + '" height="' + h + '" width="' + Math.round(h * (L ? 88 / 73 : 72 / 73)) + '"><defs><clipPath id="' + id + 'c"><path d="' + SH + '"/></clipPath></defs>' + wings
+    + '<path d="' + SH + '" fill="' + P[1] + '" stroke="' + K + '" stroke-width="6.5" stroke-linejoin="round"/>'
+    + '<g clip-path="url(' + u + 'c)"><path d="M0 42C20 36 44 36 64 42V80H0Z" fill="' + P[2] + '" fill-opacity=".6"/></g>'
+    + '<path d="' + SH + '" transform="translate(5.76 6.39) scale(.82)" fill="' + P[2] + '" stroke="' + K + '" stroke-width="3.2" stroke-linejoin="round"/>'
+    + '<g transform="translate(6.4 -.4) scale(.8)">' + em + '</g>'
+    + '<ellipse cx="17" cy="15" rx="7" ry="3.4" fill="#fff" fill-opacity=".75" transform="rotate(-28 17 15)"/><circle cx="27" cy="10.5" r="1.8" fill="#fff" fill-opacity=".75"/>' + pips + '</svg>'; })());
 const rkIcon = (i, px) => rkBadge(i, Math.round(px * 1.7));
 const DM_POOL = [{ k: 'goals', n: 3, r: 20, t: 'Faça 3 gols' }, { k: 'goals', n: 6, r: 45, t: 'Faça 6 gols' }, { k: 'v', n: 1, r: 25, t: 'Vença 1 partida' }, { k: 'v', n: 3, r: 70, t: 'Vença 3 partidas' }, { k: 'j', n: 3, r: 30, t: 'Jogue 3 partidas' }, { k: 'kicks', n: 30, r: 20, t: 'Dê 30 chutes' }, { k: 'slides', n: 5, r: 25, t: 'Dê 5 carrinhos' }];
 const dmDay = () => { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
@@ -10187,18 +10189,94 @@ new MutationObserver((m,o)=>{if(sp.classList.contains('out')){on=false;o.disconn
 .rk2M{text-align:center;padding:10px 6px;color:#dfe6ff;font:600 12px/1.45 system-ui}.rk2M>i{display:block;font-size:26px;color:#ffd54a;margin-bottom:6px}.rk2M b{color:#ffd54a}.rk2M button{margin-top:6px}
 .rkBtn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:9px 16px;border:3px solid #0a0e1a;border-radius:14px;background:linear-gradient(180deg,#ffe58a,#ffb300);color:#3a2a00;font:400 13px 'Bungee',Impact,system-ui;letter-spacing:1px;box-shadow:inset 0 -4px 0 rgba(0,0,0,.25),0 5px 10px rgba(0,0,0,.3);cursor:pointer;transition:transform .1s,filter .1s}
 .rkBtn:hover{filter:brightness(1.1);transform:translateY(-2px)}.rkBtn:active{transform:translateY(2px)}.rkBtn:disabled{opacity:.5;pointer-events:none}.rk2R[data-k],.rkPc[data-k]{cursor:pointer}.rk2R[data-k]:active{transform:translateY(2px)}@media (hover:hover){.rk2R[data-k]:hover{filter:brightness(1.12)}}body.rkView #iTabs button[data-t="v"],body.rkView #iTabs button[data-t="s"],body.rkView #inspector .irow,body.rkView #iRand{display:none!important}body.rkView #iSkin{pointer-events:none}.tile.lock{opacity:.45;filter:grayscale(1);cursor:not-allowed;pointer-events:none}.rkInv{margin:0 0 8px;border-radius:12px;background:rgba(255,213,74,.1);border:2px dashed rgba(255,213,74,.5)}.rkInv>i{font-size:18px;display:inline;margin-right:6px}
-/* Painel do time: mais respiro no celular */
-#teamPop>div{-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
-@media (max-height:540px),(max-width:700px){
- #teamPop>div{padding:8px 10px!important;gap:6px 10px!important;border-radius:14px!important}
- #teamPop .thead{gap:8px!important}#teamPop #tName{font-size:15px!important}
- #teamPop .rkS{grid-template-columns:repeat(11,1fr);gap:2px!important}#teamPop .rkc{max-width:26px;border-radius:6px}
- #teamPop .rl{font-size:10px!important}
- #teamPop .tiles{gap:5px!important}#teamPop .tile{min-height:44px!important;padding:5px 2px!important;font-size:10px!important;line-height:1.1}#teamPop .tile i{font-size:17px!important;margin-bottom:1px!important}
- #teamPop>div>.row{flex-wrap:nowrap}#teamPop button.b{padding:6px 8px!important;font-size:11px!important;min-height:38px!important}
- #teamPop .st>div{font-size:14px!important}
+/* ===== Painel MEU TIME: layout em cartões ===== */
+#teamPop>div{display:grid!important;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)!important;grid-template-areas:"h h" "r d" "r t" "r b"!important;grid-auto-rows:min-content;align-content:start!important;align-items:start;gap:10px 12px!important;width:min(880px,96vw)!important;max-height:96dvh!important;padding:14px!important;overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;font-size:13px!important}
+#teamPop .thead,#teamPop .rep,#teamPop #dmBox{margin:0!important;min-width:0;border:2px solid rgba(255,255,255,.09)!important;border-radius:16px!important;background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.02))!important;box-shadow:inset 0 -3px 0 rgba(0,0,0,.25)}
+#teamPop .thead{grid-area:h;display:flex;align-items:center;gap:12px!important;padding:10px 14px!important}
+#teamPop #tCrest{width:clamp(44px,9vh,60px)!important;height:clamp(44px,9vh,60px)!important;flex:none;font-size:22px!important;border:3px solid #0a0e1a;box-shadow:0 0 0 2px #ffd54a}
+#teamPop #tName{display:block;font:400 clamp(16px,3.4vh,24px) 'Bungee',Impact,system-ui!important;color:#ffd54a;text-shadow:0 3px 0 #0a0e1a;letter-spacing:1px;word-break:break-word}
+#teamPop .thead small{display:flex;align-items:center;gap:6px;margin-top:2px;opacity:.75;font:700 10px system-ui;letter-spacing:2px;text-transform:uppercase}
+#teamPop .thead small::before{content:"\f132";font:900 10px "Font Awesome 6 Free","Font Awesome 5 Free";color:#ffd54a}
+#teamPop .rep{grid-area:r;padding:12px!important}
+#teamPop .rep .rl{font:400 11px 'Bungee',Impact,system-ui!important;letter-spacing:2px;color:#aab6e6}
+#teamPop .rep .rl span{color:#ffd54a}
+#teamPop .rbar{height:10px!important;border-radius:8px;background:#0a0e1a!important;box-shadow:inset 0 1px 3px #000a}
+#teamPop .rep .st{display:grid!important;grid-template-columns:repeat(4,1fr);gap:6px!important;margin-top:10px!important}
+#teamPop .rep .st+.st{grid-template-columns:repeat(3,1fr)!important}
+#teamPop .st>div{padding:7px 2px!important;border-radius:10px;background:rgba(0,0,0,.28);border:2px solid rgba(255,255,255,.06);font:400 clamp(14px,2.6vh,18px) 'Bungee',Impact,system-ui!important;text-align:center;line-height:1.1}
+#teamPop .st small{display:block;margin-top:3px;font:700 8px system-ui!important;letter-spacing:.5px;opacity:.65}
+#teamPop #sV{color:#6bff9a}#teamPop #sE{color:#ffd54a}#teamPop #sD{color:#ff7a7a}#teamPop #sGP{color:#6bff9a}#teamPop #sGC{color:#ff7a7a}
+#teamPop #dmBox{grid-area:d;padding:10px 12px!important}
+#teamPop .tiles{grid-area:t;display:grid!important;grid-template-columns:repeat(2,1fr);gap:8px!important;margin:0!important}
+#teamPop .tile{display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:70px!important;padding:8px 4px!important;border:3px solid #0a0e1a!important;border-radius:14px!important;background:linear-gradient(180deg,#34437a,#222c52)!important;font:400 11px/1.1 'Bungee',Impact,system-ui!important;letter-spacing:.5px;text-align:center}
+#teamPop .tile i{width:34px;height:34px;display:grid;place-items:center;margin:0!important;border-radius:10px;background:var(--a,#ffd54a);color:#14182a;font-size:16px!important;box-shadow:inset 0 -3px 0 rgba(0,0,0,.2)}
+#teamPop #bUni{--a:#ff8a65}#teamPop #bSquad{--a:#6bff9a}#teamPop #bEditTeam{--a:#6fc3ff}#teamPop #bRank{--a:#ffd54a}
+#teamPop .tile.lock{filter:grayscale(1);opacity:.45}
+#teamPop>div>.row{grid-area:b;display:grid!important;grid-template-columns:1fr 1fr;gap:8px!important;margin:0!important}
+#teamPop>div>.row button.b{display:flex;align-items:center;justify-content:center;gap:6px;min-height:44px!important;padding:8px 10px!important;font-size:12px!important}
+#teamPop button.b.danger{background:linear-gradient(180deg,#a83232,#6e1c1c)!important;color:#ffd6d6!important}
+/* ---- cartão da PATENTE ---- */
+#teamPop .rep{display:flex!important;flex-direction:column;gap:0}
+#teamPop .rep>.rl:first-child{order:0;display:flex;align-items:center;justify-content:space-between;margin:0 0 8px!important;padding:0!important;font-size:11px!important;opacity:1!important}
+#teamPop .rep>.rl:first-child::before{content:"\f3a5";font:900 12px "Font Awesome 6 Free";margin-right:6px;color:#ffd54a}
+#teamPop .rep>.rl:first-child{justify-content:flex-start;gap:0}
+#teamPop #rTier{margin-left:auto;padding:2px 10px;border-radius:99px;background:rgba(255,213,74,.14);border:1px solid rgba(255,213,74,.4);font:400 10px 'Bungee',Impact,system-ui;letter-spacing:1px;color:#ffd54a}
+#teamPop #rkHero{order:1;margin:0 0 10px!important;padding:12px!important;border-radius:14px!important;border:2px solid color-mix(in srgb,var(--rc,#888) 70%,#0a0e1a)!important;box-shadow:inset 0 -3px 0 rgba(0,0,0,.3),0 0 18px color-mix(in srgb,var(--rc,#888) 22%,transparent);align-items:center!important;gap:12px!important}
+#teamPop #rkHero small{display:inline-block;padding:2px 8px;border-radius:99px;background:rgba(0,0,0,.35);font:700 9px system-ui!important;letter-spacing:2px;opacity:1;color:#fff}
+#teamPop #rkHero b{margin-top:4px}
+#teamPop #rkHero em{margin-top:3px!important;opacity:.85}
+#teamPop .rkPs{margin-top:8px!important;padding-top:8px;border-top:1px dashed rgba(255,255,255,.18);max-height:78px}
+#teamPop .rkPs small{background:none;padding:0;color:#aab6e6;font-size:9px!important}
+#teamPop .rkBk{display:inline-flex;align-items:center;gap:6px;border:2px solid #0a0e1a;border-radius:10px;background:linear-gradient(180deg,#34437a,#222c52);font:400 10px 'Bungee',Impact,system-ui;letter-spacing:.5px;min-height:32px;box-shadow:inset 0 -3px 0 rgba(0,0,0,.25)}
+#teamPop .rbar{order:2;margin:0!important}
+#teamPop .rbar i{background:linear-gradient(90deg,#43a047,#ffd54a)!important;box-shadow:0 0 8px rgba(255,213,74,.5)}
+#teamPop .rep>.rl[style]{order:3;display:flex;justify-content:space-between;gap:8px;margin:6px 0 10px!important;font-size:11px!important;opacity:1!important}
+#teamPop #rPts{font:400 12px 'Bungee',Impact,system-ui;color:#ffd54a}
+#teamPop #rNext{font:700 10px system-ui;color:#aab6e6;text-align:right;letter-spacing:0}
+#teamPop #rkStrip{order:4;margin:0!important;padding:6px;border-radius:12px;background:rgba(0,0,0,.3);border:2px solid rgba(255,255,255,.06);box-shadow:inset 0 2px 4px #0006}
+#teamPop .rkc.cur{background:rgba(255,255,255,.14);outline:2px solid var(--rc,#ffd54a);outline-offset:-2px}
+#teamPop #rkInfo{order:5;display:flex;align-items:center;justify-content:center;gap:6px;margin:6px 0 10px!important;font:600 10px/1.3 system-ui!important;opacity:.65;text-align:center}
+#teamPop #rkInfo::before{content:"\f129";font:900 10px "Font Awesome 6 Free";opacity:.8;flex:none}
+#teamPop .rep>.st{order:6}#teamPop .rep>.st+.st{order:7}
+/* ---- estilo TOON: contornos grossos, sombras duras, cores chapadas ---- */
+#teamPop .thead,#teamPop .rep,#teamPop #dmBox{border:3px solid #0a0e1a!important;border-radius:18px!important;box-shadow:inset 0 -5px 0 rgba(0,0,0,.28),0 4px 0 #0a0e1a!important;background:repeating-linear-gradient(115deg,rgba(255,255,255,.035) 0 22px,transparent 22px 44px),linear-gradient(180deg,#2a365f,#182040)!important}
+#teamPop #rkHero{border:3px solid #0a0e1a!important;border-radius:16px!important;background:radial-gradient(circle,rgba(255,255,255,.14) 1.5px,transparent 2px) 0 0/10px 10px,radial-gradient(circle at 18% 50%,color-mix(in srgb,var(--rc,#888) 60%,transparent),transparent 70%),color-mix(in srgb,var(--rc,#888) 22%,#10172e)!important;box-shadow:inset 0 -5px 0 rgba(0,0,0,.3),0 4px 0 #0a0e1a!important}
+#teamPop #rkHero small{background:var(--rc,#ffd54a);color:#14182a;border:2px solid #0a0e1a;font:400 9px 'Bungee',Impact,system-ui!important;letter-spacing:1px;box-shadow:0 2px 0 #0a0e1a}
+#teamPop #rkHero b{color:#fff;font-size:clamp(18px,4vh,26px)!important;-webkit-text-stroke:0;text-shadow:2px 0 #0a0e1a,-2px 0 #0a0e1a,0 2px #0a0e1a,0 -2px #0a0e1a,2px 2px #0a0e1a,-2px 2px #0a0e1a,2px -2px #0a0e1a,-2px -2px #0a0e1a,0 5px 0 #0a0e1a;paint-order:stroke}
+#teamPop #rkHero em{font-weight:800;opacity:1;color:#e8eeff;text-shadow:0 2px 0 #0a0e1a}
+#teamPop .rkPs{border-top:3px dashed rgba(0,0,0,.35)}
+#teamPop .rkP{border:2px solid #0a0e1a;background:linear-gradient(180deg,#34437a,#222c52);box-shadow:0 2px 0 #0a0e1a;font-weight:800}
+#teamPop .rkP.ok{opacity:.7}
+#teamPop .rkb{filter:none!important;display:block;margin:0 auto}#teamPop .rkPs{display:none!important}#teamPop .rkHb{display:grid;place-items:center}
+#teamPop .rkHb .rkb{filter:drop-shadow(0 5px 0 #0a0e1a)!important}
+#teamPop .rkHb.lk .rkb{filter:grayscale(.9) brightness(.65) drop-shadow(0 5px 0 #0a0e1a)!important}
+#teamPop .rkHb::before{inset:-4px!important;background:var(--rc)!important;opacity:.3!important;animation:none!important;border:3px dashed rgba(255,255,255,.5);transform:none!important}
+#teamPop .rbar{height:16px!important;border:3px solid #0a0e1a;border-radius:99px!important;background:#0a0e1a!important;box-shadow:0 3px 0 #0a0e1a}
+#teamPop .rbar i{border-radius:99px;background:repeating-linear-gradient(135deg,rgba(255,255,255,.28) 0 6px,transparent 6px 12px),linear-gradient(180deg,#8dff9d,#2fbf4a 55%,#1f8f36)!important;box-shadow:inset 0 -3px 0 rgba(0,0,0,.25)!important}
+#teamPop #rkStrip{border:3px solid #0a0e1a;border-radius:14px;background:linear-gradient(180deg,#10172e,#182040);box-shadow:inset 0 3px 0 rgba(0,0,0,.35),0 3px 0 #0a0e1a;gap:4px 3px!important}
+#teamPop .rkc{border:2px solid #0a0e1a;border-radius:10px!important;background:linear-gradient(180deg,#2d3a62,#1d2744);box-shadow:0 2px 0 #0a0e1a}
+#teamPop .rkc.on{background:linear-gradient(180deg,#3d4f8a,#27346a)}
+#teamPop .rkc.cur{background:linear-gradient(180deg,#ffe58a,#ffb300);outline:0;border-color:#0a0e1a;box-shadow:0 3px 0 #6b4e00,0 0 0 2px var(--rc,#ffd54a)}
+#teamPop .rkc.sel:not(.cur){border-color:var(--rc,#ffd54a)}
+#teamPop #rkInfo{background:rgba(0,0,0,.25);border-radius:99px;padding:3px 10px;opacity:.8}
+#teamPop .st>div{border:2px solid #0a0e1a!important;background:linear-gradient(180deg,#34437a,#222c52)!important;box-shadow:0 3px 0 #0a0e1a;border-radius:11px!important}
+#teamPop #rTier{background:linear-gradient(180deg,#ffe58a,#ffb300);color:#3a2a00;border:2px solid #0a0e1a;box-shadow:0 2px 0 #0a0e1a}
+/* retrato (celular em pé): uma coluna, na ordem certa */
+@media (max-aspect-ratio:5/4){
+ #teamPop>div{grid-template-columns:minmax(0,1fr)!important;grid-template-areas:"h" "r" "d" "t" "b"!important;width:min(96vw,560px)!important;padding:10px!important}
+ #teamPop .tiles{grid-template-columns:repeat(4,1fr)}
+ #teamPop .tile{min-height:76px!important;font-size:9px!important}
 }
-@media (max-aspect-ratio:5/4){#teamPop>div{gap:8px!important;max-height:96dvh!important}#teamPop .tiles{order:3}}
+/* celular deitado / telas baixas: mais compacto */
+@media (max-height:540px) and (min-aspect-ratio:5/4){
+ #teamPop>div{padding:8px!important;gap:6px 8px!important;width:min(96vw,820px)!important}
+ #teamPop .thead{padding:6px 10px!important}#teamPop #tCrest{width:38px!important;height:38px!important;font-size:16px!important}
+ #teamPop .tiles{grid-template-columns:repeat(4,1fr);gap:5px!important}
+ #teamPop .tile{min-height:56px!important;padding:5px 2px!important;font-size:8px!important;gap:3px}#teamPop .tile i{width:26px;height:26px;font-size:13px!important}
+ #teamPop .rkS{gap:2px!important}#teamPop .rkc{max-width:24px}
+ #teamPop .st>div{padding:4px 2px!important;font-size:13px!important}
+ #teamPop>div>.row button.b{min-height:38px!important;font-size:11px!important}
+}
 </style>
 <script>
 (() => {
