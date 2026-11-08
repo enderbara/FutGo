@@ -10226,7 +10226,7 @@ new MutationObserver((m,o)=>{if(sp.classList.contains('out')){on=false;o.disconn
       squad: members.map(m => ({ n: m.isU ? first : String(m.name).slice(0, 20), k: m.num, p: m.pos, s: m.skin || null })) };
     const sig = JSON.stringify(d); if (sig === lastSig) return; lastSig = sig;
     const r = await call({ a: 'put', t, d });
-    if (r.err === 'taken') { lastSig = ''; warn = `O nome "${esc(team.name)}" já é de outro time no rank. Renomeie seu time para aparecer.`; } else if (r.err) { lastSig = ''; } else { warn = ''; lastPub = Date.now(); try { localStorage.removeItem('rk_c2'); } catch (_) {} }
+    if (r.err === 'taken') { lastSig = ''; warn = `O nome "${esc(team.name)}" já é de outro time no rank. Renomeie seu time para aparecer.`; } else if (r.err) { lastSig = ''; } else { warn = ''; lastPub = Date.now(); try { localStorage.setItem('rk_pubts', Date.now()); } catch (_) {} try { localStorage.removeItem('rk_c2'); } catch (_) {} }
   }
   setInterval(() => { try { if (ok() && window.GTOKQ) publish(GTOKQ()).catch(() => {}); } catch (_) {} }, 300000);
 
@@ -10240,15 +10240,16 @@ new MutationObserver((m,o)=>{if(sp.classList.contains('out')){on=false;o.disconn
     bind(); $('rkB').onclick = list;
   }
   function list() {
-    box.innerHTML = head('RANK GLOBAL') + (warn ? `<div class="rkMsg" style="padding:8px;color:#ffb74d">${warn}</div>` : '') +
+    const upd = (typeof team !== 'undefined' && team && !(window.GTOKQ && GTOKQ()) && Date.now() - (+localStorage.getItem('rk_pubts') || 0) > 864e5) ? '<div class="rkMsg" style="padding:6px"><button id="rkU">Atualizar meu time no rank</button></div>' : '';
+    box.innerHTML = head('RANK GLOBAL') + upd + (warn ? `<div class="rkMsg" style="padding:8px;color:#ffb74d">${warn}</div>` : '') +
       (rows.length ? rows.map((r, i) => `<div class="rkR${r.mine ? ' mine' : ''}" data-i="${i}"><span class="n">${i + 1}</span><img src="${img(r.d.crest)}"><span class="t"><b>${esc(r.d.name)}</b><small>${esc(r.d.tier)} • ${esc(r.d.owner)}</small></span><span class="p">${r.d.rep | 0}</span></div>`).join('') : '<div class="rkMsg">Nenhum time no rank ainda. Crie seu time para aparecer!</div>');
-    bind(); box.querySelectorAll('.rkR').forEach(el => el.onclick = async () => {
+    bind(); { const u = $('rkU'); if (u) u.onclick = async () => { try { const t = await GTOK(); lastPub = 0; lastSig = ''; await publish(t); } catch (_) {} localStorage.removeItem('rk_c2'); cache = null; view(); }; } box.querySelectorAll('.rkR').forEach(el => el.onclick = async () => {
       const i = +el.dataset.i, r = rows[i], dt = cache.det || (cache.det = {});
-      if (!dt[r.k]) { msg('RANK GLOBAL', 'Carregando…'); try { const x = await call({ a: 'get', t: GTOKQ() || await GTOK(), k: r.k }); if (x.err) throw 0; dt[r.k] = x.d; saveC(); } catch (_) { return list(); } }
+      if (!dt[r.k]) { msg('RANK GLOBAL', 'Carregando…'); try { const x = await call({ a: 'get', k: r.k }); if (x.err) throw 0; dt[r.k] = x.d; saveC(); } catch (_) { return list(); } }
       detail(dt[r.k], i + 1);
     });
   }
-  let poll = 0;
+  let poll = 0, wait = 0;
   async function view() {
     clearInterval(poll);
     if (!ok()) return msg('RANK GLOBAL', 'Falta configurar a planilha (grátis, sem Node):<br>1) Crie uma Planilha Google → Extensões → Apps Script.<br>2) Cole o código do arquivo <b>rank-apps-script.gs</b> → Implantar → App da Web (Executar como: Eu • Acesso: Qualquer pessoa).<br>3) Copie a URL gerada para <b>RANK_URL</b> no fim do index.html.');
@@ -10264,16 +10265,23 @@ new MutationObserver((m,o)=>{if(sp.classList.contains('out')){on=false;o.disconn
     if (cache && cache.rows.length && Date.now() - cache.ts < 60000) { rows = cache.rows; return list(); }     // lista recente: nem chama o servidor
     msg('RANK GLOBAL', 'Carregando…');
     try {
-      const t = await GTOK(); await publish(t);
+      await publish(window.GTOKQ ? GTOKQ() : null);   // só publica se já houver token válido: nunca pede login de novo
       if (!cache || !cache.rows.length || Date.now() - cache.ts >= 60000) {
-        const r = await call({ a: 'list', t, v: cache && cache.rows.length ? cache.v : undefined }); if (r.err) throw new Error(r.err);
+        const r = await call({ a: 'list', me: em, v: cache && cache.rows.length ? cache.v : undefined }); if (r.err) throw new Error(r.err);
         cache = r.same && cache ? { ...cache, ts: Date.now() } : { em, v: r.v, ts: Date.now(), rows: r.rows || [], det: {} }; saveC();
       }
       rows = cache.rows; list();
     } catch (e) { msg('RANK GLOBAL', 'Não consegui carregar o rank (' + esc(e.code || e.message) + '). Confira a URL do App da Web, se o acesso está como "Qualquer pessoa", e o login do Google.<br><br><button class="g" id="rkR2">Tentar de novo</button>'); $('rkR2').onclick = view; }
   }
   const row = document.querySelector('#menu .mrow');
-  if (row) { const b = document.createElement('button'); b.className = 'mbtn mini'; b.id = 'bRank'; b.innerHTML = '<span class="ic"><i class="fa-solid fa-trophy"></i></span><span><b>RANK</b><small>Melhores times</small></span>'; row.appendChild(b); b.onclick = () => { pop.classList.add('on'); view(); }; }
+  if (row) { const b = document.createElement('button'); b.className = 'mbtn mini'; b.id = 'bRank'; b.innerHTML = '<span class="ic"><i class="fa-solid fa-trophy"></i></span><span><b>RANK</b><small>Melhores times</small></span>'; row.appendChild(b); b.onclick = () => {
+      if (ok() && !logged()) {   // sem login: abre direto o painel "Entrar com Google" do jogo e, ao logar, abre o rank sozinho
+        const c = $('gChip'); if (c) c.click(); clearInterval(wait); let n = 0;
+        wait = setInterval(() => { if (logged()) { clearInterval(wait); pop.classList.add('on'); view(); } else if (++n > 225) clearInterval(wait); }, 800);
+        return;
+      }
+      pop.classList.add('on'); view();
+    }; }
   pop.addEventListener('mousedown', e => { if (e.target === pop) pop.classList.remove('on'); });
   addEventListener('keydown', e => { if (e.code === 'Escape' && pop.classList.contains('on')) { e.stopImmediatePropagation(); e.preventDefault(); pop.classList.remove('on'); } }, true);
 })();
