@@ -10138,56 +10138,37 @@ new MutationObserver((m,o)=>{if(sp.classList.contains('out')){on=false;o.disconn
 #gLogin .gl-n{color:#aab6e6;opacity:.8!important}
 </style>
 <style>
-/* painel do Rank: mesmo estilo arcade do menu (Bungee, contorno escuro grosso, sombra 3D, amarelo) */
-#rkPop{position:fixed;inset:0;z-index:99999;display:none;align-items:center;justify-content:center;background:repeating-linear-gradient(115deg,rgba(255,255,255,.03) 0 30px,transparent 30px 60px),rgba(6,10,22,.82);backdrop-filter:blur(5px);font-family:system-ui,sans-serif;color:#fff}
-#rkPop.on{display:flex}
-#rkBox{width:min(640px,94vw);max-height:90vh;overflow:auto;box-sizing:border-box;background:linear-gradient(180deg,rgba(32,42,72,.97),rgba(18,24,44,.97));border:3px solid #0a0e1a;border-radius:20px;padding:18px;box-shadow:0 7px 0 #0a0e1a,0 18px 40px rgba(0,0,0,.55)}
-#rkBox h2{margin:0 0 10px;font:400 clamp(18px,3vw,24px) 'Bungee',Impact,system-ui;letter-spacing:2px;color:#fff;text-shadow:0 3px 0 #0a0e1a;display:flex;justify-content:space-between;align-items:center;gap:10px}
-#rkBox h2::after{content:none}
-#rkBox h2>span{display:flex;align-items:center;gap:10px;min-width:0}
-#rkBox h4{display:flex;align-items:center;gap:10px;margin:16px 0 8px;font:400 12px 'Bungee',Impact,system-ui;letter-spacing:3px;color:#ffd54a;text-shadow:0 2px 0 #0a0e1a}
-#rkBox h4::after{content:"";flex:1;height:3px;border-radius:3px;background:linear-gradient(90deg,rgba(255,213,74,.55),transparent)}
-#rkBox button{font:400 13px 'Bungee',Impact,system-ui;letter-spacing:1px;border:3px solid #0a0e1a;border-radius:14px;padding:8px 14px;cursor:pointer;color:#fff;background:linear-gradient(180deg,#2d3a62,#1d2744);box-shadow:0 4px 0 #0a0e1a;transition:transform .12s,box-shadow .12s,filter .12s}
-#rkBox button:hover{transform:translateY(-2px);box-shadow:0 6px 0 #0a0e1a;filter:brightness(1.12)}
-#rkBox button:active{transform:translateY(3px);box-shadow:0 1px 0 #0a0e1a}
-#rkBox #rkX{width:40px;height:40px;padding:0;border-radius:50%;background:#ffd54a;color:#14182a;flex:none}
-#rkBox #rkB{padding:6px 12px;background:#ffd54a;color:#14182a}
-#rkBox button.g{background:linear-gradient(180deg,#5fd86b,#2f9e3f);border-color:#0b3a16;box-shadow:0 6px 0 #0b3a16;padding:14px 22px;font-size:15px}
-#rkBox button.g:hover{box-shadow:0 8px 0 #0b3a16}
-.rkR{display:flex;align-items:center;gap:12px;padding:9px 12px;margin:8px 0;border-radius:16px;border:3px solid #0a0e1a;background:linear-gradient(180deg,#2d3a62,#1d2744);box-shadow:0 4px 0 #0a0e1a}
-.rkR.mine{background:linear-gradient(180deg,#ffe58a,#ffc107);color:#1b1500;box-shadow:0 4px 0 #6b4e00}
-.rkR .n{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;flex:none;background:#ffd54a;color:#14182a;font:400 15px 'Bungee',Impact,system-ui;box-shadow:inset 0 -3px 0 rgba(0,0,0,.2)}
-.rkR:nth-child(-n+3) .n{box-shadow:inset 0 -3px 0 rgba(0,0,0,.2),0 0 0 3px #fff}
-.rkR.mine .n{background:#14182a;color:#ffd54a}
-.rkR img{width:40px;height:40px;object-fit:contain;border-radius:50%;background:rgba(0,0,0,.25);box-shadow:0 0 0 2px #ffd54a}
-.rkR .t{flex:1;min-width:0}.rkR .t b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font:400 15px 'Bungee',Impact,system-ui;letter-spacing:.5px}
-.rkR small,.rkM{opacity:.72;font:600 12px system-ui}.rkR .p{font:400 17px 'Bungee',Impact,system-ui;color:#ffd54a;text-shadow:0 2px 0 #0a0e1a}
-.rkR.mine .p{color:#14182a;text-shadow:none}
-.rkK{display:flex;gap:14px;justify-content:center;margin:14px 0}.rkK img{width:130px;height:130px;object-fit:contain;background:rgba(0,0,0,.3);border:3px solid #0a0e1a;border-radius:18px;box-shadow:0 4px 0 #0a0e1a}
-.rkS{display:grid;grid-template-columns:repeat(2,1fr);gap:8px 12px;font:700 13px system-ui}
-.rkS div{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:12px;border:2px solid #0a0e1a;background:linear-gradient(180deg,#2d3a62,#1d2744);box-shadow:0 3px 0 #0a0e1a}
-.rkS i{width:14px;height:14px;border-radius:50%;display:inline-block;border:2px solid #0a0e1a;flex:none}
-.rkMsg{text-align:center;padding:24px 8px;color:#dfe6ff;font:600 14px/1.5 system-ui}.rkMsg b{color:#ffd54a}
-.rkMsg code{display:block;text-align:left;background:rgba(0,0,0,.4);border:2px solid #0a0e1a;padding:8px;border-radius:10px;font-size:11px;white-space:pre-wrap;margin:8px 0;color:#9fe}
-@media (max-height:520px),(max-width:720px){#rkBox{padding:12px;border-radius:16px}.rkR{padding:6px 9px;margin:6px 0;gap:9px}.rkR .n{width:30px;height:30px;font-size:12px}.rkR img{width:32px;height:32px}.rkR .t b{font-size:12px}.rkK img{width:96px;height:96px}.rkS{grid-template-columns:1fr}}
+/* Rank dentro do painel do time: lista com rolagem própria, não aperta o resto */
+#teamPop>div{grid-template-areas:"h d" "r d" "r k" "r t" "r b"}
+#rkTeam{grid-area:k;min-width:0;margin:0!important}
+#rkTeam h5{display:flex;align-items:center;gap:8px;margin:0 0 6px;font:400 clamp(10px,1.9vh,12px) 'Bungee',Impact,system-ui;letter-spacing:2px;color:#ffd54a;text-shadow:0 2px 0 #0a0e1a}
+#rkTeam h5::after{content:"";flex:1;height:3px;border-radius:3px;background:linear-gradient(90deg,rgba(255,213,74,.55),transparent)}
+#rkTeam .rk2L{max-height:clamp(120px,26vh,240px);overflow:auto;padding:0 4px 4px 0;scrollbar-width:thin}
+.rk2R{display:flex;align-items:center;gap:8px;padding:4px 8px;margin:0 0 6px;border-radius:12px;border:2px solid #0a0e1a;background:linear-gradient(180deg,#2d3a62,#1d2744);box-shadow:0 3px 0 #0a0e1a}
+.rk2R.mine{background:linear-gradient(180deg,#ffe58a,#ffc107);color:#1b1500;box-shadow:0 3px 0 #6b4e00}
+.rk2R .n{width:clamp(22px,4vh,28px);height:clamp(22px,4vh,28px);border-radius:50%;display:grid;place-items:center;flex:none;background:#ffd54a;color:#14182a;font:400 clamp(10px,1.8vh,12px) 'Bungee',Impact,system-ui;box-shadow:inset 0 -2px 0 rgba(0,0,0,.2)}
+.rk2R.mine .n{background:#14182a;color:#ffd54a}
+.rk2R:nth-child(-n+3) .n{box-shadow:inset 0 -2px 0 rgba(0,0,0,.2),0 0 0 2px #fff}
+.rk2R img{width:clamp(24px,4.4vh,32px);height:clamp(24px,4.4vh,32px);object-fit:contain;border-radius:50%;background:rgba(0,0,0,.25);box-shadow:0 0 0 2px #ffd54a;flex:none}
+.rk2R .t{flex:1;min-width:0}.rk2R .t b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font:400 clamp(10px,1.9vh,13px) 'Bungee',Impact,system-ui}
+.rk2R small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.72;font:600 clamp(9px,1.6vh,11px) system-ui}
+.rk2R .p{font:400 clamp(11px,2vh,14px) 'Bungee',Impact,system-ui;color:#ffd54a;text-shadow:0 2px 0 #0a0e1a;flex:none}.rk2R.mine .p{color:#14182a;text-shadow:none}
+.rk2M{text-align:center;padding:8px 4px;color:#dfe6ff;font:600 clamp(10px,1.8vh,12px)/1.45 system-ui}.rk2M b{color:#ffd54a}
+.rk2M button{margin-top:6px}
 </style>
-<div id="rkPop"><div id="rkBox"></div></div>
 <script>
 (() => {
   // ===== COLE AQUI a URL do seu App da Web (Google Apps Script ligado a uma planilha; veja rank-apps-script.gs) =====
   const RANK_URL = 'https://script.google.com/macros/s/AKfycbxJj8gfuqHMlYS99etb4d-kMkDB7sDE_tyqa0AE3ov2ySxurf_8y12JLGz6Zkm5CnHL2g/exec';
-  const $ = id => document.getElementById(id), box = $('rkBox'), pop = $('rkPop');
-  let rows = [], warn = '', lastSig = '', nameTaken = false, chkT = 0, chkSeq = 0, chkC = new Map(), lastPub = 0, cache = null;
+  const $ = id => document.getElementById(id);
+  let rows = [], warn = '', lastSig = '', nameTaken = false, chkT = 0, chkSeq = 0, chkC = new Map(), lastPub = 0, cache = null, wait = 0, busy = 0;
   const saveC = () => { try { localStorage.setItem('rk_c2', JSON.stringify(cache)); } catch (_) {} };
   const ok = () => /^https:\/\/script\.google(usercontent)?\.com\//.test(RANK_URL);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const img = u => /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+\/=]+$/.test(u || '') ? u : '';
-  const hex = c => /^#[0-9a-f]{3,8}$/i.test(c || '') ? c : '#888';
   const logged = () => { try { return !!localStorage.getItem('gsave_sess'); } catch (_) { return false; } };
+  const onTeam = () => document.body.dataset.m === 'team';
   async function call(q) { const r = await fetch(RANK_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(q) }); return r.json(); }
-  const head = t => `<h2><span>🏆 ${t}</span><button id="rkX">✕</button></h2>`;
-  const bind = () => { const x = $('rkX'); if (x) x.onclick = () => pop.classList.remove('on'); };
-  const msg = (h, body) => { box.innerHTML = head(h) + `<div class="rkMsg">${body}</div>`; bind(); };
 
   // ---- nomes únicos: mesma regra do servidor (sem acento, maiúscula, espaço ou símbolo) ----
   const nkey = n => String(n || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
@@ -10216,7 +10197,6 @@ new MutationObserver((m,o)=>{if(sp.classList.contains('out')){on=false;o.disconn
     return [cut(0), cut(256)];
   }
   const crestThumb = src => new Promise(r => { if (!src) return r(''); const i = new Image(); i.onload = () => { const o = document.createElement('canvas'); o.width = o.height = 64; o.getContext('2d').drawImage(i, 0, 0, 64, 64); r(o.toDataURL('image/webp', 0.8)); }; i.onerror = () => r(''); i.src = src; });
-
   async function publish(t) {
     if (!t || typeof team === 'undefined' || !team || Date.now() - lastPub < 180000) return;   // no máximo 1 envio a cada 3 min
     const first = ((JSON.parse(localStorage.getItem('gsave_sess') || '{}').name) || 'Jogador').split(' ')[0], [kf, kb] = kitThumbs({ ...kitSaved, num: String(members[USER_SLOT].num) });
@@ -10225,61 +10205,49 @@ new MutationObserver((m,o)=>{if(sp.classList.contains('out')){on=false;o.disconn
       squad: members.map(m => ({ n: m.isU ? first : String(m.name).slice(0, 20), k: m.num, p: m.pos, s: m.skin || null })) };
     const sig = JSON.stringify(d); if (sig === lastSig) return; lastSig = sig;
     const r = await call({ a: 'put', t, d });
-    if (r.err === 'taken') { lastSig = ''; warn = `O nome "${esc(team.name)}" já é de outro time no rank. Renomeie seu time para aparecer.`; } else if (r.err) { lastSig = ''; } else { warn = ''; lastPub = Date.now(); try { localStorage.setItem('rk_pubts', Date.now()); } catch (_) {} try { localStorage.removeItem('rk_c2'); } catch (_) {} }
+    if (r.err === 'taken') { lastSig = ''; warn = `O nome "${esc(team.name)}" já é de outro time no rank. Renomeie seu time para aparecer.`; }
+    else if (r.err) { lastSig = ''; }
+    else { warn = ''; lastPub = Date.now(); try { localStorage.setItem('rk_pubts', Date.now()); localStorage.removeItem('rk_c2'); } catch (_) {} }
   }
   setInterval(() => { try { if (ok() && window.GTOKQ) publish(GTOKQ()).catch(() => {}); } catch (_) {} }, 300000);
 
-  function detail(t, pos) {
-    const st = t.st || {}, sq = (t.squad || []).map(m => `<div><i style="background:${hex(m.s || '#ffdbac')}"></i>#${esc(m.k)} ${esc(m.n)} <span class="rkM">${esc(m.p)}</span></div>`).join('');
-    box.innerHTML = `<h2><span><button id="rkB">←</button> ${esc(t.name)}</span><button id="rkX">✕</button></h2>
-      <div class="rkMsg" style="padding:10px 0 0">#${pos} • ${esc(t.tier)} • <b>${t.rep | 0} pts</b> • técnico ${esc(t.owner)}</div>
-      <div class="rkK"><img src="${img(t.kitF)}"><img src="${img(t.kitB)}"></div>
-      <div class="rkMsg" style="padding:2px">J ${st.j | 0} • V ${st.v | 0} • E ${st.e | 0} • D ${st.d | 0} • Gols ${st.gp | 0}/${st.gc | 0}</div>
-      <h4 style="margin:14px 0 6px">EQUIPE</h4><div class="rkS">${sq}</div>`;
-    bind(); $('rkB').onclick = list;
-  }
+  // ---- seção "Rank global" dentro do painel do time ----
+  const dm = $('dmBox');
+  if (dm) dm.insertAdjacentHTML('afterend', '<div id="rkTeam"><h5>🏆 RANK GLOBAL</h5><div class="rk2L" id="rkL"></div></div>');
+  const L = () => $('rkL'), msg = h => { if (L()) L().innerHTML = `<div class="rk2M">${h}</div>`; };
   function list() {
-    const upd = (typeof team !== 'undefined' && team && !(window.GTOKQ && GTOKQ()) && Date.now() - (+localStorage.getItem('rk_pubts') || 0) > 864e5) ? '<div class="rkMsg" style="padding:6px"><button id="rkU">Atualizar meu time no rank</button></div>' : '';
-    box.innerHTML = head('RANK GLOBAL') + upd + (warn ? `<div class="rkMsg" style="padding:8px;color:#ffb74d">${warn}</div>` : '') +
-      (rows.length ? rows.map((r, i) => `<div class="rkR${r.mine ? ' mine' : ''}" data-i="${i}"><span class="n">${i + 1}</span><img src="${img(r.d.crest)}"><span class="t"><b>${esc(r.d.name)}</b><small>${esc(r.d.tier)} • ${esc(r.d.owner)}</small></span><span class="p">${r.d.rep | 0}</span></div>`).join('') : '<div class="rkMsg">Nenhum time no rank ainda. Crie seu time para aparecer!</div>');
-    bind(); { const u = $('rkU'); if (u) u.onclick = async () => { try { const t = await GTOK(); lastPub = 0; lastSig = ''; await publish(t); } catch (_) {} localStorage.removeItem('rk_c2'); cache = null; view(); }; } 
+    const upd = (typeof team !== 'undefined' && team && !(window.GTOKQ && GTOKQ()) && Date.now() - (+localStorage.getItem('rk_pubts') || 0) > 864e5) ? '<div class="rk2M"><button id="rkU">Atualizar meu time no rank</button></div>' : '';
+    L().innerHTML = upd + (warn ? `<div class="rk2M" style="color:#ffb74d">${warn}</div>` : '') +
+      (rows.length ? rows.map((r, i) => `<div class="rk2R${r.mine ? ' mine' : ''}"><span class="n">${i + 1}</span><img src="${img(r.d.crest)}"><span class="t"><b>${esc(r.d.name)}</b><small>${esc(r.d.tier)} • ${esc(r.d.owner)}</small></span><span class="p">${r.d.rep | 0}</span></div>`).join('') : '<div class="rk2M">Nenhum time no rank ainda.</div>');
+    const u = $('rkU'); if (u) u.onclick = async () => { try { const t = await GTOK(); lastPub = 0; lastSig = ''; await publish(t); } catch (_) {} localStorage.removeItem('rk_c2'); cache = null; view(); };
   }
-  let poll = 0, wait = 0;
   async function view() {
-    clearInterval(poll);
-    if (!ok()) return msg('RANK GLOBAL', 'Falta configurar a planilha (grátis, sem Node):<br>1) Crie uma Planilha Google → Extensões → Apps Script.<br>2) Cole o código do arquivo <b>rank-apps-script.gs</b> → Implantar → App da Web (Executar como: Eu • Acesso: Qualquer pessoa).<br>3) Copie a URL gerada para <b>RANK_URL</b> no fim do index.html.');
-    if (!logged()) {
-      msg('RANK GLOBAL', 'Entre com sua conta Google para ver o rank dos melhores times do mundo e aparecer nele.<br><br><button class="g" id="rkG">Entrar com Google</button>');
-      $('rkG').onclick = () => { const c = $('gChip'); if (c) c.click(); pop.classList.remove('on'); };
-      poll = setInterval(() => { if (!pop.classList.contains('on')) clearInterval(poll); else if (logged()) view(); }, 1000);
+    if (!L() || busy) return; clearInterval(wait);
+    if (!ok()) return msg('Falta configurar a planilha do rank (veja rank-apps-script.gs e RANK_URL no index.html).');
+    if (!logged()) {   // sem login: abre o painel "Entrar com Google" do jogo e, ao logar, o rank aparece sozinho
+      msg('Entre com sua conta Google para ver o rank dos melhores times do mundo e aparecer nele.<br><button id="rkG">Entrar com Google</button>');
+      $('rkG').onclick = () => { const c = $('gChip'); if (c) c.click(); clearInterval(wait); let n = 0; wait = setInterval(() => { if (logged()) { clearInterval(wait); view(); } else if (++n > 225 || !onTeam()) clearInterval(wait); }, 800); };
       return;
     }
     const em = window.GMAIL ? GMAIL() : '';
     try { cache = JSON.parse(localStorage.getItem('rk_c2') || 'null'); } catch (_) { cache = null; }
     if (cache && cache.em !== em) cache = null;
     if (cache && cache.rows.length && Date.now() - cache.ts < 60000) { rows = cache.rows; return list(); }     // lista recente: nem chama o servidor
-    msg('RANK GLOBAL', 'Carregando…');
+    msg('Carregando…'); busy = 1;
     try {
       await publish(window.GTOKQ ? GTOKQ() : null);   // só publica se já houver token válido: nunca pede login de novo
       if (!cache || !cache.rows.length || Date.now() - cache.ts >= 60000) {
         const r = await call({ a: 'list', me: em, v: cache && cache.rows.length ? cache.v : undefined }); if (r.err) throw new Error(r.err);
-        cache = r.same && cache ? { ...cache, ts: Date.now() } : { em, v: r.v, ts: Date.now(), rows: r.rows || [], det: {} }; saveC();
+        cache = r.same && cache ? { ...cache, ts: Date.now() } : { em, v: r.v, ts: Date.now(), rows: r.rows || [] }; saveC();
       }
       rows = cache.rows; list();
-    } catch (e) { msg('RANK GLOBAL', 'Não consegui carregar o rank (' + esc(e.code || e.message) + '). Confira a URL do App da Web, se o acesso está como "Qualquer pessoa", e o login do Google.<br><br><button class="g" id="rkR2">Tentar de novo</button>'); $('rkR2').onclick = view; }
+    } catch (e) { msg('Não consegui carregar o rank (' + esc(e.code || e.message) + ').<br><button id="rkR2">Tentar de novo</button>'); $('rkR2').onclick = view; }
+    busy = 0;
   }
-  const row = document.querySelector('#menu .mrow');
-  if (row) { const b = document.createElement('button'); b.className = 'mbtn mini'; b.id = 'bRank'; b.innerHTML = '<span class="ic"><i class="fa-solid fa-trophy"></i></span><span><b>RANK</b><small>Melhores times</small></span>'; row.appendChild(b); b.onclick = () => {
-      if (ok() && !logged()) {   // sem login: abre direto o painel "Entrar com Google" do jogo e, ao logar, abre o rank sozinho
-        const c = $('gChip'); if (c) c.click(); clearInterval(wait); let n = 0;
-        wait = setInterval(() => { if (logged()) { clearInterval(wait); pop.classList.add('on'); view(); } else if (++n > 225) clearInterval(wait); }, 800);
-        return;
-      }
-      pop.classList.add('on'); view();
-    }; }
-  pop.addEventListener('mousedown', e => { if (e.target === pop) pop.classList.remove('on'); });
-  addEventListener('keydown', e => { if (e.code === 'Escape' && pop.classList.contains('on')) { e.stopImmediatePropagation(); e.preventDefault(); pop.classList.remove('on'); } }, true);
+  new MutationObserver(() => { if (onTeam()) view(); }).observe(document.body, { attributes: true, attributeFilter: ['data-m'] });
+  if (onTeam()) view();
 })();
 </script>
+
 </body>
 </html>
