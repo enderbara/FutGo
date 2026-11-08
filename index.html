@@ -28,6 +28,7 @@ body #splash #spLoad.done{opacity:0!important;animation:none}
 body #splash .spl-t{display:flex;justify-content:space-between;margin-bottom:6px;font:400 12px 'Bungee',Impact,system-ui;letter-spacing:2px;color:#ffd54a}
 body #splash .spl-bar{height:16px;border-radius:10px;background:#0a0e1a;border:3px solid #0a0e1a;box-sizing:content-box;overflow:hidden;box-shadow:0 6px 12px rgba(0,0,0,.4)}
 body #splash .spl-bar i{display:block;height:100%;width:0;border-radius:6px;background:linear-gradient(180deg,#8dffb5,#35c56a);box-shadow:inset 0 -4px 0 rgba(0,0,0,.2)}
+  #note{background:rgba(10,14,28,.88)!important;padding:6px 16px!important;border-radius:14px!important;text-shadow:none!important}html.mob #note{font-size:clamp(13px,3.6vmin,20px)!important;max-width:88vw}
 </style>
 <style>
   html, body { margin: 0; height: 100%; overflow: hidden; background: #8fd0f2; font-family: sans-serif; }
@@ -640,6 +641,21 @@ html.mob #tcSkip{font-size:13px;padding:8px 14px}
 .ost{display:flex;gap:12px;align-items:center;margin-bottom:10px}.oovr{width:62px;height:62px;border-radius:16px;display:grid;place-items:center;font:400 28px 'Bungee',Impact,system-ui;background:linear-gradient(160deg,#ffd54a,#ff9800);color:#1a1a1a;flex:none}
 .abar{display:grid;grid-template-columns:92px 1fr 24px;gap:8px;align-items:center;font:700 11px system-ui;margin:6px 0}.abar .t{display:block;height:7px;border-radius:5px;background:#2b3140;overflow:hidden}.abar .t u{display:block;height:100%;border-radius:5px;text-decoration:none}
 </style>
+<style>
+#pow{height:20px!important;border:3px solid #0a0e1a!important;border-radius:12px!important;background:rgba(10,14,26,.75)!important;position:relative;box-shadow:0 4px 0 rgba(0,0,0,.35)}
+#pow i{border-radius:8px!important;background:linear-gradient(90deg,#35e07a 0,#b6ee3a 35%,#ffd54a 60%,#ff9a2e 82%,#ff3d3d 100%)!important;background-size:var(--bw,320px) 100%;box-shadow:inset 0 5px 0 rgba(255,255,255,.35),inset 0 -4px 0 rgba(0,0,0,.18);transition:none}
+#pow::after{content:'';position:absolute;inset:0;border-radius:9px;background:repeating-linear-gradient(90deg,transparent 0 calc(20% - 2px),rgba(10,14,26,.55) calc(20% - 2px) 20%);pointer-events:none}
+#pow.full{animation:powMax .22s infinite alternate;box-shadow:0 0 14px 4px rgba(255,80,60,.8)}
+#pow.full i{filter:brightness(1.35) saturate(1.3)}
+@keyframes powMax{from{transform:scale(1)}to{transform:scale(1.06)}}
+</style>
+<style>
+#score{top:38%!important;font-style:italic!important;letter-spacing:.14em!important;text-shadow:0 0 28px rgba(255,213,74,.55),0 6px 0 #232323!important}
+#score::before{content:'';display:block;height:5px;width:0;margin:0 auto 12px;background:linear-gradient(90deg,transparent,#ffd54a,transparent);animation:gLine 1s .1s ease-out forwards}
+#score.pop{animation:goalCine 3.2s cubic-bezier(.2,.8,.2,1) both!important}
+@keyframes gLine{to{width:min(70vw,560px)}}
+@keyframes goalCine{0%{opacity:0;letter-spacing:.9em;transform:scale(1.25)}14%{opacity:1;letter-spacing:.14em;transform:scale(1)}82%{opacity:1;letter-spacing:.18em;transform:scale(1.03)}100%{opacity:0;letter-spacing:.3em;transform:scale(1.06)}}
+</style>
 </head>
 <body>
 <div id="ver">Kick.io v1.4.0</div>
@@ -725,7 +741,6 @@ html.mob #tcSkip{font-size:13px;padding:8px 14px}
     <button class="tile" id="bUni"><i class="fa-solid fa-shirt"></i>Uniforme</button>
     <button class="tile" id="bSquad"><i class="fa-solid fa-users"></i>Equipe</button>
     <button class="tile" id="bEditTeam"><i class="fa-solid fa-shield-halved"></i>Nome e escudo</button>
-    <button class="tile" id="bRank"><i class="fa-solid fa-trophy"></i>Rank</button>
   </div>
   <div class="row"><button class="b" id="bTeamX"><i class="fa-solid fa-arrow-left"></i>Voltar</button><button class="b danger" id="bLeave"><i class="fa-solid fa-right-from-bracket"></i>Sair do time</button></div>
 </div></div>
@@ -872,7 +887,7 @@ body.replay #hud,body.replay #bars,body.intro #hud,body.intro #bars{opacity:0}
 #endBox h1{font:900 68px system-ui;margin:6px 0;letter-spacing:3px}#endBox p{font:800 24px system-ui;margin:0 0 20px}#endBox small{letter-spacing:6px;opacity:.7;font-weight:800}
 </style>
 <div id="hud"><i class="fa-solid fa-shield-halved hi"></i><b id="hT"></b><span id="hC"></span></div>
-<div id="bars"><div class="brow" id="powRow"><em class="fa-solid fa-futbol"></em><div id="pow"><i></i></div></div><div class="brow"><em class="fa-solid fa-bolt"></em><div id="stam"><i></i></div></div></div>
+<div id="bars"><div class="brow" id="powRow"><em class="fa-solid fa-futbol"></em><div id="pow"><i></i></div></div><div class="brow" style="display:none"><div id="stam"><i></i></div></div></div>
 <div id="endBox"></div>
 <div id="score">GOOOL!</div>
 <div id="fps"></div>
@@ -1405,6 +1420,14 @@ const bc = document.createElement('canvas'); bc.width = 384; bc.height = 64;
   g.fillStyle = '#ffffff'; g.fillText('kick', x0, 35);
   g.fillStyle = '#ff914d'; g.fillText('.io', x0 + w1, 35);
 }
+function drawBoards(goal, red) {   // placas do estádio: 'kick.io' normal; no gol vira GOOOOL!
+  const g = bc.getContext('2d'); g.clearRect(0, 0, 384, 64);
+  g.textBaseline = 'middle';
+  if (goal) { g.fillStyle = red ? '#b71c1c' : '#1b8e3e'; g.fillRect(0, 0, 384, 64); g.font = '900 46px system-ui,sans-serif'; g.textAlign = 'center'; g.lineWidth = 6; g.strokeStyle = '#0a0e1a'; g.strokeText('GOOOOL!', 192, 35); g.fillStyle = '#ffd54a'; g.fillText('GOOOOL!', 192, 35); }
+  else { g.fillStyle = '#1e88e5'; g.fillRect(0, 0, 384, 64); g.font = 'bold 40px system-ui,sans-serif'; g.textAlign = 'left'; const w1 = g.measureText('kick').width, w2 = g.measureText('.io').width, x0 = 192 - (w1 + w2) / 2; g.fillStyle = '#ffffff'; g.fillText('kick', x0, 35); g.fillStyle = '#ff914d'; g.fillText('.io', x0 + w1, 35); }
+  for (const t of boardTex) t.needsUpdate = true;
+}
+let _bdT = 0;
 const BOARD_TILE = 5.4;            // largura de 1 repetição do texto, em unidades do estádio
 const boardTex = [];
 function boards(len, x, z, ry) {
@@ -1788,13 +1811,20 @@ addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
 // ---------- Câmera ----------
 // zoom limitado e câmera presa dentro das placas "fut.io" (nunca mostra o lado de fora)
 // ---------- Configurações: câmera e controles (salvas no navegador) ----------
-const CFG_DEF = { sens: 1, zoom: 1, fov: 38, inv: 1, fps: false, aim: true, vol: 1 };          // inv: 1 normal, -1 eixo vertical invertido
+const CFG_DEF = { sens: 1, zoom: 1, fov: 38, inv: 1, fps: false, aim: true, vol: 1, fix: ('ontouchstart' in window) && matchMedia('(pointer:coarse)').matches };          // inv: 1 normal, -1 eixo vertical invertido
 const ACTS = [['up', 'Frente', 'KeyW'], ['down', 'Trás', 'KeyS'], ['left', 'Esquerda', 'KeyA'], ['right', 'Direita', 'KeyD'], ['run', 'Correr', 'KeyQ'],
-  ['shoot', 'Chutar / desarmar', 'Space'], ['lob', 'Lançamento / cruzamento', 'KeyV'], ['curveR', 'Efeito (curva) no chute', 'KeyX'], ['slide', 'Carrinho', 'KeyC'],
-  ['chip', 'Chapéu', 'KeyF'], ['call', 'Pedir a bola', 'KeyE']];
+  ['shoot', 'Chutar / desarmar', 'Space'], ['slide', 'Carrinho', 'KeyC'],
+  ['call', 'Pedir a bola', 'KeyE'], ['camfix', 'Câmera fixa (liga/desliga)', 'KeyG']];
 const CFG = Object.assign({}, CFG_DEF), BIND = {};
 for (const a of ACTS) BIND[a[0]] = a[2];
 try { const sv = JSON.parse(localStorage.getItem('futio_cfg2') || 'null'); if (sv) { for (const k in CFG_DEF) if (typeof sv.cfg[k] === typeof CFG_DEF[k]) CFG[k] = sv.cfg[k]; for (const a of ACTS) if (typeof sv.bind[a[0]] === 'string') BIND[a[0]] = sv.bind[a[0]]; } } catch (_) {}
+CFG.fix = true;   // câmera SEMPRE fixa (estilo TV/FIFA)
+// goleiro com a bola: você perde o controle (teclas e botões do celular) até a bola voltar ao jogo
+addEventListener('keydown', e => {
+  if (!window.__gkOn || e.ctrlKey || e.metaKey || e.altKey || document.body.getAttribute('data-m') !== 'play') return;
+  if (/^(Escape|Enter|Tab|F\d+|KeyM|Alt.*|Control.*|Meta.*)$/.test(e.code)) return;
+  e.stopImmediatePropagation(); if (e.code === 'Space' || e.code.startsWith('Arrow')) e.preventDefault();
+}, true);
 let KMAP = new Map();
 function buildKMap() { KMAP = new Map(); for (const a of ACTS) KMAP.set(BIND[a[0]], a[2]); for (const a of ACTS) if (!KMAP.has(a[2])) KMAP.set(a[2], null); }
 function saveCfg() { try { localStorage.setItem('futio_cfg2', JSON.stringify({ cfg: CFG, bind: BIND })); } catch (_) {} }
@@ -1811,7 +1841,7 @@ function keyXlate(e) {
 }
 addEventListener('keydown', keyXlate, true); addEventListener('keyup', keyXlate, true);
 
-const CAM_MIN = 4, CAM_MAX = 22;
+const CAM_MIN = 4, CAM_MAX = 48;
 const CAM_X = 120.4, CAM_Z = 82.9;
 let theta = 0, phi = 1.35, dist = 12;
 let targetTheta = 0, targetPhi = 1.35, targetDist = 12;
@@ -1831,14 +1861,14 @@ addEventListener('blur', () => dragging = false);
 renderer.domElement.addEventListener('contextmenu', e => { if (menu.mode === 'play') { e.preventDefault(); dragging = false; } });
 document.addEventListener('visibilitychange', () => { dragging = false; for (const k in keys) keys[k] = false; });
 addEventListener('mousemove', e => {
-  if (!dragging) return;
+  if (!dragging || CFG.fix) return;
   if (!(e.buttons & 1)) { dragging = false; return; }           // soltou o botão fora da janela
   targetTheta -= (e.clientX - lx) * 0.0045 * CFG.sens;
   targetPhi = clampPhi(targetPhi - (e.clientY - ly) * 0.0045 * CFG.sens * CFG.inv);
   lx = e.clientX; ly = e.clientY;
 });
 addEventListener('wheel', e => {
-  if (menu.mode !== 'play') return;
+  if (menu.mode !== 'play' || CFG.fix) return;
   targetDist = Math.min(Math.max(targetDist * (1 + Math.sign(e.deltaY) * 0.08 * CFG.zoom), CAM_MIN), CAM_MAX);
 });
 
@@ -1853,7 +1883,7 @@ addEventListener('blur', lookOff);
 addEventListener('keydown', e => {
   if (e.code !== 'AltLeft' && e.code !== 'AltRight') return;
   e.preventDefault();
-  if (e.repeat || menu.mode !== 'play') return;
+  if (e.repeat || menu.mode !== 'play' || CFG.fix) return;
   if (document.pointerLockElement) document.exitPointerLock();
   else if (fakeLook) lookOff();
   else { dragging = false; try { const r = renderer.domElement.requestPointerLock(); if (r && r.catch) r.catch(lookFake); } catch (_) { lookFake(); } }
@@ -1916,7 +1946,7 @@ function knockKeeper(K, dx, dz, dur = 1.8) {
   K.state = 'down'; K.t = 0; K.downT = dur; K.cool = 0.6;
 }
 function keeperGrab(K) {
-  K.state = 'hold'; K.t = 0; K.holdT = 1.1 + Math.random() * 0.7; match.offL = null;
+  K.cl = K.lean || 0; K.state = 'hold'; K.t = 0; K.holdT = (K.cl > 0.3 ? 2.2 : 1.8) + Math.random() * 0.7;   // se pegou no ar/deitado, fica no chão segurando e depois levanta match.offL = null;
   hasBall = false; ballOwner = null; match.pass = null; bv.set(0, 0, 0); bvy = 0;
 }
 
@@ -1964,6 +1994,7 @@ function toonFall(c, t, D, ph) {   // queda de desenho animado: voa girando, qui
   }
   return false;
 }
+const _kH = new THREE.Vector3();
 function updateKeeper(K, dt) {
   const s = K.s, g = K.g, bp = ball.position, live = goalLock <= 0;
   K.idleT += dt; K.t += dt; K.cool = Math.max(0, K.cool - dt);
@@ -1972,11 +2003,12 @@ function updateKeeper(K, dt) {
   const tx = s * (GOAL_LINE - 1.2 - out);   // fica colado na linha, dentro do gol
   const tz = K.man != null ? K.man : THREE.MathUtils.clamp(bp.z * 0.7, -(GOAL_HALF - 1.3), GOAL_HALF - 1.3);
   let mvx = 0, mvz = 0, reach = 0;
+  const SK = s === -ATKD(0) ? 1.3 : 1.1;   // reflexo: o goleiro do seu time é ainda melhor
 
   if (K.state === 'idle') {
     reach = 1.05;
     const dx = tx - g.position.x, dz = tz - g.position.z, d = hyp2(dx, dz);
-    if (d > 0.05) { const st = Math.min(d, 6.5 * dt); mvx = dx / d * st; mvz = dz / d * st; }
+    if (d > 0.05) { const st = Math.min(d, 10 * SK * dt); mvx = dx / d * st; mvz = dz / d * st; }
     // prevê o chute e mergulha
     if (live && !hasBall && !ballOwner && K.cool <= 0 && !K.pk) {
       const vxg = s * bv.x, sp2 = hyp2(bv.x, bv.z);
@@ -1986,9 +2018,9 @@ function updateKeeper(K, dt) {
           const tc = -Math.log(arg) / 1.3;
           const predZ = bp.z + bv.z * (dxA / Math.abs(bv.x));
           const predY = bp.y + bvy * tc - 16 * tc * tc;
-          if (tc < 1.4 && Math.abs(predZ) < GOAL_HALF + 1.5 && predY < GOAL_H - 0.5 && predY > -1) {
-            K.state = 'dive'; K.t = 0; K.delay = 0.25 + Math.random() * 0.25;
-            K.diveZ = THREE.MathUtils.clamp(predZ + (Math.random() - .5) * (sp2 > 45 ? 10 : 6), -(GOAL_HALF - 0.6), GOAL_HALF - 0.6);
+          if (tc < 1.8 && Math.abs(predZ) < GOAL_HALF + 1.5 && predY < GOAL_H - 0.5 && predY > -1) {
+            K.state = 'dive'; K.t = 0; K.delay = (0.04 + Math.random() * 0.1) / SK;
+            K.diveZ = THREE.MathUtils.clamp(predZ + (Math.random() - .5) * (sp2 > 45 ? 3.5 : 2) / SK, -(GOAL_HALF - 0.6), GOAL_HALF - 0.6);
             K.diveDir = Math.sign(K.diveZ - g.position.z) || 1;
           }
         }
@@ -1999,16 +2031,23 @@ function updateKeeper(K, dt) {
       K.contactT += dt; if (K.contactT > 0.35) { keeperGrab(K); K.contactT = 0; }
     } else K.contactT = 0;
   } else if (K.state === 'dive') {
-    reach = 1.7;
-    if (K.t > K.delay) { const dz = K.diveZ - g.position.z; mvz = Math.sign(dz) * Math.min(Math.abs(dz), 15 * dt); }
-    if (K.t > 0.75) { K.state = 'recover'; K.t = 0; }
+    reach = 2.4;
+    if (K.t > K.delay) { const dz = K.diveZ - g.position.z; mvz = Math.sign(dz) * Math.min(Math.abs(dz), 28 * SK * dt); }
+    if (K.t > 0.8) { K.state = 'recover'; K.t = 0; }
   } else if (K.state === 'recover') {
     reach = 1.3;
-    if (K.t > 0.65) { K.state = 'idle'; K.t = 0; K.cool = Math.max(K.cool, 0.2); }
+    if (K.t > 1.05) { K.state = 'idle'; K.t = 0; K.cool = Math.max(K.cool, 0.2); }
   } else if (K.state === 'hold') {
     K.holdT -= dt;
-    bp.set(g.position.x + Math.sin(g.rotation.y) * 1.15, 1.35, g.position.z + Math.cos(g.rotation.y) * 1.15); bv.set(0, 0, 0); bvy = 0;
-    if (K.holdT <= 0) {                                      // chuta pra frente
+    if (K.t > 0.25) K.cl = Math.max(0, (K.cl || 0) - dt * 1.1);
+    _kH.set(g.position.x + Math.sin(g.rotation.y) * 1.15, 1.35 - 0.8 * (K.cl || 0), g.position.z + Math.cos(g.rotation.y) * 1.15);
+    if (K.t < 0.16) bp.lerp(_kH, Math.min(1, dt * 22)); else bp.copy(_kH);   // a bola 'gruda' na mão do goleiro
+    bv.set(0, 0, 0); bvy = 0;
+    const hx = s * (GOAL_LINE - 17), hdx = hx - g.position.x, hdz = -g.position.z, hd = hyp2(hdx, hdz);   // caminha até o centro da área com a bola
+    if (K.t > 0.5 && K.cl < 0.3 && hd > 0.4) { const st = Math.min(hd, 7 * dt); mvx = hdx / hd * st; mvz = hdz / hd * st; }
+    const arrived = hd < 1.2 || K.t > 5;
+    const orgOk = arrived && (K.t > 6 || (!bots.some(o => !o.out && hyp2(o.p.x - g.position.x, o.p.z - g.position.z) < 23) && (window.__gkTx == null || !match.on || hyp2(player.position.x - window.__gkTx, player.position.z - window.__gkTz) < 5)));   // espera todos abrirem espaço
+    if (K.holdT <= 0 && orgOk) {                                      // chuta pra frente
       let aimed = false;
       if (match.on) {                                      // reposição inteligente: escolhe o companheiro livre, com passe seguro, mais à frente
         const tm = TM[s < 0 ? 0 : 1], foe = TM[s < 0 ? 1 : 0]; let tp = null, ts = -9;
@@ -2040,7 +2079,7 @@ function updateKeeper(K, dt) {
     const dx = bp.x - g.position.x, dz = bp.z - g.position.z, d = hyp2(dx, dz);
     if (d < reach + BR) {
       const spd = hyp2(bv.x, bv.z);
-      if (spd < 15 && bp.y < 3.0) keeperGrab(K);
+      if (spd < 999) keeperGrab(K);
       else {
         let nx = dx / (d || 1), nz = dz / (d || 1);
         if (s * nx > -0.15) { nx = -s * (Math.abs(nx) + 0.4); const l = hyp2(nx, nz) || 1; nx /= l; nz /= l; }
@@ -2056,7 +2095,8 @@ function updateKeeper(K, dt) {
   K.amp += (Math.min(1, speed / 10) - K.amp) * Math.min(1, dt * 10);
   K.walkT += dt * speed * 1.2;
   const sn = Math.sin(K.walkT), cs = Math.cos(K.walkT), amp = K.amp, k10 = Math.min(1, dt * 12);
-  const diveK = K.state === 'dive' ? Math.min(1, K.t / 0.18) : K.state === 'recover' ? Math.max(0, 1 - K.t / 0.6) : 0;
+  const sm_ = u => u * u * (3 - 2 * u);
+  const diveK = K.state === 'dive' ? sm_(Math.min(1, K.t / 0.22)) : K.state === 'recover' ? (K.t < 0.3 ? 1 : 1 - sm_(Math.min(1, (K.t - 0.3) / 0.7))) : K.state === 'hold' ? sm_(Math.min(1, K.cl || 0)) : 0;
   K.lean += (diveK - K.lean) * Math.min(1, dt * 16);
   K.hold += ((K.state === 'hold' ? 1 : 0) - K.hold) * k10;
   K.down += ((K.state === 'down' && K.t < K.downT - 0.35 ? 1 : 0) - K.down) * Math.min(1, dt * 10);
@@ -2081,14 +2121,25 @@ function updateKeeper(K, dt) {
   let ang = Math.atan2(bp.x - g.position.x, bp.z - g.position.z) - g.rotation.y;
   while (ang > Math.PI) ang -= TAU; while (ang < -Math.PI) ang += TAU;
   ch.head.rotation.y += (THREE.MathUtils.clamp(ang, -0.8, 0.8) - ch.head.rotation.y) * k10;
+  ch.head.rotation.x = 0;   // zera antes de somar o efeito (antes acumulava e a cabeça/olhos giravam)
   { const w = K.state === 'down' ? 0 : K.state === 'dive' ? .3 : 1, idle = K.state === 'idle' ? 1 : 0, it = K.idleT;
     toonFX(ch.model, ch.head, ch.handL, ch.handR, K.walkT, K.amp, Math.min(1, Math.max(0, (speed - 8) / 12)), it * .3, w, ch.footL, ch.footR);
     ch.model.position.y += idle * (1 - K.amp) * Math.abs(Math.sin(it * 4)) * .07;                       // posição de espera: quica na ponta dos pés
     ch.handL.position.y += idle * Math.sin(it * 5) * .09; ch.handR.position.y += idle * Math.sin(it * 5 + Math.PI) * .09;
     ch.footL.position.y += idle * Math.max(0, Math.sin(it * 4)) * .08; ch.footR.position.y += idle * Math.max(0, -Math.sin(it * 4)) * .08;
-    if (K.lean > .02) { ch.model.scale.y *= 1 + .16 * K.lean; ch.model.scale.x *= 1 - .08 * K.lean; ch.model.scale.z *= 1 - .08 * K.lean; }   // estica no mergulho
+    { const gl = 1.2 + .55 * K.lean + (K.state === 'idle' ? .12 * Math.abs(Math.sin(it * 5)) : 0); ch.handL.scale.setScalar(gl); ch.handR.scale.setScalar(gl); }   // luvas gigantes de desenho
+    if (K.state === 'dive') { const u = Math.min(1, K.t / .6); ch.model.position.y += Math.sin(u * Math.PI) * .7; ch.model.rotation.y = (K.t < K.delay ? 0 : -K.diveDir * s * .35 * Math.sin(u * Math.PI)); ch.handL.position.y += 1.1 * K.lean; ch.handR.position.y += 1.1 * K.lean; ch.handL.position.x -= .5 * K.lean; ch.handR.position.x += .5 * K.lean;
+      if (K.t < K.delay) { const a = Math.min(1, K.t / Math.max(K.delay, .05)) * .2; ch.model.scale.y -= a; ch.model.scale.x += a * .6; ch.model.scale.z += a * .6; } }   // agacha antes de saltar (antecipação)
+    else ch.model.rotation.y *= .8;
+    if (K.lean > .02) { ch.model.scale.y *= 1 + .27 * K.lean; ch.model.scale.x *= 1 - .12 * K.lean; ch.model.scale.z *= 1 - .12 * K.lean;
+      ch.footL.position.z -= .55 * K.lean; ch.footR.position.z -= .3 * K.lean; ch.footR.position.y += .3 * K.lean; ch.model.rotation.x -= .22 * K.lean; }   // corpo esticado como um 'super-homem', pernas arrastando
+    if ((K.state === 'recover' && K.t > .3) || (K.state === 'hold' && (K.cl || 0) > 0 && (K.cl || 0) < 1)) {   // levantar: apoia as mãos, agacha, empurra e se ergue
+      const u = K.state === 'recover' ? Math.min(1, (K.t - .3) / .7) : 1 - (K.cl || 0), pu = Math.sin(u * Math.PI);
+      ch.model.scale.y -= .14 * pu; ch.model.position.y -= .12 * pu; ch.head.rotation.x += .3 * pu;
+      if (K.state === 'recover') { ch.handL.position.y -= .6 * pu * (1 - u); ch.handR.position.y -= .6 * pu * (1 - u); ch.handL.position.z += .35 * pu; ch.handR.position.z += .35 * pu; } }   // estica no mergulho
     if (K.state === 'recover') { const q = Math.sin(Math.min(1, K.t / .5) * Math.PI) * .12; ch.model.scale.y -= q; ch.model.scale.x += q * .5; ch.model.scale.z += q * .5; }   // amassa ao cair
-    if (K.state === 'hold') { const q = Math.sin(it * 10) * .03; ch.model.scale.y += q; ch.model.scale.x -= q * .5; } }
+    if (K.state === 'hold') { const q = Math.sin(it * 10) * .03; ch.model.scale.y += q; ch.model.scale.x -= q * .5; }
+    ch.head.scale.set(1 / ch.model.scale.x, 1 / ch.model.scale.y, 1 / ch.model.scale.z); }   // cabeça e olhos nunca ficam esticados/entortados pela escala do corpo
 }
 
 // Colisão da bola com a estrutura do gol: traves, travessão e redes são sólidos.
@@ -2302,7 +2353,7 @@ function endReplay() {
   replay.on = false;
   document.body.classList.remove('replay');
   trail.visible = false;
-  if (!replay.manual && !startCel()) goalLock = 0.001;              // gol: comemoração + raiva do rival; depois o fluxo normal recoloca a bola no centro (a reprisa manual só devolve o jogo)
+  if (!replay.manual) goalLock = 0.001;              // gol: comemoração + raiva do rival; depois o fluxo normal recoloca a bola no centro (a reprisa manual só devolve o jogo)
   flashNow();
 }
 const clampCam = v => {
@@ -2956,6 +3007,7 @@ function onGoal(home) { sfxCrowd(true); if (LD.on) endLeaders();
   ownGoal = !home && !match.on; replay.own = ownGoal;                    // a bola entrou no gol do próprio jogador
   scoreEl.innerHTML = (ownGoal ? 'GOL CONTRA!' : match.on && !home ? 'GOL DO ADVERSÁRIO' : 'GOOOL!') + '<small>' + scoreHome + ' × ' + scoreAway + '</small>';
   scoreEl.style.color = (ownGoal || (match.on && !home)) ? '#ff6b6b' : '#fff';
+  drawBoards(true, !home && match.on); clearTimeout(_bdT); _bdT = setTimeout(() => drawBoards(false), 3600);
   scoreEl.style.opacity = 1;
   scoreEl.classList.remove('pop'); void scoreEl.offsetWidth; scoreEl.classList.add('pop');
   hasBall = false; ballOwner = null; match.pass = null;
@@ -2964,9 +3016,7 @@ function onGoal(home) { sfxCrowd(true); if (LD.on) endLeaders();
   replay.side = home ? 1 : -1; goalFrame = recHead; goalSeqT = 0; goalSeqDone = false;
   replay.focus = (lastToucher && !lastToucher.isU && lastToucher.g) ? lastToucher.g : player;   // a câmera do replay segue quem fez o gol
   if (match.on) { whistle(0.9); ref.mode = 'follow'; }
-  punch = 12; shake = 1.1;
-  if (!savedDist) savedDist = targetDist;
-  targetDist = Math.min(targetDist, 10);
+  punch = 0; shake = 0.3;   // sem zoom/aproximação no gol
   burstConfetti(ball.position.x, 1.5, ball.position.z, 150, 16);
   if (!ownGoal && (home || !match.on)) burstConfetti(player.position.x, 13, player.position.z, 110, 14, true);
   if (match.on) for (let k = 0; k < 3; k++) setTimeout(() => { if (match.on) fanSay(rnd(home ? FAN_GOAL : FAN_CONCEDE), 2.8); }, 300 + k * 450);
@@ -3791,6 +3841,20 @@ extendRec([ref.g, ref.ch.model, ref.ch.body, ref.ch.head, ref.ch.handL, ref.ch.h
 // HUD das marcações do juiz
 const callEl = document.getElementById('call');
 let callTO = 0;
+(function () {
+  const st = document.createElement('style');
+  st.textContent = '#fBan{position:fixed;left:50%;top:14%;z-index:8;pointer-events:none;display:none;align-items:center;gap:clamp(12px,2.4vw,24px);padding:clamp(12px,2.2vh,20px) clamp(20px,4vw,44px);color:#fff;font-family:system-ui;background:rgba(10,14,28,.9);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.18);border-radius:22px;box-shadow:0 20px 60px rgba(0,0,0,.6);max-width:92vw;overflow:hidden}#fBan:before{content:"";position:absolute;left:0;top:0;bottom:0;width:8px;background:var(--fc,#3b8cf0)}#fBan .ic{width:clamp(26px,5.4vmin,46px);height:clamp(36px,7.4vmin,62px);border-radius:6px;background:var(--fc,#3b8cf0);box-shadow:0 5px 0 rgba(0,0,0,.35),inset 0 0 0 3px rgba(255,255,255,.35);flex:none;font:400 clamp(18px,4vmin,32px)/1 Bungee,Impact,system-ui;display:flex;align-items:center;justify-content:center;color:#fff}#fBan b{display:block;font-family:Bungee,Impact,system-ui;font-weight:400;font-size:clamp(22px,5.6vmin,48px);letter-spacing:2px;color:var(--ft,#ffd54a);line-height:1.05}#fBan small{display:block;font:800 clamp(12px,2.6vmin,20px) system-ui;letter-spacing:3px;margin-top:6px;opacity:.85;text-transform:uppercase}';
+  document.head.appendChild(st);
+})();
+let fBanEl = null;
+function showBanner(title, sub, kind) {   // balão de texto grande e legível (celular e PC): fundo sólido escuro, título colorido
+  let el = fBanEl; if (!el) { el = fBanEl = document.createElement('div'); el.id = 'fMsg'; document.body.appendChild(el); }
+  const col = kind === 'red' ? '#ff6b66' : kind === 'yellow' ? '#ffd54a' : '#ffffff', bar = kind === 'red' ? '#e53935' : kind === 'yellow' ? '#ffc928' : '#3b8cf0';
+  el.style.cssText = 'position:fixed;left:50%;top:max(84px,calc(env(safe-area-inset-top) + 64px));z-index:30;pointer-events:none;text-align:center;box-sizing:border-box;max-width:92vw;padding:12px 22px;border-radius:16px;background:#0a0e1c;border:2px solid ' + bar + ';box-shadow:0 10px 30px rgba(0,0,0,.65);font-family:system-ui,sans-serif;display:block';
+  el.innerHTML = '<div style="font:900 clamp(20px,5.6vmin,38px)/1.1 system-ui,sans-serif;letter-spacing:1px;color:' + col + ';text-transform:uppercase">' + title + '</div>' + (sub ? '<div style="font:700 clamp(14px,3.4vmin,22px)/1.25 system-ui,sans-serif;color:#fff;margin-top:5px">' + sub + '</div>' : '');
+  el.getAnimations().forEach(x => x.cancel());
+  el.animate([{ transform: 'translate(-50%,-30px)', opacity: 0 }, { transform: 'translate(-50%,0)', opacity: 1, offset: .12 }, { transform: 'translate(-50%,0)', opacity: 1, offset: .88 }, { transform: 'translate(-50%,-10px)', opacity: 0 }], { duration: 2800, easing: 'ease-out' }).onfinish = () => { if (fBanEl === el) el.style.display = 'none'; };
+}
 function showCall(title, sub, col) {
   callEl.innerHTML = title + (sub ? '<small>' + sub + '</small>' : ''); callEl.style.color = col || '#fff';
   callEl.classList.remove('on'); void callEl.offsetWidth; callEl.classList.add('on');
@@ -3878,7 +3942,7 @@ function stepRef(dt) {
     const c0 = R.q[0];
     if (!B || hyp2(R.p.x - c0.who.p.x, R.p.z - c0.who.p.z) < 5.5 || B.t > 12) {
       R.q.shift(); R.card = c0.card; R.cardWho = c0.who; R.cardT = 2.5;
-      setTimeout(() => { if (match.on) showCall(c0.card === 'red' ? 'CARTÃO VERMELHO' : 'CARTÃO AMARELO', c0.lbl, c0.card === 'red' ? '#ff5252' : '#ffd54a'); }, 700);
+      setTimeout(() => { if (match.on) showBanner(c0.card === 'red' ? 'CARTÃO VERMELHO' : 'CARTÃO AMARELO', 'para ' + (c0.who.t ? 'o time inimigo' : 'o seu time') + ' · ' + c0.lbl, c0.card); }, 700);
     }
   }
   // cartão: levanta o braço, mostra, e só então expulsa (se for vermelho)
@@ -3898,7 +3962,7 @@ function stepRef(dt) {
   R.arm += (tArm - R.arm) * Math.min(1, dt * 9);
   if (R.arm > 0.01) {
     const c = R.ch, a = R.arm, full = R.card ? 1 : 0;
-    c.handR.position.set(HAND_X * (1 - 0.35 * a), HAND_Y + (full ? 1.75 : 1.25) * a, 0.2 + (full ? 0 : 0.55) * a);
+    c.handR.position.set(HAND_X * (1 + (full ? 1.1 : -0.35) * a), HAND_Y + (full ? 1.45 : 1.25) * a, 0.2 + (full ? 0.45 : 0.55) * a);
     c.head.rotation.x = -0.1 * a;
   }
   const tSc = B && R.down <= 0 && !R.card && (B.ph === 'sep' || B.ph === 'scold' || B.ph === 'riot') ? 1 : 0;   // esporro: dedo em riste e braço balançando
@@ -3928,14 +3992,12 @@ function sendOffUser() {
   if (U.out) return;
   let nb = null, bd = 1e9;                                   // reserva: companheiro de linha mais perto de você
   for (const b of bots) {
-    if (b.t !== 0 || b.out || !b.m || b.down > 0.5 || b.sl >= 0 || b === ballOwner || (b.fgt && b.fgt.mode !== 'walk')) continue;
+    if (b.t !== 0 || b.out || !b.m) continue;
     const d = hyp2(b.p.x - player.position.x, b.p.z - player.position.z); if (d < bd) { bd = d; nb = b; }
   }
-  if (nb) {
+  if (nb) {                                                  // o expulso sai de verdade e você assume outro jogador do time
     const up = player.position.clone(), ur = player.rotation.y, np = nb.p.clone(), nr = nb.rot, um = members[USER_SLOT];
-    paintShirt(nb.m.sh, { ...kitSaved, num: String(um.num) });          // o corpo do companheiro sai com a sua camisa
-    if (um.skin != null) setSkin({ head: nb.ch.head, handL: nb.ch.handL, handR: nb.ch.handR }, um.skin);
-    else { nb.ch.head.children[0].material.color.set(0xf8ffc4); nb.ch.handR.children[0].material.color.set(0xf8ffc4); nb.ch.handL.children[0].material.color.set(0xd0d5a8); }
+    swLook(nb);                                                         // o corpo que sai fica com a SUA aparência; você assume a do companheiro
     nb.p.copy(up); nb.rot = ur; nb.g.rotation.y = ur; nb.v.set(0, 0, 0); nb.fgt = null; nb.chg = null; nb.sl = -1; nb.hitT = 0; nb.kickT = -1;
     nb.out = true; nb.down = 1e9;
     for (const o of bots) { if (o.mt === nb) o.mt = null; if (o.mk === nb) o.mk = null; }
@@ -3947,7 +4009,7 @@ function sendOffUser() {
     U.out = false; U.exit = null; U.down = 0; U.fgt = null; U.hitT = 0; U.cards = 0; U.heat = 0; U.mk = null; U.chg = null;
     player.visible = true; slideT = -1; kickT = -1; punchT = -1; chgOn = false; kickCd = 0.4; resetPlayerPose();
     if (!(match.rs && match.rs.taker === U)) hasBall = false;
-    showCall('EXPULSO!', 'Você assumiu o lugar do ' + nb.m.pos, '#ff5252');
+    showBanner('EXPULSO!', 'Você assumiu o ' + nb.m.pos, 'red');
     return;
   }
   U.out = true; U.fgt = null; U.hitT = 0; U.down = 1e9; hasBall = false; chgOn = false; kickT = -1; punchT = -1;
@@ -4025,9 +4087,8 @@ function crowdBoo(len = 1.8) {
 // ======================================================================
 const _spot = new THREE.Vector3();
 function callFoul(off, vic, hard, forceFight) {
-  return false;   // faltas desativadas
   if (!match.on || match.foulCd > 0 || goalLock > 0 || match.freeze > 0 || match.brawl) return false;
-  match.foulCd = 14;
+  match.foulCd = 5; if (off.isU) match.uF = (match.uF || 0) + 1;
   const pen = inPenArea(vic.p.x, vic.p.z, vic.t);          // falta dentro da grande área = pênalti
   const fight = false;                                       // brigas desativadas
   if (!vic.isU) vic.ang = (vic.ang || 0) + (hard ? 0.5 : 0.3);
@@ -4050,13 +4111,13 @@ function callFoul(off, vic, hard, forceFight) {
   // cartão
   let card = null;
   if (fight) card = null;                                    // na briga os cartões saem depois, na mão do juiz
-  else if (hard && Math.random() < 0.07 && !off.isU) card = 'red';
+  else if (hard && Math.random() < 0.1) card = 'red';
   else if (Math.random() < (hard ? 0.75 : 0.3)) card = 'yellow';
   whistle(0.7);
   ref.mode = 'foul'; ref.modeT = 0; ref.tgt.set(sx - ATKD(vic.t) * 2.5 + 2.5, 0, sz + (sz > 0 ? -4.5 : 4.5));
   const who = off.isU ? 'Você' : (off.t ? 'Adversário' : 'Seu time') + ' #' + off.num;
   if (pen) showCall('PÊNALTI!', off.isU ? 'Você fez pênalti' : 'Para ' + (vic.t === 0 ? 'o seu time' : 'o adversário'), '#ffd54a');
-  else showNote(off.isU ? 'Falta cometida por você' : 'Falta · ' + who, off.isU ? '#ffb74d' : '#fff');
+  else showBanner('FALTA', 'do ' + (off.t ? 'time inimigo' : 'seu time') + ' · ' + (off.isU ? 'você' : '#' + off.num), 'blue');
   if (card) giveCard(off, card, 'Falta');
   if (card || pen || Math.random() < 0.25) setTimeout(() => { if (match.on) fanSay(rnd(FAN_FOUL), 2.4); }, 500);
   if (fight) startBrawl(vic, off, forceFight ? off : null);
@@ -4140,9 +4201,10 @@ function fighterStep(f, dt, B) {
   }
 }
 function giveCard(b, kind, why) {
-  return;   // cartões desativados                            // entra na fila de cartões do juiz (2º amarelo vira vermelho)
+                             // entra na fila de cartões do juiz (2º amarelo vira vermelho)
   let card = kind;
   if (kind === 'yellow') { b.cards = (b.cards || 0) + 1; if (b.cards >= 2) card = 'red'; }
+  if (b.isU) { if (card === 'red') match.uR = (match.uR || 0) + 1; else match.uY = (match.uY || 0) + 1; }
   ref.q.push({ who: b, card, lbl: (b.isU ? 'Você' : (b.t ? 'Adversário' : 'Seu time') + ' #' + b.num) + ' · ' + (card === 'red' && kind === 'yellow' ? '2º amarelo' : why) });
 }
 function startBrawl(vic, off, hint) {
@@ -4541,6 +4603,7 @@ function botKick(b, dx, dz, sp, vy, cv, cap) {
   bv.set(dx / l * sp, 0, dz / l * sp); bvy = vy; spawnDust(ball.position.clone(), 2, 0.2);
 }
 function botPass(b, a) {
+  if (match.on && !U.out && a !== U && b !== U && dd(U.p, b.p) > 6 && dd(U.p, b.p) < 60 && Math.random() < (b.t === 0 ? (passMargin(TM[1], b.p.x, b.p.z, U.p.x, U.p.z, 30) > 0.18 ? 0.92 : 0.35) : 0.12)) a = U;   // aliados procuram você; rivais erram o passe e a bola "sobra" pra você
   const d = dd(a.p, b.p), sp = clampN(18 + d * 1.35, 24, 56), tt = d / (sp * 0.7);
   const tx = a.p.x + a.v.x * tt * 0.7 + rr(-0.8, 0.8), tz = a.p.z + a.v.z * tt * 0.7 + rr(-0.8, 0.8);   // passa na frente do recebedor
   botKick(b, tx - b.p.x, tz - b.p.z, sp, d > 20 ? 5 : 2.2, 0, true);
@@ -4555,7 +4618,7 @@ function decide(b) {
   let best = null, bs = -9;
   for (const a of TM[t]) {
     if (a === b || a.down > 0.5 || a.out) continue;
-    const d = dd(a.p, p); if (d < 6 || d > 44) continue;
+    const d = dd(a.p, p); if (d < 6 || d > (a.isU && t === 0 ? 62 : 44)) continue;
     if (isOff(a, p.x)) continue;
     const spd = clampN(18 + d * 1.35, 24, 56), tt = d / (spd * 0.7);
     const tx = a.p.x + a.v.x * tt * 0.7, tz = a.p.z + a.v.z * tt * 0.7;
@@ -4566,7 +4629,7 @@ function decide(b) {
             + (ga < 32 ? 0.55 : 0) + Math.min(0.5, Math.atan2(GOAL_HALF * 2, ga) * 0.6)
             + (Math.abs(tz) < 52 ? 0 : -0.5)
             + ((Math.abs(tz - p.z) > 30 && op > 11) ? 0.35 : 0)                  // inversão de jogo para o lado livre
-            + (a.isU ? 0.3 : 0) + (C.sup[t].includes(a) ? 0.25 : 0);
+            + (a.isU && t === 0 ? 1.2 : a.isU ? 0.3 : 0) + (C.sup[t].includes(a) ? 0.25 : 0);
     if (s > bs) { bs = s; best = a; }
   }
   const press = nd < 5.5;
@@ -4622,10 +4685,11 @@ function considerSlide(b) {
   else if (!h && !match.pass && bp.y < 1.3 && hyp2(bv.x, bv.z) > 5) { tx = bp.x + bv.x * 0.25; tz = bp.z + bv.z * 0.25; hvx = bv.x; hvz = bv.z; val = 0.7; }
   else return;
   const dx = tx - b.p.x, dz = tz - b.p.z, d = hyp2(dx, dz);
-  if (d < 2.7 || d > 8.5) return;
+  if (d < 2.7 || d > 6 || (b.cards || 0) >= 1 || hyp2(bp.x - tx, bp.z - tz) > 2.4) return;   // só com a bola ao alcance do adversário
   const ux = dx / d, uz = dz / d, sp = hyp2(b.v.x, b.v.z);
   if (sp > 4 && (b.v.x * ux + b.v.z * uz) / sp < 0.55) return;          // só desliza para onde já está correndo
-  const away = clampN((hvx * ux + hvz * uz) / 12, -0.3, 1);              // adversário fugindo = mais motivo para o carrinho
+  const away = clampN((hvx * ux + hvz * uz) / 12, -0.3, 1); if (away > 0.35) return;   // vindo por trás = falta: não faz
+              // adversário fugindo = mais motivo para o carrinho
   const danger = h && h.p.x * ATKD(h.t) > 50 ? 0.12 : 0;                // último recurso perto do próprio gol
   const pr = (0.04 + 0.07 * Math.max(0, away) + danger * 0.4) * b.aggr * val * (b.cards >= 1 ? 0.3 : 1);   // amarelado pensa duas vezes
   if (Math.random() < pr && !inPenArea(tx, tz, 1 - b.t)) startSlide(b, ux, uz);   // não faz carrinho dentro da própria área (evita pênalti bobo)
@@ -4639,13 +4703,13 @@ function slideContact(b) {
     if (dd(o.p, b.p) > 2.5) continue;
     const holds = o === C.holder, near = dd(bp, b.p) < 3.4;
     b.slHit = true; hitAt(o.p, o.isU ? 1.2 : 0.95); if (!o.isU) o.ang = (o.ang || 0) + 0.08;
-    if ((holds && near && Math.random() < 0.85) || (!holds && near && Math.random() < 0.9)) {   // chegou na bola: desarme limpo
+    if (near || holds) {   // chegou na bola: desarme limpo
       if (holds) {
         if (o.isU) { hasBall = false; kickCd = 0.5; } else { ballOwner = null; o.cd = 1; o.down = 0.5; o.v.set(sd.x * 6, 0, sd.z * 6); }
         bv.set(sd.x * 26 + rr(-3, 3), 0, sd.z * 26 + rr(-3, 3)); bvy = 4; match.last = b.t; lastToucher = b;
       }
       spawnDust(bp.clone(), 4, 0.3);
-    } else if ((curse(o), !callFoul(b, o, Math.random() < 0.4))) {        // falta (se o juiz não puder marcar, só tropeça)
+    } else if ((curse(o), true)) {        // falta (se o juiz não puder marcar, só tropeça)
       if (!o.isU) { o.down = 0.8; o.v.set(sd.x * 7, 0, sd.z * 7); if (ballOwner === o) { ballOwner = null; bv.set(sd.x * 10, 0, sd.z * 10); bvy = 3; } }
     }
     return;
@@ -4675,21 +4739,28 @@ function moveBot(b, dt, live) {
   else if (live && !b.out) {
     let dx, dz, sp;
     if (b.esc > 0) { b.esc -= dt; dx = b.escX; dz = b.escZ; sp = 13; }       // desatolando: sai de lado
-    else if (ballOwner === b) { dx = b.dir.x; dz = b.dir.z; sp = 14.8 * b.spd; }
+    else if (ballOwner === b) { dx = b.dir.x; dz = b.dir.z; sp = (b.exh ? 10.5 : 14.8) * b.spd; }
     else {
       if (!b.st) b.st = b.tgt.clone();                                       // alvo suavizado: o bot desliza até o novo ponto em vez de mudar de rumo de uma vez
       { const ks = Math.min(1, dt * (b.run ? 7 : 2.8)); b.st.x += (b.tgt.x - b.st.x) * ks; b.st.z += (b.tgt.z - b.st.z) * ks; }
       dx = b.st.x - b.p.x; dz = b.st.z - b.p.z; const d = hyp2(dx, dz);
-      sp = (b.run ? 18.4 : 12.6) * b.spd * Math.min(1, d / (b.run ? 3 : 2.4));
+      { const rn = b.run && !b.exh; sp = (rn ? 18.4 : b.exh ? 9.5 : 12.6) * b.spd * Math.min(1, d / (rn ? 3 : 2.4)); }
       if (d > 0.01) { dx /= d; dz /= d; } else { dx = dz = 0; sp = 0; }
     }
     // curva: se precisa inverter a direção, freia antes (nada de girar 180° na velocidade máxima)
     const vl = hyp2(v.x, v.z);
     if (vl > 5) { const cs = (v.x * dx + v.z * dz) / vl; if (cs < 0.3) sp *= clampN(0.4 + (cs + 0.2) * 1.0 + ((b._ag || 1) - 1) * 2, 0.35, 1); }
     wx = dx * sp; wz = dz * sp;
+    { const hk = match.on && keepers.find(k => k.state === 'hold'), rt = match.rs && match.rs.taker === b;   // goleiro com a bola: quem já está longe fica parado olhando pra ele
+      if (hk && !rt && ballOwner !== b && hyp2(b.p.x - hk.g.position.x, b.p.z - hk.g.position.z) >= 24) { b.sx = b.sz = 0; b.st = null; b.hold = 1; wx = wz = 0; dx = dz = 0; }
+      else b.hold = 0; }
+    { const rc = ref.card && ref.cardWho && match.on && !b.out ? ref.cardWho : null;   // juiz mostrando cartão: todos olham e abrem espaço
+      if (rc) { const ox = b.p.x - rc.p.x, oz = b.p.z - rc.p.z, od = hyp2(ox, oz);
+        if (b === rc || od >= 9) { wx = wz = 0; b.sx = b.sz = 0; } else { wx = ox / (od || 1) * 7; wz = oz / (od || 1) * 7; }
+        dx = dz = 0; b.hold = 2; } }
     // separação: companheiros se afastam (não fazem "grupinho"); adversário só é empurrado de leve
     const bp = ball.position, isChase = C.chase[b.t].includes(b);
-    for (const a of bots) {
+    if (!b.hold) for (const a of bots) {
       if (a === b || a.out) continue;
       const ox = b.p.x - a.p.x, oz = b.p.z - a.p.z, od = hyp2(ox, oz);
       const R = a.t === b.t ? (isChase ? 8 : 27) : 4;
@@ -4698,7 +4769,13 @@ function moveBot(b, dt, live) {
       const k = (1 - od / R) * (a.t === b.t ? 14 : 4);
       wx += ox / od * k; wz += oz / od * k;
     }
-    if (b.t === 0 && b !== ballOwner) {                        // também abre espaço do jogador (você)
+    if (!b.hold) for (const K of keepers) {                    // goleiro é obstáculo: bots desviam dele (não grudam)
+      const ox = b.p.x - K.g.position.x, oz = b.p.z - K.g.position.z, od = hyp2(ox, oz), R = 6;
+      if (od >= R) continue;
+      const nx = od > 0.01 ? ox / od : -K.s, nz = od > 0.01 ? oz / od : 0, k = (1 - od / R) * 30, sg = (b.p.z >= K.g.position.z ? 1 : -1);
+      wx += nx * k - nz * sg * k * 0.5; wz += nz * k + nx * sg * k * 0.5;
+    }
+    if (!b.hold && b.t === 0 && b !== ballOwner) {            // também abre espaço do jogador (você)
       const ox = b.p.x - player.position.x, oz = b.p.z - player.position.z, od = hyp2(ox, oz);
       if (od < 10 && od > 0.01) { const k = (1 - od / 10) * 10; wx += ox / od * k; wz += oz / od * k; }
     }
@@ -4710,11 +4787,18 @@ function moveBot(b, dt, live) {
   if (l > mx) { v.x += ax / l * mx; v.z += az / l * mx; } else { v.x += ax; v.z += az; }
   b.p.x = clampN(b.p.x + v.x * dt, -BX, BX); b.p.z = clampN(b.p.z + v.z * dt, -BZ, BZ);
   constrainPlayerFromGoal(b.p, v);
+  for (const K of keepers) {                                   // colisão dura com o goleiro: nunca fica sobreposto
+    const kx = b.p.x - K.g.position.x, kz = b.p.z - K.g.position.z, kd = hyp2(kx, kz), KR = 2.2;
+    if (kd >= KR) continue;
+    const nx = kd > 0.01 ? kx / kd : -K.s, nz = kd > 0.01 ? kz / kd : 0;
+    b.p.x = K.g.position.x + nx * KR; b.p.z = K.g.position.z + nz * KR;
+    const vn = v.x * nx + v.z * nz; if (vn < 0) { v.x -= vn * nx; v.z -= vn * nz; }
+  }
   const sp2 = hyp2(v.x, v.z);
   if (b.sl >= 0) { b.rot = Math.atan2(b.slDir.x, b.slDir.z); }
   else {
     b.mv = b.mv ? sp2 > 0.9 : sp2 > 2.2;                      // histerese: não fica alternando entre olhar a bola e olhar pra onde corre
-    const fo = b.fgt && b.fgt.face, tr = fo ? Math.atan2(fo.p.x - b.p.x, fo.p.z - b.p.z) : b.mv ? Math.atan2(v.x, v.z) : Math.atan2(ball.position.x - b.p.x, ball.position.z - b.p.z);
+    const fo = (b.fgt && b.fgt.face) || (b.hold === 2 && ref.cardWho ? (ref.cardWho !== b ? ref.cardWho : ref) : null), tr = fo ? Math.atan2(fo.p.x - b.p.x, fo.p.z - b.p.z) : b.mv ? Math.atan2(v.x, v.z) : Math.atan2(ball.position.x - b.p.x, ball.position.z - b.p.z);
     let df = tr - b.rot; while (df > Math.PI) df -= TAU; while (df < -Math.PI) df += TAU;
     if (b.down <= 0) { let st = df * Math.min(1, dt * (sp2 > 8 ? 6 : 5)); const mxT = 7 * dt; st = st > mxT ? mxT : st < -mxT ? -mxT : st; b.rot += st; b.av += (st / Math.max(dt, 1e-4) - b.av) * Math.min(1, dt * 8); }
   }
@@ -4742,6 +4826,7 @@ function poseBot(b, dt) {
   c.model.position.y = b.dn * 0.54 + (1 - Math.abs(sn)) * (0.13 + 0.12 * run) * a;
   { const ia = (1 - a) * (1 - b.dn), ti = performance.now() / 1000, ph = ((c.g && c.g.id) || (b.i || 0)) * 1.7; c.model.position.y += ia * Math.sin(ti * 2.2 + ph) * 0.03; c.model.rotation.z += ia * Math.sin(ti * 0.9 + ph) * 0.03; c.handL.position.y += ia * Math.sin(ti * 2.2 + ph + 0.6) * 0.05; c.handR.position.y += ia * Math.sin(ti * 2.2 + ph + 1.2) * 0.05; c.handL.position.z += ia * Math.sin(ti * 1.3 + ph) * 0.06; c.handR.position.z -= ia * Math.sin(ti * 1.3 + ph) * 0.06; c.head.rotation.y = ia * Math.sin(ti * 0.55 + ph) * 0.35; }
   toonFX(c.model, c.head, c.handL, c.handR, b.walkT, a, run, b.ph || 0, 1 - b.dn, c.footL, c.footR);
+  if (b.dribT > 0 && b.sl < 0 && b.down <= 0) dribPose(c, 1 - b.dribT / 0.5, b.dsd || 1);
   if (b.down > 0 && b._fT == null) { if (b._sl) { b._fT = .64; b._fD = 1.14; } else { b._fT = 0; b._fD = b.down > 100 ? 1e9 : Math.min(b.down + .2, 4); } b._sl = 0; }
   if (b._fT != null) { b._fT += dt; if (toonFall(c, b._fT, b._fD, b.ph || 0)) b._fT = null; }
   const G = b.fgt;
@@ -4767,6 +4852,16 @@ function poseBot(b, dt) {
     c.model.rotation.x -= 0.3 * w; c.model.rotation.z += Math.sin(b.hitT * 50) * 0.22 * w;
   }
 }
+function gkAvoid(b) {   // goleiro com a bola: o destino de cada bot é um ponto fora da zona (ele caminha até lá; ninguém é empurrado)
+  const K = keepers.find(k => k.state === 'hold'); if (!K || !match.on || b.out || ballOwner === b || (match.rs && match.rs.taker === b)) return;
+  const g = K.g.position, R = 26;
+  if (hyp2(b.p.x - g.x, b.p.z - g.z) >= R - 1 && hyp2(b.tgt.x - g.x, b.tgt.z - g.z) >= R) return;
+  let vx = b.p.x - g.x, vz = b.p.z - g.z; const fx = -K.s;
+  if (vx * fx < 0.35 * (hyp2(vx, vz) || 1)) vx = fx * (Math.abs(vx) + 4);   // quem está atrás/ao lado vai para o lado do campo
+  const l = hyp2(vx, vz) || 1;
+  b.tgt.set(clampN(g.x + vx / l * (R + 5), -112, 112), 0, clampN(g.z + vz / l * (R + 5), -70, 70));
+}
+{ const _p0 = plan; plan = function (b) { _p0(b); gkAvoid(b); }; }
 function stepMatch(dt) {
   stepBrawl(dt);
   const pf = match.freeze;
@@ -4790,10 +4885,16 @@ function stepMatch(dt) {
         }
       }
     }
+    if (live && !b.hold && b.down <= 0 && b.sl < 0 && b.esc <= 0 && ballOwner !== b && !(match.rs && match.rs.taker === b)) {   // colado no goleiro: anda até um ponto livre para se ajustar
+      for (const K of keepers) {
+        const kx = b.p.x - K.g.position.x, kz = b.p.z - K.g.position.z, kd = hyp2(kx, kz);
+        if (kd < 4.5) { const l = kd || 1, tz = kz >= 0 ? 1 : -1; b.escX = kx / l * 0.6 + (-K.s) * 0.8; b.escZ = kz / l * 0.6 + tz * 0.5; const m = hyp2(b.escX, b.escZ); b.escX /= m; b.escZ /= m; b.esc = 1.1; b.th = 0; break; }
+      }
+    }
     moveBot(b, dt, live);
     if (b.sl >= 0) slideContact(b);
     // anti-travamento: quer andar mas não sai do lugar → sai de lado
-    if (live && b.down <= 0 && b.sl < 0 && b.esc <= 0) {
+    if (live && !b.hold && b.down <= 0 && b.sl < 0 && b.esc <= 0) {
       b.chk -= dt;
       if (b.chk <= 0) {
         b.chk = 0.4;
@@ -4849,9 +4950,9 @@ function knockBot(b, d) {
 // carrinho do JOGADOR contra um bot: desarme limpo se chegou na bola, falta se pegou o adversário sem a bola
 function userSlideHit(b, d) { if (window.__prog) __prog.slide(); hitAt(b.p, 1.1);
   curse(b); b.ang = (b.ang || 0) + 0.3; U.heat = (U.heat || 0) + 0.6;
-  const bp = ball.position, holds = b === ballOwner, near = hyp2(bp.x - player.position.x, bp.z - player.position.z) < 3.6;
+  const bp = ball.position, holds = b === ballOwner, near = hyp2(bp.x - player.position.x, bp.z - player.position.z) < 1.8;
   if (near) { knockBot(b, d); return; }                                        // chegou na bola → lance normal
-  if (!callFoul(U, b, Math.random() < 0.3)) knockBot(b, d);
+  match.foulCd = 0; if (!callFoul(U, b, Math.random() < 0.5)) knockBot(b, d);
 }
 // pés do jogador em coordenadas do mundo: a bola é pega quando encosta num deles (também entre dois quadros)
 const _fw1 = new THREE.Vector3(), _fw2 = new THREE.Vector3();
@@ -4883,14 +4984,49 @@ function goalReact(b) {
 }
 function ballContest(dt) {
   const bp = ball.position, h = hasBall ? U : ballOwner;
+  dribT = Math.max(0, dribT - dt); dribCd = Math.max(0, dribCd - dt);
+  for (const b of bots) { if (b.dribT > 0) b.dribT -= dt; if (b.dCd > 0) b.dCd -= dt; }
+  stealCd = Math.max(0, stealCd - dt); stealT = Math.max(0, stealT - dt);
+  { const h0 = ballOwner;                                      // encostou em quem está com a bola: jogada automática (finta + bote) pra tentar pegar a bola
+    if (false && h0 && h0.t !== 0 && !hasBall && !U.out && U.down <= 0 && slideT < 0 && stealCd <= 0 && stealPend <= 0 && !(h0.dribT > 0) && h0.down <= 0 && h0.sl < 0 && match.on && goalLock <= 0 && match.freeze <= 0 && !match.rs && dd(player.position, h0.p) < 2.1) {
+      stealCd = 1.8; stealT = 0.55; stealPend = 0.26; stealTgt = h0; stealOk = Math.random() < 0.65; dribSd = Math.random() < 0.5 ? 1 : -1;
+      player.rotation.y = targetRot = Math.atan2(h0.p.x - player.position.x, h0.p.z - player.position.z); punch = 2;
+    }
+    if (stealPend > 0 && (stealPend -= dt) <= 0) {
+      const tg = stealTgt; stealTgt = null;
+      if (tg && ballOwner === tg && !hasBall) {
+        if (stealOk) { steal(U, tg); say(player, 'Roubei!', 1); punch = 3.5; }
+        else { tg.dribT = 0.5; tg.dsd = -dribSd; tg.dCd = 2; tg.v.x += 12 * dribSd; say(tg.g, 'Olé!', 1); vel.multiplyScalar(0.3); }   // errou: ele te dribla
+      }
+    } }
+  { const o = ballOwner;                                       // bots também driblam: marcador colado → finta pro lado oposto (0,5s sem ser desarmado)
+    if (false && o && !hasBall && !o.out && o.sl < 0 && o.down <= 0 && !(o.dCd > 0) && !(o.dribT > 0) && goalLock <= 0 && match.freeze <= 0 && match.on) {
+      let nd = 2.7, ox = 0, oz = 0;
+      for (const q of bots) { if (q.t === o.t || q.out || q.down > 0) continue; const d = dd(q.p, o.p); if (d < nd) { nd = d; ox = q.p.x - o.p.x; oz = q.p.z - o.p.z; } }
+      if (o.t !== 0) { const d = dd(player.position, o.p); if (d < nd && !U.out) { nd = d; ox = player.position.x - o.p.x; oz = player.position.z - o.p.z; } }
+      if (nd < 2.7 && Math.random() < dt * 5) {
+        const hl = hyp2(o.dir.x, o.dir.z) || 1, fx = o.dir.x / hl, fz = o.dir.z / hl, sd = (fz * ox - fx * oz) > 0 ? -1 : 1;
+        o.v.x += fz * sd * 15 + fx * 4; o.v.z += -fx * sd * 15 + fz * 4; o.dribT = 0.5; o.dsd = sd; o.dCd = 2.2 + Math.random() * 1.5;
+      }
+    } }
   if (goalLock > 0 || keeperHeld || match.freeze > 0) return;
   if (h) {                                                    // desarme
     for (const b of bots) {
-      if (b.out || b.t === h.t || b.down > 0 || b.cd > 0 || b.sl >= 0) continue;
-      if (dd(b.p, h.p) < 1.9) { b.tk -= dt; if (b.tk <= 0) { b.tk = 0.7; if (Math.random() < (h.isU ? 0.3 : 0.26)) { steal(b, h); break; } b.cd = 0.35; } }
-      else b.tk = Math.min(b.tk, 0.15);
+      if (b.out || b.t === h.t || b.down > 0 || b.cd > 0 || b.sl >= 0 || (h.isU ? dribT > 0 : h.dribT > 0)) continue;
+      if (dd(b.p, h.p) < 2.1 && !(b.stP > 0)) {              // encostou em quem está com a bola: finta + bote (mesma jogada do jogador)
+        b.stP = 0.26; b.stH = h; b.cd = 1.8; b.rot = Math.atan2(h.p.x - b.p.x, h.p.z - b.p.z); b.kickT = 0;
+        b.v.x += Math.sin(b.rot) * 9; b.v.z += Math.cos(b.rot) * 9; hitAt(b.p, 0.6);
+      }
     }
-  } else if (bp.y < 2.2) {                                    // bola livre: o mais perto pega
+  }
+  for (const b of bots) if (b.stP > 0 && (b.stP -= dt) <= 0) {   // bote: rouba a bola ou toma o drible
+    const h2 = b.stH; b.stH = null;
+    if (h2 && (h2.isU ? hasBall : ballOwner === h2) && !b.out && b.down <= 0) {
+      if (Math.random() < 0.65) { steal(b, h2); takeBall(b); say(b.g, 'Roubei!', 1); }
+      else { if (h2.isU) dribT = 0.5; else { h2.dribT = 0.5; h2.dsd = 1; h2.dCd = 2; h2.v.x += 12; } say(h2.isU ? player : h2.g, 'Olé!', 1); }
+    }
+  }
+  if (!h && bp.y < 2.2) {                                    // bola livre: o mais perto pega
     let w = null, bd = 1.7;
     for (const b of bots) { if (b.out || b.down > 0 || b.cd > 0 || b.sl >= 0) continue; const d = dd(b.p, bp); if (d < bd) { bd = d; w = b; } }
     if (w && hyp2(bv.x, bv.z) < 70) takeBall(w);
@@ -4910,7 +5046,7 @@ function updHud() {
   hT.textContent = teamLabel + ' ' + scoreHome + ' × ' + scoreAway + ' VIS';
   hC.textContent = match.half + 'º T ' + (m >= lim ? lim + '+' + (m - lim + 1) : m) + '′';
   stamI.style.width = stam * 100 + '%'; stamI.style.background = exh ? '#ff5252' : '#4fc3f7';
-  powRow.style.opacity = chgOn ? 1 : 0; powI.style.width = chg * 100 + '%';
+  powRow.style.opacity = chgOn ? 1 : 0; powI.style.width = chg * 100 + '%'; powI.parentNode.classList.toggle('full', chg >= 0.98 && chgOn);
 }
 
 // ---------- impedimento ----------
@@ -4960,8 +5096,13 @@ function setRestart(type, team, x, z, vic) {
   let dx = at, dz = 0;
   if (type === 'throw') { dx = 0; dz = z > 0 ? -1 : 1; } else if (type === 'corner') { dx = -Math.sign(x) * 0.55; dz = -Math.sign(z) * 0.83; }
   const rot = Math.atan2(dx, dz);
-  let tk = vic; if (!tk) { let bd = 1e9; for (const o of TM[team]) { if (o.out || o.down > 0.5) continue; const d = hyp2(o.p.x - x, o.p.z - z); if (d < bd) { bd = d; tk = o; } } }
+  let tk = type === 'throw' ? null : vic; if (!tk) { let bd = 1e9; for (const o of TM[team]) { if (o.out || o.down > 0.5 || (type === 'throw' && o.isU)) continue; const d = hyp2(o.p.x - x, o.p.z - z); if (d < bd) { bd = d; tk = o; } } }
+  if (type === 'ko' && team === 0 && !U.out) tk = U;   // saída de bola do seu time: VOCÊ controla o chute
   if (!tk) return;
+  if (type === 'throw') {   // lateral: o batedor CORRE até a bola enquanto todos os outros param e observam
+    ball.position.set(x, BR, z); bv.set(0, 0, 0); bvy = 0; ballOwner = null; hasBall = false; tk.v.set(0, 0, 0);
+    match.rs = { type, team, taker: tk, t: 0, run: true, pick: team === 0, rot, spot: { x: x - Math.sin(rot) * 1.5, z: z - Math.cos(rot) * 1.5 } }; match.freeze = Math.max(match.freeze, 0.05); return;
+  }
   ball.position.set(x, BR, z); tk.p.set(x - Math.sin(rot) * 1.5, 0, z - Math.cos(rot) * 1.5); tk.v.set(0, 0, 0);
   if (tk.isU) { player.rotation.y = targetRot = rot; hasBall = true; camBehind(rot); }
   else { tk.rot = rot; tk.g.rotation.y = rot; tk.sx = tk.sz = 0; takeBall(tk); tk.th = 99; }
@@ -5125,12 +5266,12 @@ function shoot() {
   let a = aimAngle();
   const K = keepers.find(k => k.s === at), aimZ = (K && K.g.position.z > 0 ? -1 : 1) * GOAL_HALF * 0.62;
   let df = Math.atan2(gx - p.x, aimZ - p.z) - a; while (df > Math.PI) df -= TAU; while (df < -Math.PI) df += TAU;
-  if (Math.abs(df) < 0.65 && Math.abs(gx - p.x) < 95) a += df * 0.72;                       // assistência de mira
-  a += rr(-1, 1) * ((c > 0.88 ? (c - 0.88) * 2.4 : 0.015) + (nearest(TM[1], p)[0] < 4 ? 0.05 : 0));   // força demais = perde precisão
-  let sp = 22 + 46 * c + vel.length() * 0.3, vy = 2 + 6.5 * c * c;
+  if (Math.abs(df) < 0.65 && Math.abs(gx - p.x) < 95) a += df * (0.55 + 0.4 * c);                       // assistência de mira
+  a += rr(-1, 1) * (0.012 + (1 - c) * 0.07 + (nearest(TM[1], p)[0] < 4 ? 0.04 : 0));   // força demais = perde precisão
+  let sp = 20 + 58 * c + vel.length() * 0.3, vy = 1.6 + 5 * c * c;
   if (rs && rs.type === 'throw') { sp = Math.min(sp, 30); vy = Math.max(vy, 5); }
   bv.set(Math.sin(a) * sp, 0, Math.cos(a) * sp); bvy = vy;
-  bcurve = (keys.KeyX ? 1 : 0) * (0.5 + 0.5 * c);
+  bcurve = 0;
   hasBall = false; kickCd = 0.3; match.last = 0; lastToucher = U; kickT = 0; kickDone = true; punch = 2 + 5 * c; player.rotation.y = targetRot = a;
   afterKick(U); spawnDust(ball.position.clone(), 3, 0.25);
 }
@@ -5158,6 +5299,53 @@ function doPass(lob) {
   bv.set(dx / d * sp, 0, dz / d * sp); bvy = vy; hasBall = false; kickCd = 0.3; match.last = 0; lastToucher = U; bcurve = 0;
   match.pass = best ? { to: best, t: 3 } : null; kickT = 0; kickDone = true; player.rotation.y = Math.atan2(dx, dz);
   afterKick(U); spawnDust(ball.position.clone(), 3, 0.25);
+}
+const ballArrow = new THREE.Group(); ballArrow.scale.setScalar(1.2);                          // seta 3D no chão apontando para a bola
+{ const P = { side: THREE.DoubleSide, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 };   // 3D de verdade (fica atrás dos jogadores); polygonOffset evita piscar
+  const Y = new THREE.MeshBasicMaterial(Object.assign({ color: 0xffd600 }, P)), K = new THREE.MeshBasicMaterial(Object.assign({ color: 0x1a1a1a }, P));
+  const mk = (g, m, ro, y) => { const o = new THREE.Mesh(g, m); o.renderOrder = ro; o.position.y = y; return o; };
+  const rO = mk(new THREE.RingGeometry(1.3, 1.95, 40), K, 11, 0.05), rg = mk(new THREE.RingGeometry(1.42, 1.83, 40), Y, 12, 0.06);   // anel fino (igual ao branco) com filete escuro
+  const tri = (w, l) => { const sh = new THREE.Shape(); sh.moveTo(-w, 0); sh.lineTo(w, 0); sh.lineTo(0, l); return new THREE.ShapeGeometry(sh); };   // seta achatada no chão
+  const tO = mk(tri(0.72, 1.2), K, 13, 0.05), tp = mk(tri(0.56, 0.98), Y, 14, 0.06);
+  rO.rotation.x = rg.rotation.x = -Math.PI / 2; tO.rotation.x = tp.rotation.x = Math.PI / 2; tO.position.z = 1.72; tp.position.z = 1.8;
+  ballArrow.add(rO, rg, tO, tp); ballArrow.visible = false; ballArrow.userData.a = 0; ballArrow.userData.mats = [Y, K]; scene.add(ballArrow); }
+const olMat = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.BackSide });   // contorno branco de quem está com a bola (casco invertido)
+function setOutline(root, on) {
+  if (!root) return; const u = root.userData;
+  if (on && !u.olL) { const L = []; root.traverse(m => { if (m.isMesh && !m.userData.ol && m.geometry && m.geometry.type !== 'RingGeometry' && m.material && !m.material.transparent) L.push(m); });
+    u.olL = L.map(m => { const o = new THREE.Mesh(m.geometry, olMat); o.userData.ol = true; o.scale.setScalar(1.1); o.visible = false; m.add(o); return o; }); }
+  if (u.olL && u.olOn !== on) { u.olOn = on; for (const o of u.olL) o.visible = on; }
+}
+const ballIcon = (() => { const cv = document.createElement('canvas'); cv.width = cv.height = 128; const x = cv.getContext('2d');
+  x.beginPath(); x.arc(64, 64, 52, 0, 7); x.fillStyle = '#fff'; x.fill(); x.lineWidth = 8; x.strokeStyle = '#1a1a1a'; x.stroke(); x.font = '70px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('\u26BD', 64, 70);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), depthTest: false, transparent: true })); sp.scale.set(1.35, 1.35, 1); sp.renderOrder = 20; sp.visible = false; scene.add(sp); return sp; })();
+let _olPrev = null;
+const _cdir = new THREE.Vector3(); let carryOn = false, carryAng = 0;
+let dribT = 0, dribCd = 0, dribSd = 1, stealT = 0, stealCd = 0, stealPend = 0, stealTgt = null, stealOk = false;
+function pokePose(c, u, sd) {                                // bote: tronco inclina e a perna estica pra ponta da bola
+  const h = Math.sin(Math.PI * Math.min(1, Math.max(0, (u - 0.25) / 0.5))), f = sd > 0 ? c.footL : c.footR;
+  f.position.z += 1.5 * h; f.position.y += 0.35 * h; c.model.rotation.x += 0.25 * h; c.head.rotation.x += 0.15 * h;
+}
+function dribPose(c, u, sd) {                                // pedalada + finta: corpo balança p/ um lado, foge pro outro, perna passa por cima da bola, braços abertos
+  const o = u < 0.45 ? -sd * 0.4 * Math.sin(Math.PI * u / 0.45) : sd * 0.6 * Math.sin(Math.PI * (u - 0.45) / 0.55), a = Math.sin(Math.PI * Math.min(u * 2, 1)), h = Math.sin(Math.PI * u);
+  for (const q of [c.model, c.head, c.handL, c.handR]) q.position.x += o * 0.35;   // pés e corpo ficam dentro do anel
+  const f = sd > 0 ? c.footR : c.footL; f.position.x -= sd * 1.0 * a; f.position.y += 0.55 * a; f.position.z += 0.9 * a;
+  c.model.position.y += 0.14 * h; c.model.rotation.z += -o * 1.2; c.model.rotation.x += 0.12 * h; c.head.rotation.z += o * 0.5;
+  c.handL.position.x -= 0.5 * h; c.handR.position.x += 0.5 * h; c.handL.position.y += 0.3 * h; c.handR.position.y += 0.3 * h;
+}
+function doDribble() { return;   // drible removido
+                                        // drible de verdade: engana o marcador à frente (ele cai!), custa fôlego; colado demais, ele pode roubar a bola
+  if (!hasBall || slideT >= 0 || !match.on || match.rs || dribCd > 0 || stam < 0.08) return;
+  const p = player.position, fa = player.rotation.y, fx = Math.sin(fa), fz = Math.cos(fa);
+  let sd = Math.random() < 0.5 ? 1 : -1, bd = 3.1, foe = null;
+  for (const o of TM[1]) { if (o.down > 0.3 || o.out) continue; const dx = o.p.x - p.x, dz = o.p.z - p.z, d = hyp2(dx, dz); if (d < bd && (dx * fx + dz * fz) / (d || 1) > 0.2) { bd = d; foe = o; sd = (fz * dx - fx * dz) > 0 ? -1 : 1; } }
+  stam = Math.max(0, stam - 0.1);
+  vel.x += fz * sd * 16 + fx * 5; vel.z += -fx * sd * 16 + fz * 5;
+  dribSd = sd; dribT = 0.5; dribCd = foe ? 1.0 : 1.8; punch = 2; try { spawnDust(p.clone(), 3, 0.25); } catch (_) {}
+  if (foe) {
+    if (bd < 0.9 && Math.random() < 0.4) { dribT = 0; steal(foe, U); }          // tarde demais: ele já estava no bote e rouba
+    else { foe.down = 0.8; foe.cd = Math.max(foe.cd, 1.3); foe.tk = 0; say(foe.g, 'Ai!', 1.1); say(player, 'Drible!', 0.9); punch = 3.5; }   // engana: o marcador cai e fica fora um instante
+  }
 }
 function doChip() {                                          // chapéu: levanta a bola por cima do adversário à frente
   if (!hasBall || slideT >= 0 || !match.on) return;
@@ -5282,7 +5470,7 @@ function stepShout(dt) {
 addEventListener('keyup', e => { if (e.code === 'Space' && chgOn) shoot(); });
 addEventListener('keydown', e => {
   if (menu.mode !== 'play' || intro.on || replay.on || !match.on || e.repeat || match.freeze > 0 || U.out) return;
-  if (e.code === 'KeyV') doPass(true); else if (e.code === 'KeyF') doChip(); else if (e.code === 'KeyE') callBall();
+  if (e.code === 'KeyE') callBall(); else if (e.code === 'KeyG') { CFG.fix = true; }
 });
 
 // ======================================================================
@@ -5451,14 +5639,16 @@ function stepRules(dt) {
     rs.t += dt;
     if (rs.type === 'gk') { if (rs.taker.state !== 'hold') match.rs = null; }
     else if (rs.taker.isU) { if (!hasBall) match.rs = null; else if (rs.t > (rs.type === 'pk' ? 25 : 8)) { if (rs.type === 'pk') penUserShot(0.7); else doPass(false); } }
+    else if (rs.run) rs.t = 0;
     else if (ballOwner !== rs.taker) match.rs = null;
+    else if (rs.pick) rs.t = 0;   // espera você escolher o colega
     else if (rs.t > (rs.type === 'pk' ? 1.2 : 0.4)) botRestart(rs);
   }
   const lim = match.half * HALF_G + match.add * 60;
   if (goalLock <= 0 && !match.brawl && match.gt >= lim && (match.gt >= lim + 40 || (!hasBall && !ballOwner && bp.y < 1.2))) { endHalf(); return; }
   if (goalLock <= 0 && match.freeze <= 0 && !keeperHeld) {
     const ax = Math.abs(bp.x), az = Math.abs(bp.z), sx = Math.sign(bp.x) || 1, sz = Math.sign(bp.z) || 1, L = match.last < 0 ? 0 : match.last;
-    if (az > LINE_Z + 0.3) { bp.z = sz * (LINE_Z - 0.4); bv.z = -sz * Math.abs(bv.z) * 0.6; }   // sem lateral: a bola volta ao campo
+    if (az > LINE_Z + 0.3) { let th_ = false; if (match.on && !match.rs && !match.brawl && !replay.on) { setRestart('throw', 1 - L, clampN(bp.x, -(GOAL_LINE - 10), GOAL_LINE - 10), sz * (LINE_Z - 0.3)); th_ = !!match.rs; } if (!th_) { bp.z = sz * (LINE_Z - 0.4); bv.z = -sz * Math.abs(bv.z) * 0.6; } }   // bola saiu pela lateral: reposição (se falhar, volta ao campo)   // sem lateral: a bola volta ao campo
     else if (ax > GOAL_LINE + 0.3 && !(az < GOAL_HALF && bp.y < GOAL_H)) { bp.x = sx * (GOAL_LINE - 0.4); bv.x = -sx * Math.abs(bv.x) * 0.6; }   // sem escanteio nem tiro de meta: a bola volta ao campo
 
   }
@@ -5501,7 +5691,7 @@ function matchSetup() {
   eOx = eOy = 0; eyes.forEach((m, i) => { if (!EYES[i]) return; const pl = eyePlacement(EYES[i][0], EYES[i][1]); m.position.copy(pl.pos); m.quaternion.copy(pl.quat); });
   buildBots(); hardBots(); restoreMembers(); buildTags();
   scoreHome = 0; scoreAway = curMode === 'zebra' ? 2 : 0; drawScoreboard(true);
-  match.on = true; match.last = -1; match.foulCd = 0; match.slideG = 0; U.cards = 0; U.heat = 0; U.out = false; U.exit = null; U.down = 0; player.visible = true; exiters.length = 0;
+  match.on = true; match.last = -1; match.foulCd = 0; match.slideG = 0; match.uF = match.uY = match.uR = 0; U.cards = 0; U.heat = 0; U.out = false; U.exit = null; U.down = 0; player.visible = true; exiters.length = 0;
   Object.assign(match, { gt: 0, half: 1, add: 1 + Math.floor(Math.random() * 3), over: false, rs: null, offL: null, ending: 0, conc: 0, brawl: null, brawlCd: 25, angT: 0 }); stam = 1; exh = false; chgOn = false; bcurve = 0; $('endBox').style.display = 'none';
   for (const b of bots) { b.out = false; b.cards = 0; b.down = 0; }
   ref.card = null; ref.cardWho = null; ref.cy.scale.setScalar(0.0001); ref.cr.scale.setScalar(0.0001);
@@ -5623,8 +5813,8 @@ function finishIntro() {
   camera.fov = 38; camera.updateProjectionMatrix(); fov = 38;
   for (const k in keys) keys[k] = false;
   kickoff();
-  theta = targetTheta = -Math.PI / 2; phi = targetPhi = 1.3; dist = targetDist = 13;
-  camTarget.copy(player.position); camTarget.y += 1.4;
+  theta = targetTheta = 0; phi = targetPhi = 0.86; dist = targetDist = 50; window._fixZ = 1;
+  camTarget.set((player.position.x + ball.position.x) / 2, 1.5, (player.position.z + ball.position.z) / 2);
 }
 function skipIntro() { if (!intro.on || intro.fin) return; intro.fin = true; stopAnthem(); fadeTo(finishIntro); }
 addEventListener('keydown', e => { if (intro.on && (e.code === 'Enter' || e.code === 'Escape')) { e.preventDefault(); skipIntro(); } }, true);
@@ -5839,7 +6029,7 @@ const carrierRing = new THREE.Mesh(new THREE.RingGeometry(1.0, 1.25, 48).rotateX
 carrierRing.position.y = 0.07; carrierRing.renderOrder = 5; carrierRing.visible = false; scene.add(carrierRing);
 function updRing() {
   const p = hasBall && player.visible ? player.position : ballOwner && ballOwner.g.visible ? ballOwner.p : null;
-  carrierRing.visible = !!p && match.on && !intro.on && !document.body.classList.contains('replay');
+  carrierRing.visible = false;
   if (p) { carrierRing.position.x = p.x; carrierRing.position.z = p.z; const k = 1 + Math.sin(performance.now() / 160) * 0.06; carrierRing.scale.set(k, 1, k); }
 }
 let eOx = 0, eOy = 0;
@@ -6056,7 +6246,14 @@ function animate() {
     if (keys.KeyD || keys.ArrowRight) dir.add(right);
     if (keys.KeyA || keys.ArrowLeft)  dir.sub(right);
     if (joy.m > 0) { dir.addScaledVector(fwd, joy.y); dir.addScaledVector(right, joy.x); }   // joystick analógico (celular)
-    if (match.freeze > 0 || penAimOn()) dir.set(0, 0, 0);          // pênalti: você fica parado e só mira
+    if (match.freeze > 0 || penAimOn()) dir.set(0, 0, 0);
+    const gkL_ = !!window.__gkOn && match.on;
+    if (gkL_) {                                                 // controles travados: o boneco caminha sozinho para uma posição aberta
+      dir.set(0, 0, 0); chgOn = false;
+      const hk_ = keepers.find(K => K.state === 'hold');
+      if (hk_) { const sx_ = hk_.s; window.__gkTx = Math.abs(player.position.x - sx_ * GOAL_LINE) > 44 ? player.position.x : sx_ * (GOAL_LINE - 44); window.__gkTz = Math.max(-30, Math.min(30, player.position.z)); }
+      if (window.__gkTx != null) { const gx_ = window.__gkTx - player.position.x, gz_ = window.__gkTz - player.position.z, gd_ = hyp2(gx_, gz_); if (gd_ > 1.5) dir.set(gx_ / gd_, 0, gz_ / gd_); }
+    }          // pênalti: você fica parado e só mira
     const uf = U.fgt; let scr = false;                          // briga: o jogo conduz o seu jogador (vai até o adversário / recua)
     if (uf && match.on) { const fx = uf.tx - player.position.x, fz = uf.tz - player.position.z, fd = hyp2(fx, fz); if (fd > 0.15 && uf.sp > 0) { dir.set(fx / fd, 0, fz / fd); scr = true; } }
     if (U.out) {                                                // expulso: sai andando do campo, sem controle
@@ -6070,8 +6267,8 @@ function animate() {
       else { punchT += dt; if (!punchLanded && punchT > 0.12) { punchLanded = true; userPunchHit(); } if (punchT > 0.3) { punchT = -1; punchCd = 0.25; } }
     }
     const moving = dir.lengthSq() > 0;
-    const running = !U.out && (scr || ((keys.KeyQ || keys.ShiftLeft || keys.ShiftRight || joy.s) && !(match.on && exh)));
-    const lockU = match.on && match.rs && match.rs.taker === U && match.freeze <= 0;
+    const running = !U.out && !gkL_ && (scr || ((keys.KeyQ || keys.ShiftLeft || keys.ShiftRight || joy.s) && !(match.on && exh)));
+    const lockU = match.on && match.rs && ((match.rs.taker === U && match.freeze <= 0) || match.rs.type === 'throw');
     if (match.on) { if (running && moving && !lockU) stam = Math.max(0, stam - dt * 0.14); else stam = Math.min(1, stam + dt * (moving ? 0.1 : 0.22)); if (stam <= 0) exh = true; else if (stam > 0.3) exh = false; }
 
     // gira o corpo primeiro e só anda para onde ele já está virado (antes deslizava de costas = moonwalk)
@@ -6081,8 +6278,8 @@ function animate() {
       let angleDiff = targetRot - player.rotation.y;
       while (angleDiff < -Math.PI) angleDiff += TAU;
       while (angleDiff > Math.PI) angleDiff -= TAU;
-      player.rotation.y += angleDiff * Math.min(1, dt * 11);
-      turnF = THREE.MathUtils.clamp(Math.cos(angleDiff) * 1.6 + 0.35, 0, 1);
+      player.rotation.y += angleDiff * Math.min(1, dt * 24);
+      turnF = THREE.MathUtils.clamp(Math.cos(angleDiff) * 1.2 + 0.8, 0.6, 1);
     }
     if (uf && match.on && !scr && uf.face) {                    // parado na briga: encara o adversário
       let fa = Math.atan2(uf.face.p.x - player.position.x, uf.face.p.z - player.position.z) - player.rotation.y;
@@ -6092,7 +6289,7 @@ function animate() {
     const wish = _wish.set(0, 0, 0);
     if (moving && !lockU) wish.copy(dir).normalize().multiplyScalar((running ? RUN : WALK) * turnF * (U.out ? 0.55 : 1) * (joy.m > 0 && !running ? Math.min(1, 0.4 + joy.m * 0.7) : 1));
     const dv = wish.sub(vel);
-    const accel = (moving ? (running ? 65 : 75) : 85) * (moving && vel.dot(dir) < 0 ? 1.8 : 1);   // freia rápido ao inverter
+    const accel = (moving ? (running ? 120 : 140) : 150) * (moving && vel.dot(dir) < 0 ? 2 : 1);   // freia rápido ao inverter
     const dl = dv.length();
     if (dl > accel * dt) dv.multiplyScalar(accel * dt / dl);
     vel.add(dv);
@@ -6193,6 +6390,8 @@ function animate() {
     }
 
     model.rotation.y = 0;
+    if (dribT > 0 && slideT < 0) dribPose(uSlideCh, 1 - dribT / 0.5, dribSd);
+    if (stealT > 0 && slideT < 0) { const us = 1 - stealT / 0.55; dribPose(uSlideCh, us, dribSd); pokePose(uSlideCh, us, dribSd); }
     if (kickT >= 0) {                                           // corpo acompanha o chute: tronco inclina, braços balançam, cabeça olha a bola
       model.rotation.x += kLean; model.rotation.y = kLean * 0.5;
       { const u2 = Math.min(kickT / 0.38, 1), ky2 = u2 < .45 ? -.08 * (u2 / .45) : u2 < .65 ? -.08 + .22 * ((u2 - .45) / .2) : .14 * (1 - (u2 - .65) / .35), kx2 = 1 / Math.sqrt(1 + ky2);   // toon: agacha, estica no chute, volta
@@ -6289,14 +6488,18 @@ function animate() {
     const isIdleBall = hasBall && (1 - amp) > 0.5;
     const idleRestAmp = isIdleBall ? (1 - amp) : 0;
 
+    if (!(hasBall && !ballOwner && slideT < 0)) carryOn = false;
     if (ballOwner) { botCarry(dt); userPoke(dt, sp); }
     else if (hasBall && slideT < 0) {
+      if (!carryOn) { carryOn = true; carryAng = Math.atan2(bp.x - player.position.x, bp.z - player.position.z); }   // ao pegar, a bola começa de onde está (sem pular)
+      { let da = player.rotation.y - carryAng; da = ((da + Math.PI) % TAU + TAU) % TAU - Math.PI; carryAng += da * Math.min(1, dt * 16); }   // e gira ao redor do jogador pelo caminho curto
+      const cDir = _cdir.set(Math.sin(carryAng), 0, Math.cos(carryAng));
       let targetBallPos;
       if (idleRestAmp > 0.5) {
-        targetBallPos = _tbp.copy(player.position).addScaledVector(playerDir, 0.70 * CHAR_SCALE + BR);
+        targetBallPos = _tbp.copy(player.position).addScaledVector(cDir, 0.70 * CHAR_SCALE + BR);
         targetBallPos.y = BR;
       } else {
-        targetBallPos = _tbp.copy(player.position).addScaledVector(playerDir, 1.25 * CHAR_SCALE + BR + 0.2);
+        targetBallPos = _tbp.copy(player.position).addScaledVector(cDir, 1.25 * CHAR_SCALE + BR + 0.2);
         targetBallPos.y = BR + Math.abs(Math.sin(walkT * 2)) * 0.08 * amp;
       }
 
@@ -6323,9 +6526,9 @@ function animate() {
       }
 
       const fd = footSweep(bp, ballLast);                       // distância da bola até o pé mais próximo (com varredura entre quadros)
-      if (!U.out && (d < (1.6 * CHAR_SCALE + BR + 0.3) || fd < 1.25 || (GKM && d < 2.7)) && lowY < (GKM ? 4.4 : 2.6) && goalLock <= 0 && (slideT < 0 || GKM) && kickCd <= 0 && !keeperHeld && !ballOwner && match.freeze <= 0) {
+      if (!U.out && (d < (1.6 * CHAR_SCALE + BR + 0.3 + 0.6) || fd < 1.5 || (GKM && d < 2.7)) && lowY < (GKM ? 4.4 : 2.6) && goalLock <= 0 && (slideT < 0 || GKM) && kickCd <= 0 && !keeperHeld && !ballOwner && match.freeze <= 0) {
         const bsp = hyp2(bv.x, bv.z);
-        if (match.on && bsp > 62 && !keys.Space) { bv.x *= 0.4; bv.z *= 0.4; bvy = Math.max(bvy, 2.5); kickCd = 0.22; lastToucher = U; match.last = 0; }   // bola forte demais: dominou mal
+        if (match.on && bsp > 80 && !keys.Space) { bv.x *= 0.4; bv.z *= 0.4; bvy = Math.max(bvy, 2.5); kickCd = 0.22; lastToucher = U; match.last = 0; }   // bola forte demais: dominou mal
         else if (match.on && touchOff(U)) { }
         else { if (bsp > 14) spawnDust(bp.clone(), 2, 0.2); hasBall = true; lastToucher = U; if (match.on) match.last = 0; }   // domina a bola no primeiro toque
       }
@@ -6385,9 +6588,17 @@ function animate() {
 
   if (!replay.on) recordFrame(dt);
 
+  { const ax = ball.position.x - player.position.x, az = ball.position.z - player.position.z, ad = hyp2(ax, az), A = ballArrow.userData,
+      sh = menu.mode === 'play' && match.on && !intro.on && !replay.on && !U.out && !match.rs && (hasBall || ad > 3);
+    A.a += ((sh ? 1 : 0) - A.a) * Math.min(1, dt * 8); ballArrow.visible = A.a > 0.03;                          // some/aparece suave (sem piscar)
+    if (ballArrow.visible) { ballArrow.position.set(player.position.x, 0.03, player.position.z); if (hasBall) ballArrow.rotation.y = player.rotation.y; else if (ad > 0.01) ballArrow.rotation.y = Math.atan2(ax, az); for (const m of A.mats) m.opacity = A.a * 0.95; }
+    const hb = menu.mode === 'play' && match.on && !replay.on ? (hasBall ? player : (ballOwner ? ballOwner.g : null)) : null;   // quem está com a bola: contorno branco + ícone de bola
+    if (hb !== _olPrev) { if (_olPrev) setOutline(_olPrev, false); if (hb) setOutline(hb, true); _olPrev = hb; }
+    ballIcon.visible = !!hb; if (hb) ballIcon.position.set(hb.position.x, 4.5 + Math.sin(performance.now() / 220) * 0.15, hb.position.z); }
   // Câmera
   const dampK = 1 - Math.exp(-12 * dt);
-  if (goalLock > 0 && sp < 1) targetTheta += dt * 0.4;     // câmera orbita na comemoração
+  if (!CFG.fix && goalLock > 0 && sp < 1) targetTheta += dt * 0.4;     // câmera orbita na comemoração
+  if (CFG.fix && menu.mode === 'play' && match.on && !intro.on && !replay.on && !match.brawl && !(U.out && U.exit && U.exit.done)) { targetTheta = 0; targetPhi = 0.86; window._fixZ = 1; targetDist = 50; }   // câmera fixa: visão de TV lateral (seu time ataca para a direita; W = para cima na tela): ângulo travado atrás/acima, só segue o jogador (zoom continua livre)
   theta += (targetTheta - theta) * dampK;
   phi += (targetPhi - phi) * dampK;
   dist += (targetDist - dist) * dampK;
@@ -6413,22 +6624,40 @@ function animate() {
   camera.updateProjectionMatrix();
   head.visible = fpMix < 0.5;                                // cabeça some na 1ª pessoa (vê do tronco pra baixo)
 
+  { const hk0 = keepers.some(K => K.state === 'hold');            // goleiro com a bola: controles travam; câmera vai no goleiro, depois na bola, depois volta pro jogador
+    if (!match.on || replay.on) window.__gkOn = 0;
+    else if (hk0) { window.__gkOn = 1; window.__gkRel = 0; }
+    else if (window.__gkOn) { window.__gkRel += dt; if (window.__gkRel > 1.4) window.__gkOn = 0; } }
   const desiredTarget = _camT.copy(player.position); desiredTarget.y += 1.5;
   desiredTarget.x += lkX * lkc; desiredTarget.z += lkZ * lkc;
+  if (!CFG.fix) window._fixZ = 0;
+  if (CFG.fix && match.on && (!match.rs || match.rs.type === 'ko') && !intro.on && !replay.on) { const fx_ = ball.position.x - player.position.x, fz_ = ball.position.z - player.position.z, fl_ = hyp2(fx_, fz_), k_ = (match.rs && match.rs.type === 'ko') ? 1 : (fl_ > 0.1 ? Math.min(0.2 * fl_, 10) / fl_ : 0); desiredTarget.x += fx_ * k_; desiredTarget.z += fz_ * k_; }   // câmera fixa enquadra jogador + bola (não precisa ficar perseguindo)
+  if (match.on && !replay.on && !intro.on) {
+    const hk = keepers.find(K => K.state === 'hold');
+    if (hk) desiredTarget.set(hk.g.position.x, 1.5, hk.g.position.z);
+    else if (window.__gkOn && window.__gkRel < 0.8) desiredTarget.set(ball.position.x, 1.2, ball.position.z);
+    else if (match.rs && (match.rs.type === 'throw' || match.rs.type === 'corner')) desiredTarget.set(ball.position.x, 1.2, ball.position.z);   // lateral/escanteio: foco na bola, câmera na posição original
+  }
+  let fixZoom_ = 1;                                                    // câmera FIFA: não acompanha 100% a lateral, só o suficiente para manter o jogador sempre no quadro
+  if (CFG.fix && match.on && !intro.on && !replay.on) {
+    const pz_ = desiredTarget.z, tz_ = pz_ * 0.7 + 3.5;                 // +3.5: o jogador aparece um pouco mais alto na tela (longe dos botões)
+    desiredTarget.z = tz_; desiredTarget.x = Math.max(-100, Math.min(100, desiredTarget.x));
+    fixZoom_ = 1 + Math.min(0.5, Math.abs(pz_ - tz_) / 42);              // perto da lateral afasta a câmera (abre o campo)
+  }
   if (U.out && U.exit && U.exit.done) desiredTarget.set(ball.position.x, 1.4, ball.position.z);   // expulso: assiste o jogo
   if (match.brawl && match.brawl.ph !== 'reset') desiredTarget.set(match.brawl.cx, 1.5, match.brawl.cz);   // câmera vai pra briga
   if (camCut) desiredTarget.copy(camCut);
-  camTarget.lerp(desiredTarget, 1 - Math.exp(-10 * dt));
+  camTarget.lerp(desiredTarget, 1 - Math.exp(-(CFG.fix ? 7 : 10) * dt));
 
-  const dEff = dist * (1 + 0.07 * runAmp);                   // afasta um pouco ao correr
+  const dEff = fixZoom_ * dist * (1 + 0.07 * runAmp) * (CFG.fix && match.on ? 1.05 + Math.min(0.25, hyp2(ball.position.x - player.position.x, ball.position.z - player.position.z) / 90) : 1);                   // afasta um pouco ao correr
   camPos.set(
     camTarget.x + dEff * Math.sin(phi) * Math.sin(theta),
     camTarget.y + dEff * Math.cos(phi),
     camTarget.z + dEff * Math.sin(phi) * Math.cos(theta)
   );
 
-  camPos.x = Math.max(-CAM_X, Math.min(CAM_X, camPos.x));
-  camPos.z = Math.max(-CAM_Z, Math.min(CAM_Z, camPos.z));
+  { const cx_ = CFG.fix ? CAM_X + 45 : CAM_X, cz_ = CFG.fix ? CAM_Z + 70 : CAM_Z;   // câmera fixa: sem trava na lateral (era o que fazia o jogador sumir)
+    camPos.x = Math.max(-cx_, Math.min(cx_, camPos.x)); camPos.z = Math.max(-cz_, Math.min(cz_, camPos.z)); }
   camPos.y = Math.max(0.9, camPos.y);
   _fpL.copy(camTarget);
   if (fpMix > 0) {
@@ -6443,6 +6672,28 @@ function animate() {
     const k = shake * (1 - 0.7 * fe);
     camPos.x += (Math.random() - .5) * k; camPos.y += (Math.random() - .5) * k; camPos.z += (Math.random() - .5) * k;
     shake *= Math.exp(-5 * dt);
+  }
+  { const R_ = ref, W_ = false && R_.card && R_.cardWho && match.on && !replay.on, fk0 = window.__fcK || 0;   // cena do cartão: câmera FIXA (calculada uma vez), baixa, de lado e longe dos jogadores
+    const fk = fk0 + ((W_ && R_.cardT > 0.15 ? 1 : 0) - fk0) * Math.min(1, dt * 3); window.__fcK = fk;
+    let bars = document.getElementById('fcBars');
+    if (!bars) { bars = document.createElement('div'); bars.id = 'fcBars'; bars.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:5'; document.body.appendChild(bars); }
+    bars.style.boxShadow = fk > 0.01 ? 'inset 0 ' + (fk * 11) + 'vh 0 0 #000, inset 0 -' + (fk * 11) + 'vh 0 0 #000' : 'none';
+    if (!W_ && fk < 0.02) window.__fcSet = null;
+    if (W_ && !window.__fcSet) {
+      const w = R_.cardWho.p, rp = R_.p, mx = (w.x + rp.x) / 2, mz = (w.z + rp.z) / 2, dx = rp.x - w.x, dz = rp.z - w.z, dl = hyp2(dx, dz) || 1;
+      let best = null, bs = -1;
+      for (const sg of [1, -1]) for (const dist of [13, 17]) {
+        const px = clampN(mx - dz / dl * dist * sg, -BX, BX), pz = clampN(mz + dx / dl * dist * sg, -BZ, BZ); let m = 99;
+        for (const o of bots) if (!o.out) m = Math.min(m, hyp2(o.p.x - px, o.p.z - pz));
+        m = Math.min(m, hyp2(player.position.x - px, player.position.z - pz));
+        const sc = Math.min(m, 8) - dist * 0.05; if (sc > bs) { bs = sc; best = [px, pz]; }
+      }
+      window.__fcSet = { p: new THREE.Vector3(best[0], 3.4, best[1]), l: new THREE.Vector3(mx, 2.3, mz) };
+    }
+    if (fk > 0.01 && window.__fcSet) {
+      camera.position.lerpVectors(camPos, window.__fcSet.p, fk); camera.fov = 40 + (camera.fov - 40) * (1 - fk); camera.updateProjectionMatrix();
+      _fpL.lerp(window.__fcSet.l, fk); camera.lookAt(_fpL); updateTags(dt); stepShout(dt); stepBubs(dt); stepAim(); stepFans(dt); sfxStep(dt); renderer.render(scene, camera); return;
+    }
   }
   camera.position.copy(camPos);
   camera.lookAt(_fpL); updateTags(dt); stepShout(dt); stepBubs(dt); stepAim(); stepFans(dt); sfxStep(dt);
@@ -6826,7 +7077,7 @@ if (IS_MOBILE) (function () {
   zone.addEventListener('pointerup', jup); zone.addEventListener('pointercancel', jup); zone.addEventListener('lostpointercapture', jup);
 
   const pos = (r, b, s) => 'right:calc(env(safe-area-inset-right,0px) + 2vw + ' + r + 'vh);bottom:calc(env(safe-area-inset-bottom,0px) + 3vh + ' + b + 'vh);width:' + s + 'vh;height:' + s + 'vh;font-size:' + Math.max(2.2, s * 0.19).toFixed(1) + 'vh';
-  const TBI = { Space: 'fa-futbol', KeyV: 'fa-arrow-up-right-dots', KeyF: 'fa-feather', KeyC: 'fa-person-falling', KeyQ: 'fa-bolt', KeyR: 'fa-clock-rotate-left', KeyE: 'fa-hand', KeyZ: 'fa-hand-fist', KeyX: 'fa-rotate', KeyT: 'fa-people-arrows' };
+  const TBI = { Space: 'fa-futbol', KeyV: 'fa-arrow-up-right-dots', KeyF: 'fa-feather', KeyB: 'fa-shuffle', KeyG: 'fa-video', KeyC: 'fa-person-falling', KeyQ: 'fa-bolt', KeyR: 'fa-clock-rotate-left', KeyE: 'fa-hand', KeyZ: 'fa-hand-fist', KeyX: 'fa-rotate', KeyT: 'fa-people-arrows' };
   const mkBtn = (label, code, kind, css, cls) => {
     const b = mk('div', '', tc); b.className = 'tb ' + (cls || ''); b.innerHTML = '<span class="tbi"><i class="fa-solid ' + (TBI[code] || 'fa-circle') + '"></i><small>' + label + '</small></span>'; b.style.cssText = css;
     let on = false;
@@ -6839,6 +7090,7 @@ if (IS_MOBILE) (function () {
   mkBtn('CHUTE', 'Space', 'hold', pos(1, 2, 21), 'big');
   mkBtn('CARRINHO', 'KeyC', 'tap', pos(24, 3, 14));
   mkBtn('PEDIR', 'KeyE', 'tap', pos(4, 25, 14));
+  mkBtn('CÂMERA', 'KeyG', 'tap', pos(39, 19, 14));
   mkBtn('TROCAR', 'KeyT', 'tap', pos(24, 19, 14));
   const pz = mk('div', 'tcPause', tc); pz.className = 'tb'; pz.innerHTML = '<i class="fa-solid fa-pause"></i>';
   pz.style.cssText = 'left:calc(env(safe-area-inset-left,0px) + 2vw);top:calc(env(safe-area-inset-top,0px) + 2vh);width:9vh;height:9vh;font-size:3.4vh;opacity:.85';
@@ -6859,7 +7111,7 @@ if (IS_MOBILE) (function () {
     const t = tp.get(e.pointerId); if (!t) return; e.preventDefault();
     const dx = e.clientX - t.x, dy = e.clientY - t.y; t.x = e.clientX; t.y = e.clientY;
     if (tp.size === 1) { targetTheta -= dx * 0.0055 * CFG.sens; targetPhi = clampPhi(targetPhi - dy * 0.0055 * CFG.sens * CFG.inv); }
-    else if (tp.size === 2) { const d = pdist(); targetDist = Math.min(Math.max(targetDist * pd / d, CAM_MIN), CAM_MAX); pd = d; }
+    else if (tp.size === 2 && !CFG.fix) { const d = pdist(); targetDist = Math.min(Math.max(targetDist * pd / d, CAM_MIN), CAM_MAX); pd = d; }
   });
   const cup = e => { tp.delete(e.pointerId); if (tp.size === 1) pd = 0; };
   cv.addEventListener('pointerup', cup); cv.addEventListener('pointercancel', cup);
@@ -6912,6 +7164,81 @@ addEventListener('resize', () => {
 });
 </script>
 <script>
+// ===== EFEITOS: anel animado, stamina 3D nos pés, troca realista =====
+let fxWave = 0, fxRp = 0, fxHad = false, fxT = 0;
+const fxBlue = 0x4fc3f7;
+(function () {
+  posRingMat.color.set(fxBlue);
+  const mk = (geo, y) => { const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: fxBlue, side: THREE.DoubleSide, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending })); m.rotation.x = -Math.PI / 2; m.position.set(0, y, posRing.position.z); player.add(m); return m; };
+  window.fxGlow = mk(new THREE.RingGeometry(1.2, 1.95, 40), 0.016);
+  window.fxWaveM = mk(new THREE.RingGeometry(1.5, 1.68, 40), 0.02);
+  window.fxArcs = [0, 1, 2].map(i => mk(new THREE.RingGeometry(1.68, 1.95, 20, 1, 0, 0.9), 0.022 + i * 0.002));
+})();
+const stBars = new Map();
+const stGeo = new Map();
+function stArc(step) {   // arco 0..50 (cache): mesmo desenho do anel do jogador, esvaziando como barra
+  let g = stGeo.get(step); if (!g) { g = new THREE.RingGeometry(1.42, 1.83, 48, 1, Math.PI / 2, Math.max(0.001, step / 50 * Math.PI * 2)); stGeo.set(step, g); } return g;
+}
+function stBar(k) {
+  let o = stBars.get(k); if (o) return o;
+  const P = { side: THREE.DoubleSide, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 };
+  const g = new THREE.Group(), tr = new THREE.Mesh(new THREE.RingGeometry(1.3, 1.95, 48), new THREE.MeshBasicMaterial(Object.assign({ color: 0x1a1a1a, opacity: 0.95 }, P)));   // contorno escuro igual ao do jogador
+  const fl = new THREE.Mesh(stArc(50), new THREE.MeshBasicMaterial(Object.assign({ color: 0x3fa9f5, opacity: 0.95 }, P))); fl.position.y = 0.004;
+  g.rotation.x = -Math.PI / 2; tr.renderOrder = 11; fl.renderOrder = 12; g.add(tr, fl); scene.add(g);
+  return (o = { g, fl, tr, st: 50, a: 1, p: null }, stBars.set(k, o), o);
+}
+function stSet(k, p, val, col, vis, r, al) {
+  const o = stBar(k); o.g.visible = vis; if (!vis) return; o.p = p;
+  o.g.position.set(p.x, 0.05, p.z); o.g.scale.setScalar(r);
+  if (al !== undefined) { o.a += (al - o.a) * 0.3; o.tr.material.opacity = o.fl.material.opacity = 0.95 * o.a; }
+  const st = Math.round(Math.max(0, Math.min(1, val)) * 50); if (st !== o.st) { o.st = st; o.fl.geometry = stArc(st); }
+  o.fl.material.color.set(val < 0.25 ? 0xff6b6b : col);
+}
+let _rgK = -1;
+function fxFrame(dt) {
+  posRing.visible = false;   // anel branco antigo substituído pelo anel azul do jogo
+  const show = match.on && !intro.on && !cel.on;
+  { // anel do jogador (azul) = stamina; seta amarela, branca quando está com a bola
+    const rg = ballArrow.children[1], tp = ballArrow.children[3];
+    if (!rg.userData.blue) { rg.userData.blue = 1; rg.material = rg.material.clone(); ballArrow.userData.mats.push(rg.material); }
+    rg.material.color.set(stam < 0.25 ? 0xff6b6b : 0x3fa9f5);
+    tp.material.color.set(0xffffff); tp.material = tp.material.userData.w ? tp.material : (() => { const m = tp.material.clone(); m.userData.w = 1; ballArrow.userData.mats.push(m); return m; })();
+    tp.material.color.set(0xffd600); ballArrow.children[2].visible = tp.visible = !hasBall;
+    const k = Math.round(Math.max(0, Math.min(1, stam)) * 50);
+    if (k !== _rgK) { _rgK = k; const g = new THREE.RingGeometry(1.42, 1.83, 48, 1, Math.PI / 2, Math.max(0.001, k / 50 * Math.PI * 2)); rg.geometry.dispose(); rg.geometry = g; }
+  }
+  for (let bi = 0; bi < bots.length; bi++) {
+    const b = bots[bi];
+    if (b.stm === undefined) b.stm = 1;
+    let sp0 = b._lx === undefined || dt <= 0 ? 0 : Math.hypot(b.p.x - b._lx, b.p.z - b._lz) / dt; b._lx = b.p.x; b._lz = b.p.z;
+    if (sp0 > 40 || replay.on) sp0 = b._sp || 0; b._sp = (b._sp || 0) + (sp0 - (b._sp || 0)) * Math.min(1, dt * 6);
+    const sp = b._sp;
+    b.stm = b.exh ? Math.min(1, b.stm + dt * 0.12) : sp > 8 ? Math.max(0, b.stm - dt * Math.min(1.3, (sp - 8) / 10) * 0.12) : Math.min(1, b.stm + dt * 0.2);
+    if (b.stm <= 0.05) b.exh = true; else if (b.stm > 0.35) b.exh = false;   // cansado: para de correr até recuperar
+    stSet(b.num + '_' + b.t, b.p, b.stm, b.t ? 0xffb74d : 0x3fa9f5, show && b.g.visible && !b.out, 1.05, Math.hypot(b.p.x - player.position.x, b.p.z - player.position.z) < 3.1 || ringTouch(bi) ? 0.12 : 1);
+  }
+}
+function ringTouch(i) {   // anéis encostando: um dos dois (o de índice maior) fica transparente
+  const b = bots[i]; if (b.out) return false;
+  for (let j = 0; j < i; j++) { const o = bots[j]; if (!o.out && Math.hypot(b.p.x - o.p.x, b.p.z - o.p.z) < 4.2) return true; }
+  return false;
+}
+const _rnd = renderer.render.bind(renderer);
+renderer.render = function (sc, cam) { if (sc === scene) for (const o of stBars.values()) if (o.p && o.g.visible) o.g.position.set(o.p.x, 0.05, o.p.z); return _rnd(sc, cam); };
+
+// troca realista: o controle vai pro companheiro e a aparência (camisa/pele) acompanha, então não há "teleporte" visível
+(function L(n) { requestAnimationFrame(L); const dt = Math.min(0.05, (n - (L.t || n)) / 1000); L.t = n; try { fxFrame(dt); } catch (_) {} })(0);
+const swStack = [];
+const _fcP = new THREE.Vector3(), _fcL = new THREE.Vector3();
+function swLook(b, rec = true) {
+  const uf = body.children[0].material, bf = b.m.body.children[0].material, t = uf.map; uf.map = bf.map; bf.map = t; uf.needsUpdate = bf.needsUpdate = true;
+  const A = { head, handL, handR }, B = { head: b.m.head, handL: b.m.handL, handR: b.m.handR };
+  for (const k in A) { const ca = A[k].children[0].material.color, cb = B[k].children[0].material.color, h = ca.getHex(); ca.setHex(cb.getHex()); cb.setHex(h); }
+  const la = members[USER_SLOT].lab, lb = b.m.lab, tx = la.textContent; la.textContent = lb.textContent; lb.textContent = tx;
+  if (rec) swStack.push(b);
+}
+function swReset() { while (swStack.length) swLook(swStack.pop(), false); }
+const _rmOrig = restoreMembers; restoreMembers = function () { try { swReset(); } catch (_) {} return _rmOrig.apply(this, arguments); };
 // ===== TROCAR DE JOGADOR: passa o controle para o companheiro mais perto da bola (tecla T ou TAB) =====
 let swCd = 0;
 function swToast(t) { const el = document.getElementById('swToast'); el.textContent = t; el.style.opacity = 1; clearTimeout(swToast.t); swToast.t = setTimeout(() => { el.style.opacity = 0; }, 1200); }
@@ -6921,7 +7248,7 @@ function swapPlayer() {
   const bp = ball.position; let best = null, bd = 1e9;
   for (const b of bots) { if (b.t !== 0 || b.out || b.down > 0 || b.sl >= 0 || b.fgt) continue; const d = Math.hypot(b.p.x - bp.x, b.p.z - bp.z); if (d < bd) { bd = d; best = b; } }
   if (!best || bd >= Math.hypot(player.position.x - bp.x, player.position.z - bp.z) - 1) { swToast('Você já é o mais próximo'); return; }
-  swCd = performance.now() + 350;
+  swCd = performance.now() + 350; swLook(best); fxWave = 1;
   const px = player.position.x, pz = player.position.z, pr = player.rotation.y, vx = vel.x, vz = vel.z;
   player.position.x = best.p.x; player.position.z = best.p.z; player.rotation.y = best.g.rotation.y; targetRot = player.rotation.y;
   vel.x = best.v.x; vel.z = best.v.z;
@@ -7196,7 +7523,7 @@ addEventListener('keydown', e => { if ((e.code === 'KeyT' || e.code === 'Tab') &
     if (GKM) return hasBall ? ['Pegou! Toque em ' + K('shoot', 'CHUTE') + ' para repor a bola (segure = chute longo)', 1] : ['GOLEIRO! Fique na frente do gol e aperte ' + K('shoot', 'CHUTE') + ' para <b>mergulhar</b>', 0];
     const near = Math.abs(ATKD(0) * GOAL_LINE - player.position.x) < 38, rs = match.rs;
     if (rs && rs.taker && rs.taker.isU) {
-      const t = { pk: 'PÊNALTI! Mire com ' + (touch ? 'o direcional' : '<b>WASD</b>') + ' e ' + K('shoot', 'CHUTE'), corner: 'ESCANTEIO! Cruze com ' + K('lob', 'LANÇA'), throw: 'LATERAL! Escolha o colega e aperte ' + K('shoot', 'CHUTE') }[rs.type];
+      const t = { pk: 'PÊNALTI! Mire com ' + (touch ? 'o direcional' : '<b>WASD</b>') + ' e ' + K('shoot', 'CHUTE'), corner: 'ESCANTEIO! Cruze com ' + K('shoot', 'CHUTE'), throw: 'LATERAL! Escolha o colega e aperte ' + K('shoot', 'CHUTE') }[rs.type];
       return [t || 'SUA VEZ! Toque em ' + K('shoot', 'CHUTE') + ' para passar', 1];
     }
     if (hasBall) {
@@ -7261,6 +7588,11 @@ addEventListener('keydown', e => { if ((e.code === 'KeyT' || e.code === 'Tab') &
   function startTH(rs) {
     const tk = rs.taker, t = rs.team, at = ATKD(t), bx = ball.position.x, bz = ball.position.z, inw = bz > 0 ? -1 : 1;
     TH = { rs, tk, t, at, inw, userTaker: !!tk.isU, t0: performance.now(), mates: [], opp: [], sel: 0, saved: null, arrived: false, corner: rs.type === 'corner', ev: [], introT: performance.now() + 450, wide: false, sv: [targetDist, targetPhi], pend: null, setT: 0 };
+    if (rs.type === 'throw') {   // novo fluxo: ninguém é reposicionado; os 4 colegas mais próximos são as opções
+      TH.thr = true; const bx0 = ball.position.x, bz0 = ball.position.z;
+      TH.mates = TM[t].filter(o => o !== tk && !o.out && o.down <= 0.5 && !o.fgt && hyp2(o.p.x - bx0, o.p.z - bz0) > 5).sort((a, b) => hyp2(a.p.x - bx0, a.p.z - bz0) - hyp2(b.p.x - bx0, b.p.z - bz0)).slice(0, 4);
+      lockX = player.position.x; lockZ = player.position.z; document.body.classList.add('throwing'); return;
+    }
     const free = TM[t].filter(o => o !== tk && !o.isU && !o.out && o.down <= 0.5 && !o.fgt);
     const used = [];
     for (const [fx, fz] of (TH.corner ? [] : SPOTS)) {                  // posições espalhadas (nunca amontoadas, mesmo perto do canto)
@@ -7294,6 +7626,7 @@ addEventListener('keydown', e => { if ((e.code === 'KeyT' || e.code === 'Tab') &
     for (const o of TH.mates.concat(TH.opp, TH.ev)) o._ts = null;
     if (!CUT) { camCut = null; if (!TH.userTaker) { targetDist = TH.sv[0]; targetPhi = TH.sv[1]; } }
     if (TH.saved && !CUT) { targetDist = TH.saved[0]; targetPhi = TH.saved[1]; }
+    if (TH.thr && !CUT) { camCut = null; targetDist = TH.sv[0]; targetPhi = TH.sv[1]; camBehind(player.rotation.y); }
     mks.forEach(m => m.style.display = 'none'); hint.style.display = 'none'; document.body.classList.remove('throwing'); TH = null;
   }
   setInterval(() => {
@@ -7304,7 +7637,7 @@ addEventListener('keydown', e => { if ((e.code === 'KeyT' || e.code === 'Tab') &
 
   const oTake = takeBall, oBC = ballContest, oBR = botRestart, oPose = poseBot;
   window.takeBall = b => { if (CUT && CUT.to && b !== CUT.to) return; return oTake(b); };            // bola da lateral só vai para o escolhido
-  window.ballContest = dt => { if (CUT && CUT.to && CUT.t < 2.5) return; return oBC(dt); };
+  window.ballContest = dt => { if (TH && TH.thr && match.rs && match.rs.run) return; if (CUT && CUT.to && CUT.t < 2.5) return; return oBC(dt); };
   window.botRestart = function (rs) {
     if (TH && rs.type === 'throw' && rs.taker === TH.tk && TH.mates.length) {
       let a = null, bs = -1; for (const m of TH.mates) { const d = nearest(TM[1 - TH.t], m.p)[0]; if (d > bs) { bs = d; a = m; } }
@@ -7319,6 +7652,18 @@ addEventListener('keydown', e => { if ((e.code === 'KeyT' || e.code === 'Tab') &
   };
   window.moveBot = function (b, dt, live) {
     if (!TH) return oMove(b, dt, live);
+    if (TH.thr && match.rs) {
+      const rs = match.rs;
+      if (b === TH.tk) {
+        if (!rs.run) { b.v.set(0, 0, 0); return; }
+        const dx = rs.spot.x - b.p.x, dz = rs.spot.z - b.p.z, d = hyp2(dx, dz);
+        if (d < 0.5) { rs.run = false; b.rot = rs.rot; b.g.rotation.y = rs.rot; b.v.set(0, 0, 0); b.run = false; takeBall(b); b.th = 99; return; }
+        const sp = Math.min(15, d / Math.max(dt, 1e-3)); b.v.set(dx / d * sp, 0, dz / d * sp); b.p.x += b.v.x * dt; b.p.z += b.v.z * dt; b.run = true;
+        let df = Math.atan2(dx, dz) - b.rot; while (df > Math.PI) df -= TAU; while (df < -Math.PI) df += TAU; b.rot += df * Math.min(1, dt * 10); b.g.rotation.y = b.rot; return;
+      }
+      b.v.set(0, 0, 0); let df = Math.atan2(TH.tk.p.x - b.p.x, TH.tk.p.z - b.p.z) - b.rot; while (df > Math.PI) df -= TAU; while (df < -Math.PI) df += TAU;
+      b.rot += df * Math.min(1, dt * 6); b.g.rotation.y = b.rot; return;   // todos parados, só observam o batedor
+    }
     oMove(b, dt, false);
     if (!b._ts && !b.out && b !== TH.tk && hyp2(b.p.x - ball.position.x, b.p.z - ball.position.z) < 9) {
       const ox = b.p.x - ball.position.x;
@@ -7348,7 +7693,7 @@ addEventListener('keydown', e => { if ((e.code === 'KeyT' || e.code === 'Tab') &
     CUT = { to: m, t: 0, sv: TH.saved || TH.sv }; TH.saved = null;
   }
   const queueThrow = m => { if (TH && !TH.pend) TH.pend = { m, at: performance.now() + 250 }; };   // o boneco ajusta a bola e a câmera mira no pé
-  const canPick = () => TH && TH.userTaker && hasBall && TH.mates.length && !TH.pend;
+  const canPick = () => TH && ((TH.userTaker && hasBall) || (TH.thr && match.rs && match.rs.pick && !match.rs.run && ballOwner === TH.tk)) && TH.mates.length && !TH.pend;
   window.doPass = function (lob) { if (canPick()) { queueThrow(TH.mates[TH.sel]); return; } return oPass2(lob); };
   window.shoot = function () { if (canPick()) { chgOn = false; queueThrow(TH.mates[TH.sel]); return; } return oShoot2(); };
 
@@ -7367,6 +7712,23 @@ addEventListener('keydown', e => { if ((e.code === 'KeyT' || e.code === 'Tab') &
     el.addEventListener('pointerdown', go);
   });
   const cv = new THREE.Vector3(); let cl = 0;
+  function botThrow(m) {   // batedor (bot) lança para o colega escolhido
+    const b = TH.tk, d = dd(m.p, b.p), sp = Math.min(clampN(18 + d * 1.35, 24, 56), 34), tt = d / (sp * 0.7);
+    botKick(b, m.p.x + m.v.x * tt * 0.7 - b.p.x, m.p.z + m.v.z * tt * 0.7 - b.p.z, sp, d > 20 ? 5 : 2.2, 0, true); match.pass = { to: m, t: 3 };
+    CUT = { to: m, t: 0, sv: TH.sv };
+  }
+  function thrStep(now) {
+    const rs = match.rs; if (!rs) return;
+    if (!TH.pend || !TH.pend.go) { camCut = cv.set(TH.tk.p.x, 0.8, TH.tk.p.z); targetTheta = 0; targetPhi = 0.92; targetDist = 26; }   // câmera fixa seguindo o batedor até a bola
+    mks.forEach(m => m.style.display = 'none'); hint.style.display = 'none';
+    if (rs.run) { rs.t = 0; return; }
+    if (TH.pend) { if (now >= TH.pend.at) { const m = TH.pend.m; TH.pend = null; botThrow(m); } return; }
+    if (!rs.pick) return;
+    if (!TH.rdy) TH.rdy = now;
+    if (now - TH.rdy > 8000) { queueThrow(TH.mates[TH.sel]); return; }
+    hint.innerHTML = 'LATERAL! <b>←</b> <b>→</b> escolhem o colega • <b>ESPAÇO</b> lança • ou toque no número'; hint.style.display = 'block';
+    TH.mates.forEach((m, i) => { const [x, y, ok] = scr(m, 2.6), el = mks[i]; el.style.display = ok ? 'flex' : 'none'; el.classList.toggle('sel', i === TH.sel); el.style.transform = `translate(${x}px,${y}px)`; });
+  }
   const camSide = rot => { let bd = 9; for (const a of [1.1, -1.1]) { let d = rot + a - theta; d = ((d + Math.PI) % TAU + TAU) % TAU - Math.PI; if (Math.abs(d) < Math.abs(bd)) bd = d; } targetTheta = theta + bd; };
   const foot = rot => { camSide(rot); targetDist = 6; targetPhi = 1.2; camCut = cv.set(ball.position.x, 0.5, ball.position.z); };
   (function loop() {
@@ -7378,6 +7740,7 @@ addEventListener('keydown', e => { if ((e.code === 'KeyT' || e.code === 'Tab') &
       if ((CUT.to ? ballOwner === CUT.to : !!ballOwner) || hasBall || CUT.t > 3.2 || (CUT.t > 0.6 && hyp2(bv.x, bv.z) < 1.5)) { targetDist = CUT.sv[0]; targetPhi = CUT.sv[1]; camCut = null; camBehind(player.rotation.y); CUT = null; }
     }
     if (!TH) return;
+    if (TH.thr) { thrStep(now); return; }
     if (!TH.snapped && now - TH.t0 > 1500) {
       TH.snapped = true;
       for (const o of TH.mates.concat(TH.opp, TH.ev)) if (o._ts) { o.p.x = o._ts.x; o.p.z = o._ts.z; o.v.set(0, 0, 0); }
@@ -10009,11 +10372,35 @@ body:has(#splash) #ver,body:has(#splash) #gAcc{display:none!important}
  #menu .mbtn{min-height:56px}
 }
 #modePop{overflow-y:auto!important;max-height:100dvh}
+#news #nwCar{min-height:0}#news .nwSl{display:none}#news .nwSl.on{display:block;animation:nwIn .3s ease-out}#news .nwSl svg{display:block;width:100%;height:auto;border-radius:14px;border:3px solid #0a0e1a;box-shadow:0 5px 0 rgba(0,0,0,.35)}#news .nwSl h3{margin:10px 0 4px;font:400 clamp(16px,3.6vw,20px) 'Bungee',Impact,system-ui;color:#ffd54a;letter-spacing:1px}#news .nwSl p{margin:0;font:600 clamp(13px,3.2vw,15px)/1.4 system-ui;opacity:.88}#news #nwDots{display:flex;justify-content:center;gap:7px;margin:12px 0 8px}#news #nwDots i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.3);cursor:pointer}#news #nwDots i.on{background:#ffd54a;transform:scale(1.25)}#news .nwNav{display:flex;gap:10px;justify-content:center;margin-bottom:10px}#news .nwNav button{width:auto;min-width:56px;padding:8px 18px;font:400 16px 'Bungee',system-ui;background:#1c2b4d;border-color:#0a0e1a;color:#fff}
 </style>
-<div id="news"><div class="nw"><h2>O QUE HÁ DE NOVO</h2><div class="nv">KICK.IO v1.4.0</div><ul>
-<li><i class="fa-solid fa-person-running"></i><div><b>ANIMAÇÕES</b><span>Corrida, carrinho, queda, levantar e chute mais naturais e com mais personalidade.</span></div></li>
-<li><i class="fa-solid fa-bug"></i><div><b>CORREÇÕES</b><span>Colisões entre jogadores, goleiros e juiz corrigidas, e outros bugs resolvidos.</span></div></li>
-</ul><button id="newsOk">CONTINUAR</button></div></div>
+<div id="news"><div class="nw"><h2>O QUE HÁ DE NOVO</h2><div class="nv">KICK.IO v1.5.0</div><div id="nwCar"></div><div id="nwDots"></div><div class="nwNav"><button id="nwPrev" type="button">◀</button><button id="nwNext" type="button">▶</button></div><button id="newsOk">CONTINUAR</button></div></div>
+<script>
+(()=>{const car=document.getElementById('nwCar'),dots=document.getElementById('nwDots');if(!car)return;
+const pitch='<rect width="320" height="180" fill="#43b04e"/><g fill="#3ba046"><rect x="0" width="40" height="180"/><rect x="80" width="40" height="180"/><rect x="160" width="40" height="180"/><rect x="240" width="40" height="180"/></g><g fill="none" stroke="#fff" stroke-width="2" opacity=".8"><rect x="6" y="6" width="308" height="168"/><line x1="160" y1="6" x2="160" y2="174"/><circle cx="160" cy="90" r="26"/></g>';
+const mv=(dx,dy,d,body,k)=>'<g><animateTransform attributeName="transform" type="translate" values="'+(k||('0 0;0 0;'+dx+' '+dy+';'+dx+' '+dy+';0 0'))+'" dur="'+d+'s" repeatCount="indefinite"/>'+body+'</g>';
+const P=(x,y,c,r)=>'<g transform="translate('+x+' '+y+')"><circle r="9" fill="'+c+'" stroke="#0a0e1a" stroke-width="2"/><circle cy="-11" r="5" fill="#ffd9a8" stroke="#0a0e1a" stroke-width="1.5"/>'+(r||'')+'</g>';
+const BL='#2f7bff',OR='#ff9a2f',RF='#222';
+const pop=(x,y,w,t,col,d)=>'<g opacity="0"><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;.3;.38;.85;1" dur="'+d+'s" repeatCount="indefinite"/><rect x="'+x+'" y="'+y+'" width="'+w+'" height="30" rx="9" fill="#0a0e1a" stroke="'+col+'" stroke-width="2.5"/><text x="'+(x+w/2)+'" y="'+(y+21)+'" text-anchor="middle" font-family="system-ui" font-weight="900" font-size="15" fill="'+col+'">'+t+'</text></g>';
+const card=(x,y,c,d)=>'<g opacity="0"><animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;.35;.42;.85;1" dur="'+d+'s" repeatCount="indefinite"/><rect x="'+x+'" y="'+y+'" width="12" height="17" rx="2" fill="'+c+'" stroke="#0a0e1a" stroke-width="1.5"/></g>';
+const S=[
+['JUIZ MELHORADO','O juiz apita, vai até o jogador e mostra o cartão com o braço levantado ao lado. Os outros jogadores param, olham e se afastam enquanto ele marca.',
+ pitch+mv(0,0,5,P(250,50,BL))+mv(-26,0,5,P(250,50,BL).replace('250','250'),'')+'',null],
+['FALTAS','Carrinho sem pegar a bola é falta: o jogo para na hora e o time adversário cobra. Dentro da área vira pênalti. Um aviso legível mostra de qual time foi.',null],
+['CARTÕES E EXPULSÃO','Amarelo, segundo amarelo e vermelho direto. Quem é expulso sai chorando do campo e você assume outro jogador do time, que joga com um a menos.',null],
+['CÂMERA','A cutscene do cartão foi removida. A câmera não se mexe mais nem entra nos jogadores durante a falta ou o cartão: você continua vendo o jogo normal.',null],
+['IA MAIS ESPERTA','Os bots só dão carrinho quando é limpo, de frente e com a bola ao alcance. Por trás eles não entram, e não cometem mais faltas.',null],
+['RANK REMOVIDO','O Rank global foi retirado do jogo e não existe mais.',null]];
+S[0][2]=pitch+mv(26,0,6,P(250,55,BL))+mv(26,0,6,P(250,130,BL))+mv(-26,0,6,P(80,135,OR))+P(160,95,OR)+mv(80,22,6,P(40,45,RF),'0 0;0 0;98 22;98 22;0 0')+card(158,56,'#ffd600',6)+pop(100,138,120,'CARTÃO AMARELO','#ffd54a',6);
+S[1][2]=pitch+mv(78,0,5,P(55,100,BL),'0 0;0 0;78 0;78 0;0 0')+'<g transform="translate(150 100)"><g><animateTransform attributeName="transform" type="rotate" values="0;0;85;85;0" dur="5s" repeatCount="indefinite"/><circle r="9" fill="'+OR+'" stroke="#0a0e1a" stroke-width="2"/><circle cy="-11" r="5" fill="#ffd9a8" stroke="#0a0e1a" stroke-width="1.5"/></g></g><circle cx="168" cy="108" r="4" fill="#fff" stroke="#0a0e1a"/>'+pop(80,36,160,'FALTA · do seu time','#fff',5);
+S[2][2]=pitch+mv(150,-40,6,P(150,95,OR),'0 0;0 0;150 -40;150 -40;0 0')+card(160,62,'#e53935',6)+P(230,130,BL,'<circle r="15" fill="none" stroke="#ffd54a" stroke-width="3"><animate attributeName="r" values="13;18;13" dur="1.2s" repeatCount="indefinite"/></circle>')+'<text x="230" y="160" text-anchor="middle" font-family="system-ui" font-weight="900" font-size="12" fill="#ffd54a">VOCÊ</text>'+pop(70,20,180,'CARTÃO VERMELHO','#ff6b66',6);
+S[3][2]=pitch+P(120,100,BL)+P(190,70,OR)+P(200,130,BL)+'<rect x="108" y="22" width="104" height="38" rx="9" fill="#0a0e1a" stroke="#fff" stroke-width="2"/><rect x="120" y="32" width="22" height="16" rx="3" fill="#fff"/><circle cx="131" cy="40" r="5" fill="#0a0e1a"/><text x="178" y="46" text-anchor="middle" font-family="system-ui" font-weight="900" font-size="11" fill="#fff">CÂMERA FIXA</text><g stroke="#e53935" stroke-width="5" stroke-linecap="round"><line x1="224" y1="130" x2="276" y2="170"/><line x1="276" y1="130" x2="224" y2="170"/></g><text x="250" y="124" text-anchor="middle" font-family="system-ui" font-weight="900" font-size="12" fill="#fff">CUTSCENE</text>';
+S[4][2]=pitch+mv(40,0,6,P(150,100,OR),'0 0;40 0;40 0;0 0;0 0')+mv(-48,0,6,P(260,100,BL),'0 0;-48 0;-48 0;0 0;0 0')+'<text x="220" y="70" font-size="30" text-anchor="middle">✅</text><text x="220" y="62" font-size="0"></text>'+P(60,150,BL)+'<text x="100" y="156" font-size="26">❌</text><text x="62" y="172" font-family="system-ui" font-weight="900" font-size="10" fill="#fff">por trás: não entra</text>';
+S[5][2]='<rect width="320" height="180" fill="#101a35"/><text x="160" y="112" text-anchor="middle" font-size="84">🏆</text><g stroke="#e53935" stroke-width="9" stroke-linecap="round"><line x1="95" y1="30" x2="225" y2="150"/></g>';
+S.forEach((x,i)=>{const d=document.createElement('div');d.className='nwSl'+(i?'':' on');d.innerHTML='<svg viewBox="0 0 320 180">'+x[2]+'</svg><h3>'+x[0]+'</h3><p>'+x[1]+'</p>';car.appendChild(d);const t=document.createElement('i');if(!i)t.className='on';t.onclick=()=>go(i);dots.appendChild(t)});
+let cur=0,tm;const go=n=>{cur=(n+S.length)%S.length;[...car.children].forEach((e,i)=>e.classList.toggle('on',i===cur));[...dots.children].forEach((e,i)=>e.classList.toggle('on',i===cur));clearInterval(tm);tm=setInterval(()=>go(cur+1),7000)};
+document.getElementById('nwPrev').onclick=()=>go(cur-1);document.getElementById('nwNext').onclick=()=>go(cur+1);go(0);})();
+</script>
 <script>
 (()=>{const n=document.getElementById('news'),ok=document.getElementById('newsOk'),sp=document.getElementById('splash');
 const show=()=>n.classList.add('on'),hide=()=>{n.classList.remove('on');n.remove()};
@@ -10399,7 +10786,7 @@ new MutationObserver((m,o)=>{if(sp.classList.contains('out')){on=false;o.disconn
     delTeam(); publish(window.GTOKQ ? GTOKQ() : null).catch(() => {});   // só publica se já houver token válido
     tick();
   }
-  function openRank() { if (!logged()) return; isOpen = true; P().classList.add('on'); start(); }
+  function openRank() { return; if (!logged()) return; isOpen = true; P().classList.add('on'); start(); }
   function closeRank() { isOpen = false; clearTimeout(tm); clearInterval(wait); P().classList.remove('on'); }
   $('rkX').onclick = closeRank;
   P().addEventListener('click', e => { if (e.target === P()) closeRank(); });
