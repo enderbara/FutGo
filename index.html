@@ -725,6 +725,7 @@ html.mob #tcSkip{font-size:13px;padding:8px 14px}
     <button class="tile" id="bUni"><i class="fa-solid fa-shirt"></i>Uniforme</button>
     <button class="tile" id="bSquad"><i class="fa-solid fa-users"></i>Equipe</button>
     <button class="tile" id="bEditTeam"><i class="fa-solid fa-shield-halved"></i>Nome e escudo</button>
+    <button class="tile" id="bRank"><i class="fa-solid fa-trophy"></i>Rank</button>
   </div>
   <div class="row"><button class="b" id="bTeamX"><i class="fa-solid fa-arrow-left"></i>Voltar</button><button class="b danger" id="bLeave"><i class="fa-solid fa-right-from-bracket"></i>Sair do time</button></div>
 </div></div>
@@ -10139,25 +10140,63 @@ new MutationObserver((m,o)=>{if(sp.classList.contains('out')){on=false;o.disconn
 #gLogin .gl-n{color:#aab6e6;opacity:.8!important}
 </style>
 <style>
-/* Rank dentro do painel do time: lista com rolagem própria, não aperta o resto */
-#teamPop>div{grid-template-areas:"h d" "r d" "r k" "r t" "r b"}
-#rkTeam{grid-area:k;min-width:0;margin:0!important}
-#rkTeam h5{display:flex;align-items:center;gap:8px;margin:0 0 6px;font:400 clamp(10px,1.9vh,12px) 'Bungee',Impact,system-ui;letter-spacing:2px;color:#ffd54a;text-shadow:0 2px 0 #0a0e1a}
-#rkTeam h5::after{content:"";flex:1;height:3px;border-radius:3px;background:linear-gradient(90deg,rgba(255,213,74,.55),transparent)}
-#rkTeam .rk2L{max-height:clamp(120px,26vh,240px);min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;touch-action:pan-y;-webkit-overflow-scrolling:touch;padding:0 6px 4px 0;scrollbar-width:thin;scrollbar-color:#ffd54a #0a0e1a}
-#rkTeam .rk2L::-webkit-scrollbar{width:8px}#rkTeam .rk2L::-webkit-scrollbar-track{background:#0a0e1a;border-radius:8px}#rkTeam .rk2L::-webkit-scrollbar-thumb{background:#ffd54a;border-radius:8px}
-#rkTeam{min-height:0}
-.rk2R{display:flex;align-items:center;gap:8px;padding:4px 8px;margin:0 0 6px;border-radius:12px;border:2px solid #0a0e1a;background:linear-gradient(180deg,#2d3a62,#1d2744);box-shadow:0 3px 0 #0a0e1a}
+/* Painel de Rank separado */
+#teamPop>div{grid-template-areas:"h d" "r d" "r t" "r b"}
+#rankPop{position:fixed;inset:0;z-index:14;display:none;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 0,rgba(255,213,74,.12),transparent 55%),rgba(6,10,22,.9);padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+#rankPop.on{display:flex}
+#rankPop .rkBox{width:min(580px,96vw);max-height:96dvh;display:flex;flex-direction:column;gap:8px;box-sizing:border-box;padding:clamp(10px,2vh,16px);border:3px solid #0a0e1a;border-radius:20px;background:repeating-linear-gradient(115deg,rgba(255,255,255,.028) 0 30px,transparent 30px 60px),linear-gradient(180deg,#232e52,#141b33);box-shadow:inset 0 -6px 0 rgba(0,0,0,.3),0 20px 60px #000a;color:#fff;font-family:system-ui}
+#rankPop .rkTop{display:flex;align-items:center;gap:10px}
+#rankPop .rkTi{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex:none;background:linear-gradient(180deg,#ffe58a,#ffb300);color:#3a2a00;font-size:20px;border:3px solid #0a0e1a;box-shadow:inset 0 -3px 0 rgba(0,0,0,.2)}
+#rankPop h3{margin:0;font:400 clamp(15px,3vh,20px) 'Bungee',Impact,system-ui;letter-spacing:2px;color:#ffd54a;text-shadow:0 3px 0 #0a0e1a}
+#rankPop .rkTop small{display:block;font:600 11px system-ui;color:#aab6e6;letter-spacing:0}
+#rankPop .rkTop>div{flex:1;min-width:0}
+#rkLive{display:flex;align-items:center;gap:5px;padding:4px 9px;border-radius:99px;background:rgba(107,255,154,.12);font:700 11px system-ui;color:#6bff9a}
+#rkLive i{width:8px;height:8px;border-radius:50%;background:#6bff9a;box-shadow:0 0 8px #6bff9a;animation:rkP 1s infinite}#rkLive.off{color:#ff8a80;background:rgba(255,107,107,.12)}#rkLive.off i{background:#ff6b6b;box-shadow:none;animation:none}
+@keyframes rkP{50%{opacity:.25}}
+#rkMe{display:none;align-items:center;gap:10px;cursor:pointer;padding:8px 12px;border-radius:14px;border:3px solid #0a0e1a;background:linear-gradient(180deg,#ffe58a,#ffc107);color:#1b1500;box-shadow:0 3px 0 #6b4e00;font:700 12px/1.3 system-ui}
+#rkMe .pos{font:400 22px 'Bungee',Impact,system-ui}#rkMe>span{flex:1;min-width:0}#rkMe small{display:block;opacity:.75;font-weight:600}#rkMe>i{opacity:.6}
+#rankPop .rk2L{flex:1;min-height:120px;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;touch-action:pan-y;-webkit-overflow-scrolling:touch;padding:0 6px 4px 0;scrollbar-width:thin;scrollbar-color:#ffd54a #0a0e1a}
+#rankPop .rk2L::-webkit-scrollbar{width:8px}#rankPop .rk2L::-webkit-scrollbar-track{background:#0a0e1a;border-radius:8px}#rankPop .rk2L::-webkit-scrollbar-thumb{background:#ffd54a;border-radius:8px}
+#rkX{align-self:stretch;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 12px;min-height:44px;background:#2a3560;color:#fff;border:3px solid #0a0e1a;border-radius:14px;font:400 14px 'Bungee',Impact,system-ui;letter-spacing:1px;box-shadow:inset 0 -4px 0 rgba(0,0,0,.28);cursor:pointer}
+/* pódio */
+.rkPod{display:grid;grid-template-columns:1fr 1.15fr 1fr;align-items:end;gap:8px;margin:2px 0 12px}
+.rkPc{display:flex;flex-direction:column;align-items:center;min-width:0;text-align:center}
+.rkPc .cr{position:relative;margin-bottom:4px}
+.rkPc img{display:block;width:clamp(44px,12vw,58px);height:clamp(44px,12vw,58px);object-fit:contain;border-radius:50%;background:rgba(0,0,0,.3);box-shadow:0 0 0 3px var(--c)}
+.rkPc.p1 img{width:clamp(56px,15vw,74px);height:clamp(56px,15vw,74px)}
+.rkPc .cr>i{position:absolute;left:50%;top:-15px;transform:translateX(-50%);color:var(--c);font-size:18px;filter:drop-shadow(0 2px 0 #0a0e1a)}
+.rkPc b{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font:400 12px 'Bungee',Impact,system-ui}
+.rkPc small{font:600 10px system-ui;color:#aab6e6;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rkPc .pt{margin:3px 0 4px;font:400 13px 'Bungee',Impact,system-ui;color:#ffd54a;text-shadow:0 2px 0 #0a0e1a}.rkPc .pt i{font-size:10px;margin-right:3px}
+.rkPc .bar{width:100%;display:grid;place-items:center;border:3px solid #0a0e1a;border-bottom:0;border-radius:12px 12px 0 0;background:linear-gradient(180deg,var(--c),rgba(0,0,0,.35));font:400 22px 'Bungee',Impact,system-ui;color:#14182a;box-shadow:inset 0 3px 0 rgba(255,255,255,.35)}
+.rkPc.p1{--c:#ffd54a}.rkPc.p1 .bar{height:74px}.rkPc.p2{--c:#cfd8e8}.rkPc.p2 .bar{height:52px}.rkPc.p3{--c:#d9914f}.rkPc.p3 .bar{height:38px}
+.rkPc.mine .bar{outline:3px solid #fff;outline-offset:-3px}.rkPc.mine b{color:#ffd54a}
+.rkPc .mv,.rk2R .mv{font:700 10px system-ui}.up{color:#6bff9a}.dn{color:#ff6b6b}
+/* lista */
+.rk2R{display:flex;align-items:center;gap:10px;padding:7px 10px;margin:0 0 6px;border-radius:14px;border:2px solid #0a0e1a;background:linear-gradient(180deg,#2d3a62,#1d2744);box-shadow:0 3px 0 #0a0e1a;animation:rkIn .25s both}
+@keyframes rkIn{from{opacity:.4;transform:translateY(3px)}}
 .rk2R.mine{background:linear-gradient(180deg,#ffe58a,#ffc107);color:#1b1500;box-shadow:0 3px 0 #6b4e00}
-.rk2R .n{width:clamp(22px,4vh,28px);height:clamp(22px,4vh,28px);border-radius:50%;display:grid;place-items:center;flex:none;background:#ffd54a;color:#14182a;font:400 clamp(10px,1.8vh,12px) 'Bungee',Impact,system-ui;box-shadow:inset 0 -2px 0 rgba(0,0,0,.2)}
-.rk2R.mine .n{background:#14182a;color:#ffd54a}
-.rk2R:nth-child(-n+3) .n{box-shadow:inset 0 -2px 0 rgba(0,0,0,.2),0 0 0 2px #fff}
-.rk2R img{width:clamp(24px,4.4vh,32px);height:clamp(24px,4.4vh,32px);object-fit:contain;border-radius:50%;background:rgba(0,0,0,.25);box-shadow:0 0 0 2px #ffd54a;flex:none}
-.rk2R .t{flex:1;min-width:0}.rk2R .t b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font:400 clamp(10px,1.9vh,13px) 'Bungee',Impact,system-ui}
-.rk2R small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.72;font:600 clamp(9px,1.6vh,11px) system-ui}
-.rk2R .p{font:400 clamp(11px,2vh,14px) 'Bungee',Impact,system-ui;color:#ffd54a;text-shadow:0 2px 0 #0a0e1a;flex:none}.rk2R.mine .p{color:#14182a;text-shadow:none}
-.rk2M{text-align:center;padding:8px 4px;color:#dfe6ff;font:600 clamp(10px,1.8vh,12px)/1.45 system-ui}.rk2M b{color:#ffd54a}
-.rk2M button{margin-top:6px}
+.rk2R .n{width:30px;text-align:center;flex:none;color:#aab6e6;font:400 14px 'Bungee',Impact,system-ui}.rk2R.mine .n{color:#14182a}
+.rk2R img{width:36px;height:36px;object-fit:contain;border-radius:50%;background:rgba(0,0,0,.25);box-shadow:0 0 0 2px rgba(255,213,74,.7);flex:none}
+.rk2R .t{flex:1;min-width:0}.rk2R .t b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font:400 13px 'Bungee',Impact,system-ui}
+.rk2R .t small{display:flex;align-items:center;gap:6px;margin-top:2px;white-space:nowrap;overflow:hidden;font:600 11px system-ui;opacity:.9}
+.rk2R .tr{display:inline-flex;align-items:center;gap:4px;padding:1px 7px;border-radius:99px;background:rgba(0,0,0,.28);color:var(--tc,#ffd54a);font-weight:700;font-size:10px;flex:none}.rk2R.mine .tr{background:rgba(0,0,0,.15);color:#14182a}
+.rk2R .ow{overflow:hidden;text-overflow:ellipsis;opacity:.75}.rk2R .ow i{margin-right:3px;font-size:9px}
+.rk2R .p{text-align:right;flex:none;font:400 14px 'Bungee',Impact,system-ui;color:#ffd54a;text-shadow:0 2px 0 #0a0e1a}.rk2R.mine .p{color:#14182a;text-shadow:none}.rk2R .p i{font-size:10px;margin-right:3px}
+.rk2R .p .mv{display:block;text-shadow:none}.rk2R.mine .up{color:#0a7a35}.rk2R.mine .dn{color:#b00020}
+.rk2M{text-align:center;padding:10px 6px;color:#dfe6ff;font:600 12px/1.45 system-ui}.rk2M>i{display:block;font-size:26px;color:#ffd54a;margin-bottom:6px}.rk2M b{color:#ffd54a}.rk2M button{margin-top:6px}.rkInv{margin:0 0 8px;border-radius:12px;background:rgba(255,213,74,.1);border:2px dashed rgba(255,213,74,.5)}.rkInv>i{font-size:18px;display:inline;margin-right:6px}
+/* Painel do time: mais respiro no celular */
+#teamPop>div{-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+@media (max-height:540px),(max-width:700px){
+ #teamPop>div{padding:8px 10px!important;gap:6px 10px!important;border-radius:14px!important}
+ #teamPop .thead{gap:8px!important}#teamPop #tName{font-size:15px!important}
+ #teamPop .rkS{grid-template-columns:repeat(11,1fr);gap:2px!important}#teamPop .rkc{max-width:26px;border-radius:6px}
+ #teamPop .rl{font-size:10px!important}
+ #teamPop .tiles{gap:5px!important}#teamPop .tile{min-height:44px!important;padding:5px 2px!important;font-size:10px!important;line-height:1.1}#teamPop .tile i{font-size:17px!important;margin-bottom:1px!important}
+ #teamPop>div>.row{flex-wrap:nowrap}#teamPop button.b{padding:6px 8px!important;font-size:11px!important;min-height:38px!important}
+ #teamPop .st>div{font-size:14px!important}
+}
+@media (max-aspect-ratio:5/4){#teamPop>div{gap:8px!important;max-height:96dvh!important}#teamPop .tiles{order:3}}
 </style>
 <script>
 (() => {
@@ -10171,7 +10210,7 @@ new MutationObserver((m,o)=>{if(sp.classList.contains('out')){on=false;o.disconn
   const img = u => /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+\/=]+$/.test(u || '') ? u : '';
   const logged = () => { try { return !!localStorage.getItem('gsave_sess'); } catch (_) { return false; } };
   const onTeam = () => document.body.dataset.m === 'team';
-  async function call(q) { const r = await fetch(RANK_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(q) }); return r.json(); }
+  async function call(q) { const ac = new AbortController(), tm = setTimeout(() => ac.abort(), 9000); try { const r = await fetch(RANK_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(q), signal: ac.signal }); return await r.json(); } finally { clearTimeout(tm); } }
 
   // ---- nomes únicos: mesma regra do servidor (sem acento, maiúscula, espaço ou símbolo) ----
   const nkey = n => String(n || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
@@ -10202,7 +10241,7 @@ new MutationObserver((m,o)=>{if(sp.classList.contains('out')){on=false;o.disconn
   const crestThumb = src => new Promise(r => { if (!src) return r(''); const i = new Image(); i.onload = () => { const o = document.createElement('canvas'); o.width = o.height = 64; o.getContext('2d').drawImage(i, 0, 0, 64, 64); r(o.toDataURL('image/webp', 0.8)); }; i.onerror = () => r(''); i.src = src; });
   async function publish(t) {
     try { if (typeof team !== 'undefined' && team) localStorage.removeItem('rk_del'); } catch (_) {}   // entrou em novo time: cancela remoção pendente
-    if (!t || typeof team === 'undefined' || !team || Date.now() - lastPub < 180000) return;   // no máximo 1 envio a cada 3 min
+    if (!t || typeof team === 'undefined' || !team || Date.now() - lastPub < 15000) return;   // no máximo 1 envio a cada 15s
     const first = ((JSON.parse(localStorage.getItem('gsave_sess') || '{}').name) || 'Jogador').split(' ')[0], [kf, kb] = kitThumbs({ ...kitSaved, num: String(members[USER_SLOT].num) });
     const d = { name: String(team.name).slice(0, 30), crest: await crestThumb(team.crest), kitF: kf, kitB: kb, rep: stats.rep | 0, tier: TIERS[tierOf(stats.rep)][1],
       st: { j: stats.j | 0, v: stats.v | 0, e: stats.e | 0, d: stats.d | 0, gp: stats.gp | 0, gc: stats.gc | 0 }, owner: first,
@@ -10226,43 +10265,67 @@ new MutationObserver((m,o)=>{if(sp.classList.contains('out')){on=false;o.disconn
   setTimeout(delTeam, 4000);
   setInterval(() => { try { delTeam(); if (ok() && window.GTOKQ) publish(GTOKQ()).catch(() => {}); } catch (_) {} }, 300000);
 
-  // ---- seção "Rank global" dentro do painel do time ----
-  const dm = $('dmBox');
-  if (dm) dm.insertAdjacentHTML('afterend', '<div id="rkTeam"><h5>🏆 RANK GLOBAL</h5><div class="rk2L" id="rkL"></div></div>');
-  { const l = $('rkL'); if (l) for (const ev of ['wheel', 'touchmove']) l.addEventListener(ev, e => e.stopPropagation(), { passive: true }); }   // o jogo não rouba a rolagem da lista
-  const L = () => $('rkL'), msg = h => { if (L()) L().innerHTML = `<div class="rk2M">${h}</div>`; };
-  function list() {
+  // ---- painel de Rank separado (abre pelo botão "Rank" do painel do time) ----
+  document.body.insertAdjacentHTML('beforeend', '<div id="rankPop"><div class="rkBox"><div class="rkTop"><span class="rkTi"><i class="fa-solid fa-trophy"></i></span><div><h3>RANK GLOBAL</h3><small id="rkCnt">Melhores times do mundo</small></div><span id="rkLive"><i></i><b style="font-weight:700">ao vivo</b></span></div><div id="rkMe"></div><div class="rk2L" id="rkL"></div><button id="rkX"><i class="fa-solid fa-arrow-left"></i>Voltar</button></div></div>');
+  const L = () => $('rkL'), P = () => $('rankPop'), gm = () => { try { return logged() && window.GMAIL ? GMAIL() || '' : ''; } catch (_) { return ''; } };
+  for (const ev of ['wheel', 'touchmove']) L().addEventListener(ev, e => e.stopPropagation(), { passive: true });
+  const msg = (h, ic) => { lastR = ''; L().innerHTML = `<div class="rk2M"><i class="fa-solid fa-${ic || 'circle-notch fa-spin'}"></i>${h}</div>`; $('rkMe').style.display = 'none'; };
+  let isOpen = false, tm = 0, lastR = '', prevPos = {}, mv = {}, live = true;
+  const setLive = v => { live = v; const e = $('rkLive'); e.className = v ? '' : 'off'; e.lastChild.textContent = v ? 'ao vivo' : 'reconectando…'; };
+  const TC = { bronze: '#e0955a', prata: '#d5dcea', ouro: '#ffd54a', platina: '#7ee8e0', diamante: '#6fc3ff', mestre: '#c58bff', campe: '#ff7a7a', lend: '#ff9bf0' };
+  const tcol = t => { const k = Object.keys(TC).find(k => nkey(t).startsWith(k)); return TC[k] || '#ffd54a'; };
+  const mvH = m => m ? `<span class="mv ${m > 0 ? 'up' : 'dn'}"><i class="fa-solid fa-caret-${m > 0 ? 'up' : 'down'}"></i>${Math.abs(m)}</span>` : '';
+  const pod = (r, i) => `<div class="rkPc p${i + 1}${r.mine ? ' mine' : ''}"><div class="cr">${i === 0 ? '<i class="fa-solid fa-crown"></i>' : ''}<img src="${img(r.d.crest)}"></div><b>${esc(r.d.name)}</b><small>${esc(r.d.tier)}</small><div class="pt"><i class="fa-solid fa-star"></i>${r.d.rep | 0}</div>${mvH(mv[r.k])}<div class="bar">${i + 1}</div></div>`;
+  const row = (r, i) => `<div class="rk2R${r.mine ? ' mine' : ''}"><span class="n">${i + 1}</span><img src="${img(r.d.crest)}"><span class="t"><b>${esc(r.d.name)}</b><small><span class="tr" style="--tc:${tcol(r.d.tier)}"><i class="fa-solid fa-gem"></i>${esc(r.d.tier)}</span><span class="ow"><i class="fa-solid fa-user"></i>${esc(r.d.owner)}</span></small></span><span class="p"><i class="fa-solid fa-star"></i>${r.d.rep | 0}${mvH(mv[r.k])}</span></div>`;
+  function render(force) {
+    const sig = JSON.stringify(rows.map(r => [r.k, r.d.rep, r.d.name, r.d.tier, r.d.crest ? 1 : 0, r.mine])) + warn + logged();
+    if (!force && sig === lastR) return; lastR = sig;
+    const np = {}; rows.forEach((r, i) => np[r.k] = i);
+    if (Object.keys(prevPos).length) { mv = {}; rows.forEach((r, i) => { if (prevPos[r.k] != null && prevPos[r.k] !== i) mv[r.k] = prevPos[r.k] - i; }); }
+    prevPos = np;
+    const l = L(), st = l.scrollTop, me = rows.findIndex(r => r.mine), box = $('rkMe');
+    if (me >= 0) { const gap = me > 0 ? (rows[me - 1].d.rep | 0) - (rows[me].d.rep | 0) : 0; box.style.display = 'flex'; box.innerHTML = `<span class="pos">#${me + 1}</span><span>SEU TIME<small>${me > 0 ? '<i class="fa-solid fa-arrow-up"></i> Faltam ' + (gap + 1) + ' pts para o #' + me : '<i class="fa-solid fa-crown"></i> Você lidera o rank!'}</small></span><i class="fa-solid fa-location-crosshairs"></i>`; box.onclick = () => { const m = l.querySelector('.mine'); if (m) m.scrollIntoView({ block: 'center', behavior: 'smooth' }); }; $('rkCnt').textContent = rows.length + ' times no ranking'; }
+    else box.style.display = 'none';
     const upd = (typeof team !== 'undefined' && team && !(window.GTOKQ && GTOKQ()) && Date.now() - (+localStorage.getItem('rk_pubts') || 0) > 864e5) ? '<div class="rk2M"><button id="rkU">Atualizar meu time no rank</button></div>' : '';
-    L().innerHTML = upd + (warn ? `<div class="rk2M" style="color:#ffb74d">${warn}</div>` : '') +
-      (rows.length ? rows.map((r, i) => `<div class="rk2R${r.mine ? ' mine' : ''}"><span class="n">${i + 1}</span><img src="${img(r.d.crest)}"><span class="t"><b>${esc(r.d.name)}</b><small>${esc(r.d.tier)} • ${esc(r.d.owner)}</small></span><span class="p">${r.d.rep | 0}</span></div>`).join('') : '<div class="rk2M">Nenhum time no rank ainda.</div>');
-    const u = $('rkU'); if (u) u.onclick = async () => { try { const t = await GTOK(); lastPub = 0; lastSig = ''; await publish(t); } catch (_) {} localStorage.removeItem('rk_c2'); cache = null; view(); };
+    const inv = logged() ? '' : '<div class="rk2M rkInv"><i class="fa-solid fa-lock"></i>Entre com sua conta Google para seu time aparecer no rank.<br><button id="rkG"><i class="fa-brands fa-google"></i> Entrar com Google</button></div>';
+    l.innerHTML = inv + upd + (warn ? `<div class="rk2M" style="color:#ffb74d">${warn}</div>` : '') +
+      (rows.length ? (rows.length >= 3 ? `<div class="rkPod">${[1, 0, 2].map(i => pod(rows[i], i)).join('')}</div>` + rows.slice(3).map((r, i) => row(r, i + 3)).join('') : rows.map(row).join('')) : '<div class="rk2M"><i class="fa-solid fa-ranking-star"></i>Nenhum time no rank ainda.</div>');
+    l.scrollTop = st;
+    const g = $('rkG'); if (g) g.onclick = () => { const c = $('gChip'); if (c) c.click(); clearInterval(wait); let n = 0; wait = setInterval(() => { if (logged()) { clearInterval(wait); if (isOpen) { cache = null; render(true); } } else if (++n > 225 || !isOpen) clearInterval(wait); }, 800); };
+    const u = $('rkU'); if (u) u.onclick = async () => { try { const t = await GTOK(); lastPub = 0; lastSig = ''; await publish(t); } catch (_) {} try { localStorage.removeItem('rk_c2'); } catch (_) {} cache = null; render(true); };
   }
-  async function view() {
-    if (!L() || busy) return; clearInterval(wait);
-    await delTeam();
-    if (!ok()) return msg('Falta configurar a planilha do rank (veja rank-apps-script.gs e RANK_URL no index.html).');
-    if (!logged()) {   // sem login: abre o painel "Entrar com Google" do jogo e, ao logar, o rank aparece sozinho
-      msg('Entre com sua conta Google para ver o rank dos melhores times do mundo e aparecer nele.<br><button id="rkG">Entrar com Google</button>');
-      $('rkG').onclick = () => { const c = $('gChip'); if (c) c.click(); clearInterval(wait); let n = 0; wait = setInterval(() => { if (logged()) { clearInterval(wait); view(); } else if (++n > 225 || !onTeam()) clearInterval(wait); }, 800); };
-      return;
+  async function tick() {   // consulta o servidor a cada 1s (sem sobrepor chamadas); só redesenha se mudou
+    clearTimeout(tm); if (!isOpen) return;
+    if (!busy) {
+      busy = 1;
+      try {
+        const em = gm();
+        const r = await call({ a: 'list', me: em, v: cache && cache.em === em && cache.rows.length ? cache.v : undefined }); if (r.err) throw new Error(r.err);
+        if (!r.same || !cache) { cache = { em, v: r.v, ts: Date.now(), rows: r.rows || [] }; saveC(); }
+        rows = cache.rows; if (isOpen) { setLive(true); render(); }
+      } catch (e) { if (isOpen) { setLive(false); if (!rows.length) msg('Não consegui carregar o rank (' + esc(e.name === 'AbortError' ? 'tempo esgotado' : e.message) + '). Tentando de novo…', 'triangle-exclamation'); } }
+      busy = 0;
     }
-    const em = window.GMAIL ? GMAIL() : '';
+    if (isOpen) tm = setTimeout(tick, 1000);
+  }
+  function start() {
+    if (!ok()) return msg('Falta configurar a planilha do rank.', 'gear');
+
+    const em = gm();
     try { cache = JSON.parse(localStorage.getItem('rk_c2') || 'null'); } catch (_) { cache = null; }
     if (cache && cache.em !== em) cache = null;
-    if (cache && cache.rows.length && Date.now() - cache.ts < 60000) { rows = cache.rows; return list(); }     // lista recente: nem chama o servidor
-    msg('Carregando…'); busy = 1;
-    try {
-      await publish(window.GTOKQ ? GTOKQ() : null);   // só publica se já houver token válido: nunca pede login de novo
-      if (!cache || !cache.rows.length || Date.now() - cache.ts >= 60000) {
-        const r = await call({ a: 'list', me: em, v: cache && cache.rows.length ? cache.v : undefined }); if (r.err) throw new Error(r.err);
-        cache = r.same && cache ? { ...cache, ts: Date.now() } : { em, v: r.v, ts: Date.now(), rows: r.rows || [] }; saveC();
-      }
-      rows = cache.rows; list();
-    } catch (e) { msg('Não consegui carregar o rank (' + esc(e.code || e.message) + ').<br><button id="rkR2">Tentar de novo</button>'); $('rkR2').onclick = view; }
-    busy = 0;
+    rows = cache ? cache.rows : []; prevPos = {}; mv = {}; lastR = '';
+    if (rows.length) render(true); else msg('Carregando…');
+    delTeam(); publish(window.GTOKQ ? GTOKQ() : null).catch(() => {});   // só publica se já houver token válido
+    tick();
   }
-  new MutationObserver(() => { if (onTeam()) view(); }).observe(document.body, { attributes: true, attributeFilter: ['data-m'] });
-  if (onTeam()) view();
+  function openRank() { isOpen = true; P().classList.add('on'); start(); }
+  function closeRank() { isOpen = false; clearTimeout(tm); clearInterval(wait); P().classList.remove('on'); }
+  $('rkX').onclick = closeRank;
+  P().addEventListener('click', e => { if (e.target === P()) closeRank(); });
+  document.addEventListener('keydown', e => { if (isOpen && e.key === 'Escape') { e.stopPropagation(); closeRank(); } }, true);
+  const bR = $('bRank'); if (bR) bR.onclick = openRank;
+  new MutationObserver(() => { if (!onTeam() && isOpen) closeRank(); }).observe(document.body, { attributes: true, attributeFilter: ['data-m'] });
 })();
 </script>
 
