@@ -10154,8 +10154,7 @@ new MutationObserver((m,o)=>{if(sp.classList.contains('out')){on=false;o.disconn
 #rkBox #rkB{padding:6px 12px;background:#ffd54a;color:#14182a}
 #rkBox button.g{background:linear-gradient(180deg,#5fd86b,#2f9e3f);border-color:#0b3a16;box-shadow:0 6px 0 #0b3a16;padding:14px 22px;font-size:15px}
 #rkBox button.g:hover{box-shadow:0 8px 0 #0b3a16}
-.rkR{display:flex;align-items:center;gap:12px;padding:9px 12px;margin:8px 0;border-radius:16px;border:3px solid #0a0e1a;background:linear-gradient(180deg,#2d3a62,#1d2744);box-shadow:0 4px 0 #0a0e1a;cursor:pointer;transition:transform .12s,box-shadow .12s,filter .12s}
-.rkR:hover{transform:translateY(-3px);box-shadow:0 7px 0 #0a0e1a;filter:brightness(1.1)}
+.rkR{display:flex;align-items:center;gap:12px;padding:9px 12px;margin:8px 0;border-radius:16px;border:3px solid #0a0e1a;background:linear-gradient(180deg,#2d3a62,#1d2744);box-shadow:0 4px 0 #0a0e1a}
 .rkR.mine{background:linear-gradient(180deg,#ffe58a,#ffc107);color:#1b1500;box-shadow:0 4px 0 #6b4e00}
 .rkR .n{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;flex:none;background:#ffd54a;color:#14182a;font:400 15px 'Bungee',Impact,system-ui;box-shadow:inset 0 -3px 0 rgba(0,0,0,.2)}
 .rkR:nth-child(-n+3) .n{box-shadow:inset 0 -3px 0 rgba(0,0,0,.2),0 0 0 3px #fff}
@@ -10243,11 +10242,7 @@ new MutationObserver((m,o)=>{if(sp.classList.contains('out')){on=false;o.disconn
     const upd = (typeof team !== 'undefined' && team && !(window.GTOKQ && GTOKQ()) && Date.now() - (+localStorage.getItem('rk_pubts') || 0) > 864e5) ? '<div class="rkMsg" style="padding:6px"><button id="rkU">Atualizar meu time no rank</button></div>' : '';
     box.innerHTML = head('RANK GLOBAL') + upd + (warn ? `<div class="rkMsg" style="padding:8px;color:#ffb74d">${warn}</div>` : '') +
       (rows.length ? rows.map((r, i) => `<div class="rkR${r.mine ? ' mine' : ''}" data-i="${i}"><span class="n">${i + 1}</span><img src="${img(r.d.crest)}"><span class="t"><b>${esc(r.d.name)}</b><small>${esc(r.d.tier)} • ${esc(r.d.owner)}</small></span><span class="p">${r.d.rep | 0}</span></div>`).join('') : '<div class="rkMsg">Nenhum time no rank ainda. Crie seu time para aparecer!</div>');
-    bind(); { const u = $('rkU'); if (u) u.onclick = async () => { try { const t = await GTOK(); lastPub = 0; lastSig = ''; await publish(t); } catch (_) {} localStorage.removeItem('rk_c2'); cache = null; view(); }; } box.querySelectorAll('.rkR').forEach(el => el.onclick = async () => {
-      const i = +el.dataset.i, r = rows[i], dt = cache.det || (cache.det = {});
-      if (!dt[r.k]) { msg('RANK GLOBAL', 'Carregando…'); try { const x = await call({ a: 'get', k: r.k }); if (x.err) throw 0; dt[r.k] = x.d; saveC(); } catch (_) { return list(); } }
-      detail(dt[r.k], i + 1);
-    });
+    bind(); { const u = $('rkU'); if (u) u.onclick = async () => { try { const t = await GTOK(); lastPub = 0; lastSig = ''; await publish(t); } catch (_) {} localStorage.removeItem('rk_c2'); cache = null; view(); }; } 
   }
   let poll = 0, wait = 0;
   async function view() {
