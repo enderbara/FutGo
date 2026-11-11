@@ -682,6 +682,7 @@ html.mob #tcSkip{font-size:13px;padding:8px 14px}
     <button class="mbtn mini" id="bWr"><span class="ic"><i class="fa-solid fa-shirt"></i></span><span><b>VESTIÁRIO</b><small>Skins e chapéus</small></span></button>
     <button class="mbtn mini" id="bCfg"><span class="ic"><i class="fa-solid fa-gear"></i></span><span><b>AJUSTES</b><small>Controles e som</small></span></button>
   </div>
+  <button class="mbtn mini" id="bAds" style="width:100%;max-width:420px;margin-top:8px;flex-direction:row;gap:10px"><span class="ic"><i class="fa-solid fa-heart"></i></span><span><b>APOIAR O JOGO</b><small>Veja um anúncio e ajude a manter o Kick.io</small></span></button>
   <div class="foot">Alt: mouse-look • ESC: pausa</div>
 </div>
 <div id="swToast"></div>
@@ -11961,5 +11962,34 @@ if(cv){let on=false;const vk=t=>{const e=new KeyboardEvent(t,{code:'Space',key:'
  cv.addEventListener('mousedown',e=>{if(e.button!==2||on)return;try{if(menu.mode!=='play')return;}catch(_){return;}e.preventDefault();on=true;vk('keydown');});
  const rel=()=>{if(on){on=false;vk('keyup');}};addEventListener('mouseup',e=>{if(e.button===2)rel();});addEventListener('blur',rel);document.addEventListener('visibilitychange',rel);cv.addEventListener('contextmenu',e=>e.preventDefault());}
 })();</script>
+<style>
+#adsPop{display:none;position:fixed;inset:0;z-index:99999;align-items:center;justify-content:center;background:rgba(0,0,0,.65)}
+#adsPop.on{display:flex}
+#adsPop>div{background:#1b1f27;border:3px solid #000;border-radius:18px;padding:16px;width:min(360px,94vw);box-sizing:border-box;text-align:center;color:#fff;font-family:system-ui,sans-serif;max-height:96dvh;overflow:auto}
+#adsPop h3{margin:0 0 4px;letter-spacing:2px;font-size:18px}#adsPop p{margin:0 0 10px;font-size:12px;opacity:.7}
+#adsSlot{width:300px;height:250px;max-width:100%;margin:0 auto 12px;background:#0006;border-radius:8px;overflow:hidden}
+#adsSlot iframe{width:300px;height:250px;border:0;display:block}
+#adsPop button{font:800 14px system-ui;letter-spacing:1px;padding:10px 22px;border:0;border-radius:10px;background:#ffd54a;color:#000;cursor:pointer}
+</style>
+<div id="adsPop"><div><h3>APOIE O KICK.IO</h3><p>Obrigado por ajudar o jogo a continuar gratuito!</p><div id="adsSlot"></div><button id="adsX">FECHAR</button></div></div>
+<script>
+// Configuração do banner Adsterra 300x250 (sem colar tags <script>, evita erro de sintaxe)
+var ADS={key:'f4703967ed5958d394b67ef5fc5752b2',src:'https://bauval.org/22/f4703967ed5958d394b67ef5fc5752b2',w:300,h:250};
+(function(){
+  var pop=document.getElementById('adsPop'),slot=document.getElementById('adsSlot'),b=document.getElementById('bAds');
+  if(!b)return;
+  b.addEventListener('click',function(){
+    pop.classList.add('on');
+    if(slot.firstChild)return;
+    var f=document.createElement('iframe');f.setAttribute('scrolling','no');slot.appendChild(f);
+    var d=f.contentWindow.document;d.open();
+    d.write('<!DOCTYPE html><html><body style="margin:0;background:transparent"></body></html>');d.close();
+    var o=d.createElement('script');o.text='atOptions={"key":"'+ADS.key+'","format":"iframe","height":'+ADS.h+',"width":'+ADS.w+',"params":{}};';d.body.appendChild(o);
+    var l=d.createElement('script');l.src=ADS.src;d.body.appendChild(l);
+  });
+  document.getElementById('adsX').addEventListener('click',function(){pop.classList.remove('on');});
+  pop.addEventListener('click',function(e){if(e.target===pop)pop.classList.remove('on');});
+})();
+</script>
 </body>
 </html>
