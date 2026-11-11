@@ -11973,13 +11973,16 @@ if(cv){let on=false;const vk=t=>{const e=new KeyboardEvent(t,{code:'Space',key:'
 #menu #bAds:hover:not(:disabled)::before{background:#ff4d4d}
 #menu #bAds:hover:not(:disabled) .ic{background:#ff7a7a!important;color:#000!important}
 #adsPop #adsCp{background:#ff4d4d;color:#000}
-#adsBar{display:none;position:fixed;left:50%;bottom:10px;transform:translateX(-50%) scale(.82);transform-origin:bottom center;z-index:5;line-height:0;padding:6px;background:linear-gradient(135deg,rgba(255,255,255,.14),rgba(255,255,255,.04)),rgba(27,31,39,.88);border:3px solid #000;border-radius:16px;box-shadow:0 6px 18px #0008,inset 0 0 0 1px rgba(255,255,255,.14);backdrop-filter:blur(8px)}
-#adsBar::before{content:"";position:absolute;left:14px;right:14px;top:-3px;height:3px;background:#ffd54a;border-radius:0 0 3px 3px}
+#adsBar{display:none;position:fixed;left:50%;bottom:10px;transform:translateX(-50%) scale(.6);transform-origin:bottom center;z-index:5;line-height:0;padding:6px;background:linear-gradient(135deg,rgba(255,255,255,.14),rgba(255,255,255,.04)),rgba(27,31,39,.88);border:3px solid #000;border-radius:16px;box-shadow:0 6px 18px #0008,inset 0 0 0 1px rgba(255,255,255,.14);backdrop-filter:blur(8px)}
+#adsBar::before{content:"ANÚNCIO";position:absolute;left:16px;top:-22px;padding:2px 10px;background:#ffd54a;color:#000;font:800 15px/1.3 system-ui;letter-spacing:3px;border:3px solid #000;border-radius:8px 8px 0 0;border-bottom:0}
+#adsBar::after{content:"";position:absolute;inset:0;border-radius:13px;pointer-events:none;background:linear-gradient(110deg,transparent 42%,rgba(255,255,255,.38) 50%,transparent 58%);background-size:250% 100%;background-position:150% 0;animation:adsShine 3.6s ease-in-out infinite}
+@keyframes adsShine{0%{background-position:150% 0}55%,100%{background-position:-50% 0}}
 body[data-m="menu"] #adsBar{display:block}
 #adsBar iframe{border:0;display:block;border-radius:9px}
 #adsPop button{font:800 14px system-ui;letter-spacing:1px;padding:10px 22px;border:0;border-radius:10px;background:#ffd54a;color:#000;cursor:pointer}
 </style>
 <div id="adsPop"><div><h3>DIVULGUE O KICK.IO</h3><p>Copie o link e envie onde quiser!</p><input id="adsUrl" readonly><button id="adsCp" style="margin-bottom:10px">COPIAR LINK</button><br><button id="adsX">FECHAR</button></div></div>
+
 <div id="adsBar"></div>
 <script>
 // Banner Adsterra em barra na parte inferior do menu. COLE AQUI a key e o src do seu banner 728x90 (e 320x50 para celular) criados no painel do Adsterra.
