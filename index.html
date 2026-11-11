@@ -682,7 +682,7 @@ html.mob #tcSkip{font-size:13px;padding:8px 14px}
     <button class="mbtn mini" id="bWr"><span class="ic"><i class="fa-solid fa-shirt"></i></span><span><b>VESTIÁRIO</b><small>Skins e chapéus</small></span></button>
     <button class="mbtn mini" id="bCfg"><span class="ic"><i class="fa-solid fa-gear"></i></span><span><b>AJUSTES</b><small>Controles e som</small></span></button>
   </div>
-  <button class="mbtn mini" id="bAds" style="width:100%;max-width:420px;margin-top:8px;flex-direction:row;gap:10px"><span class="ic"><i class="fa-solid fa-heart"></i></span><span><b>APOIAR O JOGO</b><small>Veja um anúncio e ajude a manter o Kick.io</small></span></button>
+  <button class="mbtn mini" id="bAds" style="width:100%;max-width:420px;margin-top:8px;flex-direction:row;gap:10px"><span class="ic"><i class="fa-solid fa-share-nodes"></i></span><span><b>DIVULGAR</b><small>Copie o link e mande para os amigos</small></span></button>
   <div class="foot">Alt: mouse-look • ESC: pausa</div>
 </div>
 <div id="swToast"></div>
@@ -11967,26 +11967,35 @@ if(cv){let on=false;const vk=t=>{const e=new KeyboardEvent(t,{code:'Space',key:'
 #adsPop.on{display:flex}
 #adsPop>div{background:#1b1f27;border:3px solid #000;border-radius:18px;padding:16px;width:min(360px,94vw);box-sizing:border-box;text-align:center;color:#fff;font-family:system-ui,sans-serif;max-height:96dvh;overflow:auto}
 #adsPop h3{margin:0 0 4px;letter-spacing:2px;font-size:18px}#adsPop p{margin:0 0 10px;font-size:12px;opacity:.7}
-#adsSlot{width:300px;height:250px;max-width:100%;margin:0 auto 12px;background:#0006;border-radius:8px;overflow:hidden}
-#adsSlot iframe{width:300px;height:250px;border:0;display:block}
+#adsUrl{display:block;width:100%;box-sizing:border-box;margin:0 0 10px;padding:10px;border:2px solid #000;border-radius:10px;background:#0006;color:#fff;font:700 13px system-ui;text-align:center}
+#adsBar{display:none;position:fixed;left:50%;bottom:0;transform:translateX(-50%);z-index:5;line-height:0}
+body[data-m="menu"] #adsBar{display:block}
+#adsBar iframe{border:0;display:block}
 #adsPop button{font:800 14px system-ui;letter-spacing:1px;padding:10px 22px;border:0;border-radius:10px;background:#ffd54a;color:#000;cursor:pointer}
 </style>
-<div id="adsPop"><div><h3>APOIE O KICK.IO</h3><p>Obrigado por ajudar o jogo a continuar gratuito!</p><div id="adsSlot"></div><button id="adsX">FECHAR</button></div></div>
+<div id="adsPop"><div><h3>DIVULGUE O KICK.IO</h3><p>Copie o link e envie onde quiser!</p><input id="adsUrl" readonly><button id="adsCp" style="margin-bottom:10px">COPIAR LINK</button><br><button id="adsX">FECHAR</button></div></div>
+<div id="adsBar"></div>
 <script>
-// Configuração do banner Adsterra 300x250 (sem colar tags <script>, evita erro de sintaxe)
-var ADS={key:'f4703967ed5958d394b67ef5fc5752b2',src:'https://bauval.org/22/f4703967ed5958d394b67ef5fc5752b2',w:300,h:250};
+// Banner Adsterra em barra na parte inferior do menu. COLE AQUI a key e o src do seu banner 728x90 (e 320x50 para celular) criados no painel do Adsterra.
+var ADS_BAR={d:{key:'863e0b23d14b509b82b4925976f257b1',src:'https://bauval.org/22/863e0b23d14b509b82b4925976f257b1',w:728,h:90},m:{key:'',src:'',w:320,h:50}};
 (function(){
-  var pop=document.getElementById('adsPop'),slot=document.getElementById('adsSlot'),b=document.getElementById('bAds');
+  var pop=document.getElementById('adsPop'),b=document.getElementById('bAds'),bar=document.getElementById('adsBar');
+  var small=innerWidth<760,c=small&&ADS_BAR.m.key?ADS_BAR.m:ADS_BAR.d;
+  if(bar&&small&&c===ADS_BAR.d){bar.style.transform='translateX(-50%) scale(.44)';bar.style.transformOrigin='bottom center';}
+  if(bar&&c.key&&c.src){var f=document.createElement('iframe');f.setAttribute('scrolling','no');f.width=c.w;f.height=c.h;bar.appendChild(f);
+    var d=f.contentWindow.document;d.open();d.write('<!DOCTYPE html><html><body style="margin:0;background:transparent"></body></html>');d.close();
+    var o=d.createElement('script');o.text='atOptions={"key":"'+c.key+'","format":"iframe","height":'+c.h+',"width":'+c.w+',"params":{}};';d.body.appendChild(o);
+    var l=d.createElement('script');l.src=c.src;d.body.appendChild(l);}
   if(!b)return;
-  b.addEventListener('click',function(){
-    pop.classList.add('on');
-    if(slot.firstChild)return;
-    var f=document.createElement('iframe');f.setAttribute('scrolling','no');slot.appendChild(f);
-    var d=f.contentWindow.document;d.open();
-    d.write('<!DOCTYPE html><html><body style="margin:0;background:transparent"></body></html>');d.close();
-    var o=d.createElement('script');o.text='atOptions={"key":"'+ADS.key+'","format":"iframe","height":'+ADS.h+',"width":'+ADS.w+',"params":{}};';d.body.appendChild(o);
-    var l=d.createElement('script');l.src=ADS.src;d.body.appendChild(l);
-  });
+  var U=document.getElementById('adsUrl'),CP=document.getElementById('adsCp');
+  var url=/^https?:/.test(location.protocol)?location.origin+location.pathname.replace(/index\.html$/,''):'https://enderbara.github.io/Kick.io/';
+  U.value=url;
+  CP.addEventListener('click',function(){
+    if(navigator.share){navigator.share({title:'Kick.io',text:'Joga Kick.io!',url:url}).catch(function(){});return;}
+    U.select();var ok=false;try{ok=document.execCommand('copy');}catch(e){}
+    if(navigator.clipboard)navigator.clipboard.writeText(url).then(function(){ok=true;}).catch(function(){});
+    CP.textContent='✔ COPIADO!';setTimeout(function(){CP.textContent='COPIAR LINK';},1500);});
+  b.addEventListener('click',function(){pop.classList.add('on');});
   document.getElementById('adsX').addEventListener('click',function(){pop.classList.remove('on');});
   pop.addEventListener('click',function(e){if(e.target===pop)pop.classList.remove('on');});
 })();
