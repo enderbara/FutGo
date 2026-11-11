@@ -11973,9 +11973,10 @@ if(cv){let on=false;const vk=t=>{const e=new KeyboardEvent(t,{code:'Space',key:'
 #menu #bAds:hover:not(:disabled)::before{background:#ff4d4d}
 #menu #bAds:hover:not(:disabled) .ic{background:#ff7a7a!important;color:#000!important}
 #adsPop #adsCp{background:#ff4d4d;color:#000}
-#adsBar{display:none;position:fixed;left:50%;bottom:0;transform:translateX(-50%);z-index:5;line-height:0}
+#adsBar{display:none;position:fixed;left:50%;bottom:10px;transform:translateX(-50%) scale(.82);transform-origin:bottom center;z-index:5;line-height:0;padding:6px;background:linear-gradient(135deg,rgba(255,255,255,.14),rgba(255,255,255,.04)),rgba(27,31,39,.88);border:3px solid #000;border-radius:16px;box-shadow:0 6px 18px #0008,inset 0 0 0 1px rgba(255,255,255,.14);backdrop-filter:blur(8px)}
+#adsBar::before{content:"";position:absolute;left:14px;right:14px;top:-3px;height:3px;background:#ffd54a;border-radius:0 0 3px 3px}
 body[data-m="menu"] #adsBar{display:block}
-#adsBar iframe{border:0;display:block}
+#adsBar iframe{border:0;display:block;border-radius:9px}
 #adsPop button{font:800 14px system-ui;letter-spacing:1px;padding:10px 22px;border:0;border-radius:10px;background:#ffd54a;color:#000;cursor:pointer}
 </style>
 <div id="adsPop"><div><h3>DIVULGUE O KICK.IO</h3><p>Copie o link e envie onde quiser!</p><input id="adsUrl" readonly><button id="adsCp" style="margin-bottom:10px">COPIAR LINK</button><br><button id="adsX">FECHAR</button></div></div>
@@ -11986,7 +11987,7 @@ var ADS_BAR={d:{key:'863e0b23d14b509b82b4925976f257b1',src:'https://bauval.org/2
 (function(){
   var pop=document.getElementById('adsPop'),b=document.getElementById('bAds'),bar=document.getElementById('adsBar');
   var small=innerWidth<760,c=small&&ADS_BAR.m.key?ADS_BAR.m:ADS_BAR.d;
-  if(bar&&small&&c===ADS_BAR.d){bar.style.transform='translateX(-50%) scale(.44)';bar.style.transformOrigin='bottom center';}
+  if(bar&&small&&c===ADS_BAR.d){bar.style.transform='translateX(-50%) scale(.4)';bar.style.transformOrigin='bottom center';}
   if(bar&&c.key&&c.src){var f=document.createElement('iframe');f.setAttribute('scrolling','no');f.width=c.w;f.height=c.h;bar.appendChild(f);
     var d=f.contentWindow.document;d.open();d.write('<!DOCTYPE html><html><body style="margin:0;background:transparent"></body></html>');d.close();
     var o=d.createElement('script');o.text='atOptions={"key":"'+c.key+'","format":"iframe","height":'+c.h+',"width":'+c.w+',"params":{}};';d.body.appendChild(o);
