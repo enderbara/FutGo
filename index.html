@@ -3,6 +3,7 @@
 <head><script>if(/access_token=/.test(location.hash)&&window.opener){try{var h=new URLSearchParams(location.hash.slice(1));window.opener.postMessage({gtok:h.get("access_token"),exp:h.get("expires_in")},location.origin)}catch(e){}window.stop();document.write("Login concluído. Pode fechar esta janela.");setTimeout(function(){close()},300)}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Bungee&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
 <meta charset="UTF-8">
+<meta name="monetag" content="0ef81460b71395e36a8429e9b0cccf3f">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -7185,16 +7186,20 @@ if (IS_MOBILE) (function () {
   mkBtn('CHUTE', 'Space', 'hold', pos(1, 2, 19), 'big');
   { // mirar no celular: segure CHUTE e arraste o dedo para a direção desejada (relativa à tela); solte para chutar
     const cb = tc.querySelector('.tb.big'); let sx = 0, sy = 0, act = false, clr = 0;
-    const setA = e => { const dx = e.clientX - sx, dy = e.clientY - sy; if (Math.hypot(dx, dy) < 14) { window.__tAim = null; arr.style.opacity = 0; return; } arr.style.opacity = 1; arr.style.transform = 'rotate(' + Math.atan2(dy, dx) + 'rad)';
+    let engaged = false;
+    const setA = e => { const dx = e.clientX - sx, dy = e.clientY - sy, d = Math.hypot(dx, dy), RR = cb.offsetWidth * 1.0;
+      if (d < RR * .2) { window.__tAim = null; arr.style.opacity = 0; engaged = false; return; }   // zona morta: solta aqui = chute reto
+      if (!engaged) { engaged = true; try { navigator.vibrate && navigator.vibrate(8); } catch (_) {} }
+      const k = Math.min(1, d / RR); arr.style.opacity = .55 + .45 * k; arr.style.transform = 'rotate(' + Math.atan2(dy, dx) + 'rad) scaleX(' + (.7 + .9 * k).toFixed(2) + ')';
       const f = new THREE.Vector3(); camera.getWorldDirection(f); f.y = 0; f.normalize(); const rx = -f.z, rz = f.x;
       window.__tAim = Math.atan2(rx * dx + f.x * -dy, rz * dx + f.z * -dy); };
-    cb.style.overflow = 'visible'; const knob = cb.querySelector('.tbi'), ring = document.createElement('div'); ring.style.cssText = 'position:absolute;left:50%;top:50%;width:170%;height:170%;margin:-85% 0 0 -85%;border-radius:50%;border:.5vh solid rgba(255,255,255,.6);background:radial-gradient(circle,rgba(255,255,255,.22) 0 12%,rgba(0,0,0,.3) 13%);box-shadow:0 0 2vh #0008;pointer-events:none;opacity:0;transition:opacity .12s;z-index:-1'; cb.appendChild(ring);
-    const arr = document.createElement('div'); arr.style.cssText = 'position:absolute;left:50%;top:50%;width:0;height:0;pointer-events:none;opacity:0;z-index:-1'; arr.innerHTML = '<div style="position:absolute;left:0;top:-.7vh;width:' + (cb.offsetWidth * .85 || 80) + 'px;height:1.4vh;border-radius:1vh;background:linear-gradient(90deg,rgba(255,213,74,0),#ffd54a)"></div>'; cb.appendChild(arr);
+    cb.style.overflow = 'visible'; const knob = cb.querySelector('.tbi'), ring = document.createElement('div'); ring.style.cssText = 'position:absolute;left:50%;top:50%;width:210%;height:210%;margin:-105% 0 0 -105%;border-radius:50%;border:.5vh solid rgba(255,213,74,.75);background:radial-gradient(circle,rgba(255,255,255,.22) 0 12%,rgba(0,0,0,.3) 13%);box-shadow:0 0 2vh #0008;pointer-events:none;opacity:0;transition:opacity .12s;z-index:-1'; cb.appendChild(ring);
+    const arr = document.createElement('div'); arr.style.cssText = 'position:absolute;left:50%;top:50%;width:0;height:0;pointer-events:none;opacity:0;z-index:-1'; arr.innerHTML = '<div style="position:absolute;left:0;top:-.7vh;width:' + (cb.offsetWidth * 1.1 || 100) + 'px;height:1.6vh;border-radius:1vh;background:linear-gradient(90deg,rgba(255,213,74,0),#ffd54a)"></div>'; cb.appendChild(arr);
     knob.style.transition = 'transform .06s';
-    const kmove = e => { const R = cb.offsetWidth * .75; let dx = e.clientX - sx, dy = e.clientY - sy; const d = Math.hypot(dx, dy); if (d > R) { dx *= R / d; dy *= R / d; } knob.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(1.08)'; };   // o botão vira o manche do joystick
+    const kmove = e => { const R = cb.offsetWidth * 1.0; let dx = e.clientX - sx, dy = e.clientY - sy; const d = Math.hypot(dx, dy); if (d > R) { dx *= R / d; dy *= R / d; } knob.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(1.08)'; };   // o botão vira o manche do joystick
     cb.addEventListener('pointerdown', e => { clearTimeout(clr); act = true; const r = cb.getBoundingClientRect(); sx = r.left + r.width / 2; sy = r.top + r.height / 2; window.__tAim = null; ring.style.opacity = 1; kmove(e); setA(e); });
     cb.addEventListener('pointermove', e => { if (act) { setA(e); kmove(e); } });
-    const end = () => { if (!act) return; act = false; ring.style.opacity = 0; arr.style.opacity = 0; knob.style.transform = ''; clr = setTimeout(() => { window.__tAim = null; }, 350); };
+    const end = () => { if (!act) return; act = false; engaged = false; ring.style.opacity = 0; arr.style.opacity = 0; knob.style.transform = ''; clr = setTimeout(() => { window.__tAim = null; }, 350); };
     cb.addEventListener('pointerup', end); cb.addEventListener('pointercancel', end);
     const hint = document.createElement('div'); hint.textContent = 'arraste p/ mirar'; hint.style.cssText = 'position:absolute;left:0;right:0;top:-2.6vh;text-align:center;font:800 1.9vh system-ui;color:#fff;text-shadow:0 1px 3px #000;pointer-events:none;opacity:.8;white-space:nowrap'; cb.appendChild(hint);
   }
@@ -10647,7 +10652,7 @@ new MutationObserver((m,o)=>{if(sp.classList.contains('out')){on=false;o.disconn
 </style>
 <script>
 /* modos bloqueados por patente (índice em TIERS: Bronze I=0 … Lendário=21) */
-(() => { const REQ = { ouro: 3, triplo: 5, dobro: 6, turbo: 8, zebra: 10, mara: 12, hard: 14 };   // Prata I, Prata III, Ouro I, Ouro III, Platina II, Diamante I, Diamante III
+(() => { const REQ = { ouro: 0, triplo: 5, dobro: 6, turbo: 8, zebra: 10, mara: 12, hard: 14 };   // Bronze I (ouro), Prata III, Ouro I, Ouro III, Platina II, Diamante I, Diamante III
   const pop = document.getElementById('modePop'); if (!pop) return;
   const cards = [...pop.querySelectorAll('.mcard')], T = document.createElement('div'); T.id = 'mlkT'; document.body.appendChild(T); let tt = 0;
   const cur = () => { try { return tierOf(stats.rep); } catch (_) { return 0; } };
@@ -11784,8 +11789,8 @@ function angry(c,t,ph){base(c);const s=SIN(t*9+ph),a=Math.max(0,s),b=Math.max(0,
  c.model.rotation.set(.22,0,SIN(t*9+ph)*.07);c.model.position.y=.18-hit*.05;c.head.rotation.set(.3,SIN(t*20)*.14,SIN(t*9)*.05);c.model.scale.set(1+hit*.03,1-hit*.05,1+hit*.03);}
 function holdTrophy(c,t){base(c);const b=Math.abs(SIN(t*3.2));c.g.position.y=b*.3;
  c.footL.position.set(-FX*1.2,FY,.15);c.footR.position.set(FX*1.2,FY,-.1);
- c.handL.position.set(-HX*.5,HY+.95,.25);c.handR.position.set(HX*.5,HY+.95,.25);
- c.model.rotation.set(-.1,0,SIN(t*3.2)*.04);c.head.rotation.set(-.3,0,0);}
+ c.handL.position.set(-.5,HY+3.35,.3);c.handR.position.set(.5,HY+3.35,.3);
+ c.model.rotation.set(-.05,0,SIN(t*3.2)*.03);c.head.rotation.set(-.12,0,0);}
 function mkTrophy(){const g=new THREE.Group(),M=(c,e)=>new THREE.MeshLambertMaterial({color:c,emissive:e||0});
  const add=(geo,mat,x,y,z)=>{const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);g.add(m);return m;};
  const gold=M(0xffc928,0x553a00),dk=M(0x3b2a1c);
@@ -11799,7 +11804,7 @@ function pose(){const win=st==='w',lose=st==='l';
  chars.forEach((c,i)=>{const mine=c.side==='b';
   if(st==='d'||st==='p'){tense(c,T,i*.8,mine?-1:1);if(tr.parent===c.g)c.g.remove(tr);return;}
   const winner=(win&&mine)||(lose&&!mine);
-  if(winner){holdTrophy(c,T);if(tr.parent!==c.g)c.g.add(tr);tr.position.set(0,HY+.8,.3);tr.rotation.y=T*1.6;}
+  if(winner){holdTrophy(c,T);if(tr.parent!==c.g)c.g.add(tr);tr.position.set(0,HY+3.2,.3);tr.scale.setScalar(.9);tr.rotation.y=T*1.6;}
   else angry(c,T,0);
   c.g.rotation.y=mine?.5:-.5;});}
 function frame(now){if(!run)return;requestAnimationFrame(frame);const dt=Math.min(.05,(now-(lastT||now))/1000);lastT=now;T+=dt;pose();
