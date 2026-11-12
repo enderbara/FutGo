@@ -11,7 +11,6 @@
 <title>FutGO – Jogo de Futebol Online Grátis no Navegador (PC e Celular)</title>
 <meta name="description" content="FutGO é um jogo de futebol 3D grátis para jogar no navegador, no PC ou no celular. Monte seu time, personalize a camisa, escolha modos como Gol de Ouro, Turbo, Gols em Dobro e Desafio Extremo e jogue partidas rápidas contra bots.">
 <meta name="keywords" content="FutGO, jogo de futebol, futebol online, jogo de futebol grátis, jogo 3D de futebol, futebol no navegador, jogo de futebol para celular, jogo io, futgo, fut go">
-<meta name="monetag" content="0ef81460b71395e36a8429e9b0cccf3f">
 <meta name="google-site-verification" content="SGflj4VPNSmy7_lRwITz7e9svLUcd0LGKH98mNYxQcY" />
 <link rel="canonical" href="https://enderbara.github.io/FutGo/">
 <link rel="alternate" hreflang="pt-BR" href="https://enderbara.github.io/FutGo/">
@@ -605,6 +604,20 @@ body[data-m="play"] #ver,body[data-m="train"] #ver{display:none}
 #splash .sp-nm{white-space:nowrap;padding:0 .1em}
 #splash .sp-nm span{background:none!important;-webkit-background-clip:border-box!important;background-clip:border-box!important;color:#fff!important;animation:none!important;padding:0!important;text-shadow:0 0 28px rgba(255,213,74,.55),0 0 2px rgba(255,255,255,.6)}
 #menu{max-width:100vw}
+</style>
+<style id="splashPerf">
+/* créditos/splash leves: só transform + opacity (sem blur, sem animar altura/letter-spacing) */
+#splash .sp-bar{height:12vh!important;animation:spBarT 2s .2s ease-out both!important;will-change:transform}
+#splash .sp-bar.t{transform-origin:top}#splash .sp-bar.b{transform-origin:bottom}
+@keyframes spBarT{from{transform:scaleY(4.1667)}to{transform:scaleY(1)}}
+#splash .sp-c{animation:none!important}
+#splash .sp-lg{filter:none!important;will-change:transform,opacity;animation:spLogoL 1.4s 1.3s cubic-bezier(.2,.8,.2,1) both!important}
+@keyframes spLogoL{from{opacity:0;transform:translateY(24px) scale(.6) rotate(-14deg)}to{opacity:1;transform:none}}
+#splash .sp-nm{will-change:transform,opacity;animation:spNameL 1.8s 1.6s cubic-bezier(.2,.8,.2,1) both!important}
+@keyframes spNameL{from{opacity:0;transform:scale(1.25)}to{opacity:1;transform:none}}
+#splash .sp-nm span{text-shadow:none!important}
+#splash .sp-by,#splash .sp-sub{will-change:transform,opacity}
+#splash .sp-line{box-shadow:none!important;will-change:transform,opacity}
 </style>
 <style>
 html,body{touch-action:manipulation;overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
